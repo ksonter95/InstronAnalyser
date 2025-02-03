@@ -1,6 +1,6 @@
 import argparse
 from typing import Optional
-import analyser, data
+import analyser
 
 from pathlib import Path
 
@@ -323,11 +323,11 @@ if __name__ == "__main__":
     analysers: list[analyser.Analyser]
     match str(parsed_arguments.test):
         case "relaxation":
-            analysers = RelaxationAnalyserParser(parsed_arguments).create_analysers()
+            analysers = RelaxationAnalyserParser(parsed_arguments).create_analysers() # type: ignore
         case _:
             pass
 
-    for a in analysers:
+    for a in analysers: # type: ignore
         a.analyse()
         a.save()
 

@@ -41,15 +41,15 @@ class DataFrame(pd.DataFrame):
 
     @property
     def displacement(self) -> "pd.Series[float]":
-        return self._data_frame[("Displacement", "(mm)")]  # type: ignore
+        return self._data_frame["Displacement (mm)"]  # type: ignore
 
     @property
     def e_modulus(self) -> "pd.Series[float]":
-        return self._data_frame[("E-modulus", "(MPa)")]  # type: ignore
+        return self._data_frame["E-modulus (MPa)"]  # type: ignore
 
     @property
     def force(self) -> "pd.Series[float]":
-        return self._data_frame[("Force", "(N)")]  # type: ignore
+        return self._data_frame["Force (N)"]  # type: ignore
 
     @property
     def initial_time_s(self) -> float:
@@ -57,15 +57,15 @@ class DataFrame(pd.DataFrame):
 
     @property
     def strain(self) -> "pd.Series[float]":
-        return self._data_frame[("Strain", "(%)")]  # type: ignore
+        return self._data_frame["Strain (%)"]  # type: ignore
 
     @property
     def stress(self) -> "pd.Series[float]":
-        return self._data_frame[("Compressive Stress", "(MPa)")]  # type: ignore
+        return self._data_frame["Compressive Stress (MPa)"]  # type: ignore
 
     @property
     def time(self) -> "pd.Series[float]":
-        return self._data_frame[("Time", "(s)")]  # type: ignore
+        return self._data_frame["Time (s)"]  # type: ignore
 
     @staticmethod
     def load(csv: Path) -> "DataFrame":
@@ -77,59 +77,44 @@ class DataFrame(pd.DataFrame):
         """
 
         try:
-            # Read the CSV fil
-            data_frame: pd.DataFrame = pd.read_csv(csv, header=None)  # type: ignore
+            # Read the CSV file
+            # NOTE: the column headings are split across two rows and formatted
+            #       weirdly such that all units are on the second row except the
+            #       strain.  Therefore, the two rows are combined into one
+            data_frame: pd.DataFrame = pd.read_csv(  # type: ignore
+                csv, skiprows=19, header=[0, 1]
+            ).iloc[:, :5]
+            data_frame.columns = [
+                (
+                    " ".join(map(str, c)).strip()
+                    if not c[1].startswith("Unnamed")
+                    else str(c[0])
+                )
+                for c in data_frame.columns
+            ]
 
             # Validate the CSV file
             #  - Data headings must be in rows 19-20, columns 0-4 (0-indexed) and
             #    must be:
             #       Time, Displacement, Force, Strain (%), Compressive stress
-            #       (s), (mm),          (N),   (%),        (MPa)
+            #       (s), (mm),          (N),   ,           (MPa)
             #  - Data must be in rows 21-... (0-indexed) and must be all floating
             #    point numbers
-            headings: pd.DataFrame = pd.DataFrame(
-                [
-                    [
-                        "Time",
-                        "Displacement",
-                        "Force",
-                        "Strain (%)",
-                        "Compressive stress",
-                    ],
-                    ["(s)", "(mm)", "(N)", np.nan, "(MPa)"],
-                ]
-            )
+            headings: list[str] = [
+                "Time (s)",
+                "Displacement (mm)",
+                "Force (N)",
+                "Strain (%)",
+                "Compressive stress (MPa)",
+            ]
             if (
-                not np.array_equal(
-                    data_frame.iloc[19:21, :5].to_numpy(dtype=str),  # type: ignore
-                    headings.to_numpy(dtype=str),  # type: ignore
-                )
-                or not data_frame.iloc[21:, :5]  # type: ignore
-                .map(lambda x: pd.to_numeric(x, errors="coerce"))  # type: ignore
-                .notna()
-                .all()
-                .all()
+                data_frame.columns.tolist() != headings
+                or not data_frame.notna().all().all()  # type: ignore
             ):
                 raise ValueError
 
         except:
-            raise ValueError("Invalid CSV file")
-
-        # Extract the data frame from the CSV file
-        # NOTE: the data frame starts in row 22 (indexed from 1)
-        data_frame = data_frame.iloc[21:, :5].map(  # type: ignore
-            lambda x: pd.to_numeric(x, errors="coerce")  # type: ignore
-        )
-        data_frame.columns = pd.MultiIndex.from_tuples(  # type: ignore
-            [
-                ("Time", "(s)"),
-                ("Displacement", "(mm)"),
-                ("Force", "(N)"),
-                ("Strain", "(%)"),
-                ("Compressive stress", "(MPa)"),
-            ]
-        )
-        data_frame.reset_index(drop=True, inplace=True)
+            raise ValueError(f"Invalid CSV file: {csv}")
 
         # Add the Young's modulus column
         # E = σ / ε
@@ -139,9 +124,9 @@ class DataFrame(pd.DataFrame):
         # NOTE: handling divide by zero runtime warning
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            data_frame[("E-modulus", "(MPa)")] = data_frame[
-                ("Compressive stress", "(MPa)")
-            ] / (data_frame[("Strain", "(%)")] / 100)
+            data_frame["E-modulus (MPa)"] = data_frame["Compressive stress (MPa)"] / (
+                data_frame["Strain (%)"] / 100
+            )
 
         return DataFrame(data_frame)
 
@@ -171,33 +156,33 @@ class RelaxationDataFrame(DataFrame):
 
     @property
     def regression_force(self) -> "pd.Series[float]":
-        return self._data_frame[("Regression Force", "(N)")]  # type: ignore
+        return self._data_frame["Regression Force (N)"]  # type: ignore
 
     @regression_force.setter
     def regression_force(self, value: "pd.Series[float]") -> None:
-        self._data_frame[("Regression Force", "(N)")] = value
+        self._data_frame["Regression Force (N)"] = value
 
         # Move the regression force column to be directly after the force column
-        column: pd.Series = self._data_frame.pop(("Regression Force", "(N)"))  # type: ignore
+        column: pd.Series = self._data_frame.pop("Regression Force (N)")  # type: ignore
         self._data_frame.insert(  # type: ignore
-            self._data_frame.columns.get_loc(("Force", "(N)")) + 1,  # type: ignore
-            ("Regression Force", "(N)"),
+            self._data_frame.columns.get_loc("Force (N)") + 1,  # type: ignore
+            "Regression Force (N)",
             column,
         )
 
     @property
     def relative_time(self) -> "pd.Series[float]":
-        return self._data_frame[("Relative Time", "(s)")]  # type: ignore
+        return self._data_frame["Relative Time (s)"]  # type: ignore
 
     @relative_time.setter
     def relative_time(self, value: "pd.Series[float]") -> None:
-        self._data_frame[("Relative Time", "(s)")] = value
+        self._data_frame["Relative Time (s)"] = value
 
         # Move the relative time column to be directly after the time column
-        column: pd.Series = self._data_frame.pop(("Relative Time", "(s)"))  # type: ignore
+        column: pd.Series = self._data_frame.pop("Relative Time (s)")  # type: ignore
         self._data_frame.insert(  # type: ignore
-            self._data_frame.columns.get_loc(("Time", "(s)")) + 1,  # type: ignore
-            ("Relative Time", "(s)"),
+            self._data_frame.columns.get_loc("Time (s)") + 1,  # type: ignore
+            "Relative Time (s)",
             column,
         )
 
@@ -223,18 +208,11 @@ class Data:
         return str(self.processed_data_frame)
 
     def write_to_excel(self, writer: pd.ExcelWriter) -> None:
-        self.processed_data_frame.drop(self.processed_data_frame.index).to_excel(  # type: ignore
-            writer,
-            sheet_name=self.sheet_name,
-            startrow=0,
-        )
         self.processed_data_frame.to_excel(  # type: ignore
             writer,
             sheet_name=self.sheet_name,
-            startrow=1,
-            header=False,
+            index=False,
         )
-        # writer.sheets[self.sheet_name].set_row(2, None, None, {"hidden": True})
 
     def process_raw_data(self, *args: list[Any], **kwargs: dict[str, Any]) -> None:
         """
