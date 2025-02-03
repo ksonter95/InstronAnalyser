@@ -61,7 +61,7 @@ class DataFrame(pd.DataFrame):
 
     @property
     def stress(self) -> "pd.Series[float]":
-        return self._data_frame["Compressive Stress (MPa)"]  # type: ignore
+        return self._data_frame["Compressive stress (MPa)"]  # type: ignore
 
     @property
     def time(self) -> "pd.Series[float]":
@@ -187,6 +187,110 @@ class RelaxationDataFrame(DataFrame):
         )
 
 
+class SummaryFrame(pd.DataFrame):
+    """
+    Wrapper for pd.DataFrame that allows the class to be interacted with like a
+    standard pd.DataFrame.
+
+    Args:
+        summary_frame: pd.DataFrame to wrap.
+    """
+
+    def __init__(self, summary_frame: pd.DataFrame) -> None:
+
+        self._summary_frame: pd.DataFrame = summary_frame.copy(deep=True)
+        self._summary_frame.reset_index(drop=True, inplace=True)
+
+    def __getattr__(self, attribute: str) -> Any:
+        return getattr(self._summary_frame, attribute)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == "_summary_frame":
+            object.__setattr__(self, name, value)  # prevent recursion
+        else:
+            setattr(self._summary_frame, name, value)
+
+    def __getitem__(self, key: Any) -> Any:
+        return self._summary_frame[key]  # type: ignore
+
+    def __setitem__(self, key: Any, value: Any) -> None:
+        self._summary_frame[key] = value
+
+    def __str__(self) -> str:
+        return str(self._summary_frame)
+
+
+class RelaxationSummaryFrame(SummaryFrame):
+    """
+    Wrapper for pd.DataFrame that allows the class to be interacted with like a
+    standard pd.DataFrame.  It contains the summary from a relaxation test.
+    """
+
+    def __init__(self) -> None:
+
+        super().__init__(
+            pd.DataFrame(
+                columns=[
+                    "Strain (%)",
+                    "Min Force (N)",
+                    "Max Force (N)",
+                    "Min Stress (MPa)",
+                    "Max Stress (MPa)",
+                    "Min E-modulus (MPa)",
+                    "Max E-modulus (MPa)",
+                    "a",
+                    "b",
+                    "tau",
+                ]
+            )
+        )
+
+    def append_row(
+        self,
+        strain_pct: float,
+        min_force_N: float,
+        max_force_N: float,
+        min_stress_MPa: float,
+        max_stress_MPa: float,
+        min_e_modulus_MPa: float,
+        max_e_modulus_MPa: float,
+        a: float,
+        b: float,
+        tau: float,
+    ) -> None:
+        """
+        Append a row to the summary frame.
+
+        Args:
+            strain_pct: The relaxation strain.
+            min_force_N: The minimum force during relaxation.
+            max_force_N: The maximum force during relaxation.
+            min_stress_MPa: The minimum stress during relaxation.
+            max_stress_MPa: The maximum stress during relaxation.
+            min_e_modulus_MPa: The minimum E-modulus during relaxation.
+            max_e_modulus_MPa: The maximum E-modulus during relaxation.
+            a: The exponential decay equation coefficient a
+                (y = a * e^(-t / tau) + b)
+            b: The exponential decay equation coefficient b
+                (y = a * e^(-t / tau) + b)
+            tau: The exponential decay equation coefficient tau
+                (y = a * e^(-t / tau) + b)
+        """
+
+        self._summary_frame.loc[len(self._summary_frame)] = [
+            strain_pct,
+            min_force_N,
+            max_force_N,
+            min_stress_MPa,
+            max_stress_MPa,
+            min_e_modulus_MPa,
+            max_e_modulus_MPa,
+            a,
+            b,
+            tau,
+        ]
+
+
 class Data:
     """
     Base class for all data.
@@ -275,6 +379,30 @@ class RelaxationData(ProcessedData):
         self.b: float = 0.0
         self.tau: float = 1.0
 
+    @property
+    def max_e_modulus_MPa(self) -> float:
+        return self.processed_data_frame.e_modulus.max()  # type: ignore
+
+    @property
+    def max_force_N(self) -> float:
+        return self.processed_data_frame.force.max()  # type: ignore
+
+    @property
+    def max_stress_MPa(self) -> float:
+        return self.processed_data_frame.stress.max()  # type: ignore
+
+    @property
+    def min_e_modulus_MPa(self) -> float:
+        return self.processed_data_frame.e_modulus.min()  # type: ignore
+
+    @property
+    def min_force_N(self) -> float:
+        return self.processed_data_frame.force.min()  # type: ignore
+
+    @property
+    def min_stress_MPa(self) -> float:
+        return self.processed_data_frame.stress.min()  # type: ignore
+
     def process_raw_data(  # type: ignore
         self,
         relaxation_strain_pct: float,
@@ -361,3 +489,84 @@ class RelaxationData(ProcessedData):
         """
 
         return a * np.exp(-t / tau) + b
+
+
+class Summary:
+    """
+    Base class for all summaries.
+    """
+
+    def __init__(self) -> None:
+
+        self.summary_frame: SummaryFrame
+        self.sheet_name: str = "Summary"
+
+    def __str__(self) -> str:
+        return str(self.summary_frame)
+
+    def clear_all_rows(self) -> None:
+        self.summary_frame.drop(self.summary_frame.index, inplace=True)  # type: ignore
+
+    def write_to_excel(self, writer: pd.ExcelWriter) -> None:
+        self.summary_frame.to_excel(  # type: ignore
+            writer,
+            sheet_name=self.sheet_name,
+            index=False,
+        )
+
+
+class RelaxationSummary(Summary):
+    """
+    Data storage class for the summary of the relaxation test.
+    """
+
+    def __init__(self) -> None:
+
+        super().__init__()
+
+        self.summary_frame: RelaxationSummaryFrame = RelaxationSummaryFrame()  # type: ignore
+
+    def append_row(
+        self,
+        strain_pct: float,
+        min_force_N: float,
+        max_force_N: float,
+        min_stress_MPa: float,
+        max_stress_MPa: float,
+        min_e_modulus_MPa: float,
+        max_e_modulus_MPa: float,
+        a: float,
+        b: float,
+        tau: float,
+    ) -> None:
+        """
+        Append a row to the summary frame.
+
+        Args:
+            strain_pct: The relaxation strain.
+            min_force_N: The minimum force during relaxation.
+            max_force_N: The maximum force during relaxation.
+            min_stress_MPa: The minimum stress during relaxation.
+            max_stress_MPa: The maximum stress during relaxation.
+            min_e_modulus_MPa: The minimum E-modulus during relaxation.
+            max_e_modulus_MPa: The maximum E-modulus during relaxation.
+            a: The exponential decay equation coefficient a
+                (y = a * e^(-t / tau) + b)
+            b: The exponential decay equation coefficient b
+                (y = a * e^(-t / tau) + b)
+            tau: The exponential decay equation coefficient tau
+                (y = a * e^(-t / tau) + b)
+        """
+
+        self.summary_frame.append_row(
+            strain_pct,
+            min_force_N,
+            max_force_N,
+            min_stress_MPa,
+            max_stress_MPa,
+            min_e_modulus_MPa,
+            max_e_modulus_MPa,
+            a,
+            b,
+            tau,
+        )

@@ -14,15 +14,20 @@ class Analyser:
             Instron.
         output_xlsx: The path to the Excel file which will contain the analysis
             results.
+        summary: The summary of the analysis.
     """
 
-    def __init__(self, input_csv: Path, output_xlsx: Path) -> None:
+    def __init__(
+        self, input_csv: Path, output_xlsx: Path, summary: data.Summary
+    ) -> None:
 
         self._processed_data: list[data.ProcessedData] = []
+        self._summary: data.Summary
 
         self.output_xlsx: Path = output_xlsx
         self.raw_data: data.RawData = data.RawData(input_csv)
         self.processed_data = []
+        self.summary = summary
 
     @property
     def processed_data(self) -> list[data.ProcessedData]:
@@ -31,6 +36,14 @@ class Analyser:
     @processed_data.setter
     def processed_data(self, value: list[data.ProcessedData]) -> None:
         self._processed_data = value
+
+    @property
+    def summary(self) -> data.Summary:
+        return self._summary
+
+    @summary.setter
+    def summary(self, value: data.Summary) -> None:
+        self._summary = value
 
     def analyse(self) -> None:
         """
@@ -53,8 +66,8 @@ class Analyser:
             for d in self.processed_data:
                 d.write_to_excel(writer)
 
-            # Save all the analysis results
-            # TODO
+            # Save the analysis summary
+            self.summary.write_to_excel(writer)
 
 
 class RelaxationAnalyser(Analyser):
@@ -95,7 +108,7 @@ class RelaxationAnalyser(Analyser):
         regression_data_points: Optional[int] = None,
     ) -> None:
 
-        super().__init__(input_csv, output_xlsx)
+        super().__init__(input_csv, output_xlsx, data.RelaxationSummary())
 
         self._relaxation_intervals: int = 0
         self._relaxation_step_pct: float = 0.0
@@ -188,14 +201,37 @@ class RelaxationAnalyser(Analyser):
     def relaxation_strains_pct(self) -> list[float]:
         return self._relaxation_strains_pct
 
+    @property
+    def summary(self) -> data.RelaxationSummary:
+        return super().summary  # type: ignore
+
+    @summary.setter
+    def summary(self, value: data.RelaxationSummary) -> None:  # type: ignore
+        Analyser.summary = value
+
     def analyse(self) -> None:
         """
         Analyses the processed data.
         """
+
+        self.summary.clear_all_rows()
 
         for i in range(self.relaxation_intervals):
             self.processed_data[i].process_raw_data(
                 self.relaxation_strains_pct[i],
                 self.epsilon_pct,
                 self.regression_data_points,
+            )
+
+            self.summary.append_row(
+                self.relaxation_strains_pct[i],
+                self.processed_data[i].min_force_N,
+                self.processed_data[i].max_force_N,
+                self.processed_data[i].min_stress_MPa,
+                self.processed_data[i].max_stress_MPa,
+                self.processed_data[i].min_e_modulus_MPa,
+                self.processed_data[i].max_e_modulus_MPa,
+                self.processed_data[i].a,
+                self.processed_data[i].b,
+                self.processed_data[i].tau,
             )
