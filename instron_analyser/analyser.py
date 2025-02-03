@@ -235,3 +235,84 @@ class RelaxationAnalyser(Analyser):
                 self.processed_data[i].b,
                 self.processed_data[i].tau,
             )
+
+
+class FailureAnalyser(Analyser):
+    """
+    The analyser used to analyse the Instron output for the compression to
+    failure test.
+
+    Args:
+        input_csv: The path to the CSV file containing the output of the
+            Instron.
+        output_xlsx: The path to the Excel file which will contain the analysis
+            results.
+        abort_strain_pct: The strain threshold at which the test is considered
+            to be aborted.
+        toughness_strain_pct: The strain at which the toughness is calculated.
+        stiffness_strain_pct: The strain at which the stiffness is calculated.
+    """
+
+    def __init__(
+        self,
+        input_csv: Path,
+        output_xlsx: Path,
+        abort_strain_pct: float,
+        toughness_strain_pct: float,
+        stiffness_strain_pct: float,
+    ) -> None:
+
+        super().__init__(input_csv, output_xlsx, data.FailureSummary())
+
+        self.abort_strain_pct: float = abort_strain_pct
+        self.toughness_strain_pct: float = toughness_strain_pct
+        self.stiffness_strain_pct: float = stiffness_strain_pct
+
+        self.processed_data.append(data.FailureData(self.raw_data.raw_data_frame))
+
+    def __str__(self) -> str:
+
+        # TODO
+        return super().__str__()
+
+    @property
+    def processed_data(self) -> list[data.FailureData]:  # type: ignore
+        return super().processed_data  # type: ignore
+
+    @processed_data.setter
+    def processed_data(self, value: list[data.FailureData]) -> None:  # type: ignore
+        super().processed_data[:] = value
+
+    @property
+    def summary(self) -> data.FailureSummary:
+        return super().summary  # type: ignore
+
+    @summary.setter
+    def summary(self, value: data.FailureSummary) -> None:  # type: ignore
+        Analyser.summary = value
+
+    def analyse(self) -> None:
+        """
+        Analyses the processed data.
+        """
+
+        self.summary.clear_all_rows()
+
+        self.processed_data[0].process_raw_data(
+            self.abort_strain_pct, self.toughness_strain_pct, self.stiffness_strain_pct
+        )
+
+        self.summary.append_row(
+            self.processed_data[0].ultimate_strain_pct,
+            self.processed_data[0].ultimate_force_N,
+            self.processed_data[0].ultimate_strength_MPa,
+            self.processed_data[0].aborted,
+            self.processed_data[0].slipped,
+            self.processed_data[0].yield_strain_pct,
+            self.processed_data[0].yield_force_N,
+            self.processed_data[0].yield_strength_MPa,
+            self.processed_data[0].toughness_strain_pct,
+            self.processed_data[0].toughness_MPa,
+            self.processed_data[0].stiffness_strain_pct,
+            self.processed_data[0].stiffness_MPa,
+        )

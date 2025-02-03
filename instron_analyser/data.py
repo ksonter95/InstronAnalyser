@@ -3,11 +3,12 @@ import pandas as pd
 import warnings
 
 from pathlib import Path
+from scipy.integrate import cumulative_trapezoid  # type: ignore
 from scipy.optimize import curve_fit  # type: ignore
 from typing import Any, Optional
 
 
-class DataFrame(pd.DataFrame):
+class DataFrame:
     """
     Wrapper for pd.DataFrame that allows the class to be interacted with like a
     standard pd.DataFrame.
@@ -20,21 +21,6 @@ class DataFrame(pd.DataFrame):
 
         self._data_frame: pd.DataFrame = data_frame.copy(deep=True)
         self._data_frame.reset_index(drop=True, inplace=True)
-
-    def __getattr__(self, attribute: str) -> Any:
-        return getattr(self._data_frame, attribute)
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name == "_data_frame":
-            object.__setattr__(self, name, value)  # prevent recursion
-        else:
-            setattr(self._data_frame, name, value)
-
-    def __getitem__(self, key: Any) -> Any:
-        return self._data_frame[key]  # type: ignore
-
-    def __setitem__(self, key: Any, value: Any) -> None:
-        self._data_frame[key] = value
 
     def __str__(self) -> str:
         return str(self._data_frame)
@@ -50,6 +36,10 @@ class DataFrame(pd.DataFrame):
     @property
     def force(self) -> "pd.Series[float]":
         return self._data_frame["Force (N)"]  # type: ignore
+
+    @property
+    def frame(self) -> pd.DataFrame:
+        return self._data_frame
 
     @property
     def initial_time_s(self) -> float:
@@ -145,14 +135,8 @@ class RelaxationDataFrame(DataFrame):
         super().__init__(data_frame)
 
         # Initially populate the processed data columns with default values
-        self.relative_time = pd.Series([0.0] * self.index.size)  # type: ignore
-        self.regression_force = pd.Series([0] * self.index.size)  # type: ignore
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name in ["regression_force", "relative_time"]:
-            object.__setattr__(self, name, value)
-        else:
-            super().__setattr__(name, value)
+        self.relative_time = pd.Series([0.0] * self._data_frame.index.size)  # type: ignore
+        self.regression_force = pd.Series([0] * self._data_frame.index.size)  # type: ignore
 
     @property
     def regression_force(self) -> "pd.Series[float]":
@@ -187,7 +171,33 @@ class RelaxationDataFrame(DataFrame):
         )
 
 
-class SummaryFrame(pd.DataFrame):
+class FailureDataFrame(DataFrame):
+    """
+    Wrapper for pd.DataFrame that allows the class to be interacted with like a
+    standard pd.DataFrame.  It contains all the data from a compression to
+    failure test.
+
+    Args:
+        data_frame: pd.DataFrame to wrap.
+    """
+
+    def __init__(self, data_frame: pd.DataFrame) -> None:
+
+        super().__init__(data_frame)
+
+        # Initially populate the processed data columns with default values
+        self.toughness = pd.Series([0.0] * self._data_frame.index.size)  # type: ignore
+
+    @property
+    def toughness(self) -> "pd.Series[float]":
+        return self._data_frame["Toughness (MPa)"]  # type: ignore
+
+    @toughness.setter
+    def toughness(self, value: "pd.Series[float]") -> None:
+        self._data_frame["Toughness (MPa)"] = value
+
+
+class SummaryFrame:
     """
     Wrapper for pd.DataFrame that allows the class to be interacted with like a
     standard pd.DataFrame.
@@ -201,23 +211,12 @@ class SummaryFrame(pd.DataFrame):
         self._summary_frame: pd.DataFrame = summary_frame.copy(deep=True)
         self._summary_frame.reset_index(drop=True, inplace=True)
 
-    def __getattr__(self, attribute: str) -> Any:
-        return getattr(self._summary_frame, attribute)
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name == "_summary_frame":
-            object.__setattr__(self, name, value)  # prevent recursion
-        else:
-            setattr(self._summary_frame, name, value)
-
-    def __getitem__(self, key: Any) -> Any:
-        return self._summary_frame[key]  # type: ignore
-
-    def __setitem__(self, key: Any, value: Any) -> None:
-        self._summary_frame[key] = value
-
     def __str__(self) -> str:
         return str(self._summary_frame)
+
+    @property
+    def frame(self) -> pd.DataFrame:
+        return self._summary_frame
 
 
 class RelaxationSummaryFrame(SummaryFrame):
@@ -232,10 +231,10 @@ class RelaxationSummaryFrame(SummaryFrame):
             pd.DataFrame(
                 columns=[
                     "Strain (%)",
-                    "Min Force (N)",
-                    "Max Force (N)",
-                    "Min Stress (MPa)",
-                    "Max Stress (MPa)",
+                    "Min force (N)",
+                    "Max force (N)",
+                    "Min stress (MPa)",
+                    "Max stress (MPa)",
                     "Min E-modulus (MPa)",
                     "Max E-modulus (MPa)",
                     "a",
@@ -291,6 +290,97 @@ class RelaxationSummaryFrame(SummaryFrame):
         ]
 
 
+class FailureSummaryFrame(SummaryFrame):
+    """
+    Wrapper for pd.DataFrame that allows the class to be interacted with like a
+    standard pd.DataFrame.  It contains the summary from a compression to
+    failure test.
+    """
+
+    def __init__(self) -> None:
+
+        super().__init__(
+            pd.DataFrame(
+                columns=[
+                    "Ultimate strain (%)",
+                    "Ultimate force (N)",
+                    "Ultimate strength (MPa)",
+                    "Aborted?",
+                    "Slipped?",
+                    "Yield strain (%)",
+                    "Yield force (N)",
+                    "Yield strength (MPa)",
+                    "Toughness strain (%)",
+                    "Toughness (MPa)",
+                    "Stiffness strain (%)",
+                    "Stiffness (MPa)",
+                ]
+            )
+        )
+
+    def append_row(
+        self,
+        ultimate_strain_pct: float,
+        ultimate_force_N: float,
+        ultimate_strength_MPa: float,
+        aborted: float,
+        slipped: float,
+        yield_strain_pct: float,
+        yield_force_N: float,
+        yield_strength_MPa: float,
+        toughness_strain_pct: float,
+        toughness_MPa: float,
+        stiffness_strain_pct: float,
+        stiffness_MPa: float,
+    ) -> None:
+        """
+        Append a row to the summary frame.
+
+        Args:
+            ultimate_strain_pct: The strain at which the sample broke or the
+                test was aborted.
+            ultimate_force_N: The force at which the sample broke or the test
+                was aborted.
+            ultimate_strength_MPa: The stress at which the sample broke or the
+                test was aborted.
+            aborted: Flag indicating whether the test was aborted or if the
+                sample broke.  This flag is used to interpret the meaning of the
+                ultimate values.
+            slipped: Flag indicating whether the sample slipped during the test.
+                Slipped is defined as it partially breaking before continuing
+                on the achieve a greater ultimate strength.
+            yield_strain_pct: The strain at which the sample deformation changes
+                from elastic to plastic.
+            yield_force_N: The force at which the sample deformation changes
+                from elastic to plastic.
+            yield_strength_MPa: The stress at which the sample deformation
+                changes from elastic to plastic.
+            toughness_strain_pct: The strain at which the toughness was
+                calculated.
+            toughness_MPa: The toughness of the sample, which is defined as the
+                area under the stress-strain curve up until a specified strain.
+            stiffness_strain_pct: The strain at which the stiffness was
+                calculated.
+            stiffness_MPa: The stiffness of the sample, which is defined as the
+                stress at a specified strain.
+        """
+
+        self._summary_frame.loc[len(self._summary_frame)] = [
+            ultimate_strain_pct,
+            ultimate_force_N,
+            ultimate_strength_MPa,
+            aborted,
+            slipped,
+            yield_strain_pct,
+            yield_force_N,
+            yield_strength_MPa,
+            toughness_strain_pct,
+            toughness_MPa,
+            stiffness_strain_pct,
+            stiffness_MPa,
+        ]
+
+
 class Data:
     """
     Base class for all data.
@@ -304,15 +394,25 @@ class Data:
 
     def __init__(self, raw_data_frame: DataFrame, sheet_name: str) -> None:
 
+        self._processed_data_frame: DataFrame
+
         self.raw_data_frame: DataFrame = raw_data_frame
-        self.processed_data_frame: DataFrame = self.raw_data_frame
+        self.processed_data_frame = self.raw_data_frame
         self.sheet_name: str = sheet_name
 
     def __str__(self) -> str:
-        return str(self.processed_data_frame)
+        return str(self.processed_data_frame.frame)
+
+    @property
+    def processed_data_frame(self) -> DataFrame:
+        return self._processed_data_frame
+
+    @processed_data_frame.setter
+    def processed_data_frame(self, value: DataFrame) -> None:
+        self._processed_data_frame = value
 
     def write_to_excel(self, writer: pd.ExcelWriter) -> None:
-        self.processed_data_frame.to_excel(  # type: ignore
+        self.processed_data_frame.frame.to_excel(  # type: ignore
             writer,
             sheet_name=self.sheet_name,
             index=False,
@@ -367,10 +467,7 @@ class RelaxationData(ProcessedData):
             processed data.
     """
 
-    def __init__(
-        self,
-        raw_data_frame: DataFrame,
-    ) -> None:
+    def __init__(self, raw_data_frame: DataFrame) -> None:
 
         super().__init__(raw_data_frame, "Strain = ?%")
 
@@ -402,6 +499,14 @@ class RelaxationData(ProcessedData):
     @property
     def min_stress_MPa(self) -> float:
         return self.processed_data_frame.stress.min()  # type: ignore
+
+    @property
+    def processed_data_frame(self) -> RelaxationDataFrame:
+        return Data.processed_data_frame  # type: ignore
+
+    @processed_data_frame.setter
+    def processed_data_frame(self, value: RelaxationDataFrame) -> None:  # type: ignore
+        Data.processed_data_frame = value
 
     def process_raw_data(  # type: ignore
         self,
@@ -439,7 +544,7 @@ class RelaxationData(ProcessedData):
         # Filter the raw data to only obtain the data within the relation phase
         # of the sample for the specified strain
         self.processed_data_frame = RelaxationDataFrame(
-            self.raw_data_frame[
+            self.raw_data_frame.frame[
                 (self.raw_data_frame.strain > (relaxation_strain_pct - epsilon_pct))
                 & (self.raw_data_frame.strain < (relaxation_strain_pct + epsilon_pct))
             ]
@@ -456,11 +561,11 @@ class RelaxationData(ProcessedData):
             self.y,
             self.processed_data_frame.relative_time.head(  # type: ignore
                 regression_data_points
-                or self.processed_data_frame.index.size  # type: ignore
+                or self.processed_data_frame.frame.index.size  # type: ignore
             ),
             self.processed_data_frame.force.head(  # type: ignore
                 regression_data_points
-                or self.processed_data_frame.index.size  # type: ignore
+                or self.processed_data_frame.frame.index.size  # type: ignore
             ),
         )
 
@@ -491,6 +596,151 @@ class RelaxationData(ProcessedData):
         return a * np.exp(-t / tau) + b
 
 
+class FailureData(ProcessedData):
+    """
+    Data storage class for the compression to failure test.  A column containing
+    the toughness is also calculated and added to the data.
+
+    Args:
+        raw_data_frame: The raw data frame which will be used to create the
+            processed data.
+    """
+
+    def __init__(self, raw_data_frame: DataFrame) -> None:
+
+        super().__init__(raw_data_frame, "Toughness")
+
+        self._abort_strain_pct: float = 0.0
+        self._stiffness_strain_pct: float = 0.0
+        self._toughness_strain_pct: float = 0.0
+        self._yield_strain_pct: float = 0.0
+
+    @property
+    def aborted(self) -> bool:
+        return self.ultimate_strain_pct >= self._abort_strain_pct
+
+    @property
+    def processed_data_frame(self) -> FailureDataFrame:
+        return Data.processed_data_frame  # type: ignore
+
+    @processed_data_frame.setter
+    def processed_data_frame(self, value: FailureDataFrame) -> None:  # type: ignore
+        Data.processed_data_frame = value
+
+    @property
+    def slipped(self) -> bool:
+        return False  # TODO: implement
+
+    @property
+    def stiffness_MPa(self) -> float:
+        return self.processed_data_frame.stress.loc[
+            (self.processed_data_frame.strain - self._stiffness_strain_pct)
+            .abs()
+            .idxmin()  # type: ignore
+        ]
+
+    @property
+    def stiffness_strain_pct(self) -> float:
+        return self._stiffness_strain_pct
+
+    @property
+    def toughness_MPa(self) -> float:
+        return self.processed_data_frame.toughness.loc[
+            (self.processed_data_frame.strain - self._toughness_strain_pct)
+            .abs()
+            .idxmin()  # type: ignore
+        ]
+
+    @property
+    def toughness_strain_pct(self) -> float:
+        return self._toughness_strain_pct
+
+    @property
+    def ultimate_force_N(self) -> float:
+        return self.processed_data_frame.force.loc[
+            self.processed_data_frame.stress.idxmax()  # type: ignore
+        ]
+
+    @property
+    def ultimate_strain_pct(self) -> float:
+        return self.processed_data_frame.strain.loc[
+            self.processed_data_frame.stress.idxmax()  # type: ignore
+        ]
+
+    @property
+    def ultimate_strength_MPa(self) -> float:
+        return self.processed_data_frame.stress.max()  # type: ignore
+
+    @property
+    def yield_force_N(self) -> float:
+        return self.processed_data_frame.force.loc[
+            (self.processed_data_frame.strain - self._yield_strain_pct)
+            .abs()
+            .idxmin()  # type: ignore
+        ]
+
+    @property
+    def yield_strain_pct(self) -> float:
+        return self._yield_strain_pct
+
+    @property
+    def yield_strength_MPa(self) -> float:
+        return self.processed_data_frame.stress.loc[
+            (self.processed_data_frame.strain - self._yield_strain_pct)
+            .abs()
+            .idxmin()  # type: ignore
+        ]
+
+    def process_raw_data(  # type: ignore
+        self,
+        abort_strain_pct: float,
+        toughness_strain_pct: float,
+        stiffness_strain_pct: float,
+    ) -> None:
+        """
+        Processes the raw data read from the CSV output of the Instron.
+
+        Dataset filtering:
+            -
+
+        Columns that are populated:
+            - Toughness: The area under the stress-strain curve up until each
+                data point.
+
+        Summary parameters that are calculated:
+            -
+
+
+        Args:
+            abort_strain_pct: The strain threshold at which the test is
+                considered to be aborted.
+            toughness_strain_pct: The strain at which the toughness is
+                calculated.
+            stiffness_strain_pct: The strain at which the stiffness is
+                calculated.
+        """
+
+        self._abort_strain_pct = abort_strain_pct
+        self._toughness_strain_pct = toughness_strain_pct
+        self._stiffness_strain_pct = stiffness_strain_pct
+
+        self.processed_data_frame = FailureDataFrame(self.raw_data_frame.frame)
+
+        # Add the toughness column
+        # NOTE: np.insert is required because the output of
+        #       cumulative_trapezoid() is an array one less than the length of
+        #       the data frame
+        self.processed_data_frame.toughness = pd.Series(  # type: ignore
+            np.insert(
+                cumulative_trapezoid(
+                    self.processed_data_frame.stress, self.processed_data_frame.strain
+                ),
+                0,
+                0,
+            )
+        )
+
+
 class Summary:
     """
     Base class for all summaries.
@@ -502,13 +752,13 @@ class Summary:
         self.sheet_name: str = "Summary"
 
     def __str__(self) -> str:
-        return str(self.summary_frame)
+        return str(self.summary_frame.frame)
 
     def clear_all_rows(self) -> None:
-        self.summary_frame.drop(self.summary_frame.index, inplace=True)  # type: ignore
+        self.summary_frame.frame.drop(self.summary_frame.frame.index, inplace=True)  # type: ignore
 
     def write_to_excel(self, writer: pd.ExcelWriter) -> None:
-        self.summary_frame.to_excel(  # type: ignore
+        self.summary_frame.frame.to_excel(  # type: ignore
             writer,
             sheet_name=self.sheet_name,
             index=False,
@@ -569,4 +819,78 @@ class RelaxationSummary(Summary):
             a,
             b,
             tau,
+        )
+
+
+class FailureSummary(Summary):
+    """
+    Data storage class for the summary of the compression to failure test.
+    """
+
+    def __init__(self) -> None:
+
+        super().__init__()
+
+        self.summary_frame: FailureSummaryFrame = FailureSummaryFrame()  # type: ignore
+
+    def append_row(
+        self,
+        ultimate_strain_pct: float,
+        ultimate_force_N: float,
+        ultimate_strength_MPa: float,
+        aborted: float,
+        slipped: float,
+        yield_strain_pct: float,
+        yield_force_N: float,
+        yield_strength_MPa: float,
+        toughness_strain_pct: float,
+        toughness_MPa: float,
+        stiffness_strain_pct: float,
+        stiffness_MPa: float,
+    ) -> None:
+        """
+        Append a row to the summary frame.
+
+        Args:
+            ultimate_strain_pct: The strain at which the sample broke or the
+                test was aborted.
+            ultimate_force_N: The force at which the sample broke or the test
+                was aborted.
+            ultimate_strength_MPa: The stress at which the sample broke or the
+                test was aborted.
+            aborted: Flag indicating whether the test was aborted or if the
+                sample broke.  This flag is used to interpret the meaning of the
+                ultimate values.
+            slipped: Flag indicating whether the sample slipped during the test.
+                Slipped is defined as it partially breaking before continuing
+                on the achieve a greater ultimate strength.
+            yield_strain_pct: The strain at which the sample deformation changes
+                from elastic to plastic.
+            yield_force_N: The force at which the sample deformation changes
+                from elastic to plastic.
+            yield_strength_MPa: The stress at which the sample deformation
+                changes from elastic to plastic.
+            toughness_strain_pct: The strain at which the toughness was
+                calculated.
+            toughness_MPa: The toughness of the sample, which is defined as the
+                area under the stress-strain curve up until a specified strain.
+            stiffness_strain_pct: The strain at which the stiffness was
+                calculated.
+            stiffness_MPa: The stiffness of the sample, which is defined as the
+                stress at a specified strain.
+        """
+
+        self.summary_frame.append_row(
+            ultimate_strain_pct,
+            ultimate_force_N,
+            ultimate_strength_MPa,
+            aborted,
+            slipped,
+            yield_strain_pct,
+            yield_force_N,
+            yield_strength_MPa,
+            toughness_strain_pct,
+            toughness_MPa,
+            stiffness_strain_pct,
+            stiffness_MPa,
         )

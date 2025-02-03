@@ -279,7 +279,6 @@ class RelaxationAnalyserParser(AnalyserParser):
             type=ArgparseTypes.positive_non_zero_integer,
             default=6,
         )
-
         parser.add_argument(  # type: ignore
             "-s",
             "--relaxation-step",
@@ -308,6 +307,82 @@ class RelaxationAnalyserParser(AnalyserParser):
         )
 
 
+class FailureAnalyserParser(AnalyserParser):
+    """
+    Parser for the FailureAnalyser.
+
+    Args:
+        parsed_arguments: The parsed command line arguments.
+    """
+
+    def __init__(self, parsed_arguments: argparse.Namespace) -> None:
+
+        super().__init__(parsed_arguments)
+
+        self.abort_strain_pct: float = parsed_arguments.abort_strain
+        self.toughness_strain_pct: float = parsed_arguments.toughness_strain
+        self.stiffness_strain_pct: float = parsed_arguments.stiffness_strain
+
+    def create_analysers(self) -> list[analyser.FailureAnalyser]:
+        """
+        Creates the RelaxationAnalysers from the parsed command line arguments.
+
+        Returns:
+            list[analyser.RelaxationAnalyser]: List of all RelaxationAnalysers to be used
+                for analysis.
+        """
+
+        return [
+            analyser.FailureAnalyser(
+                input_csv,
+                output_xlsx,
+                self.abort_strain_pct,
+                self.toughness_strain_pct,
+                self.stiffness_strain_pct,
+            )
+            for input_csv, output_xlsx in self.files
+        ]
+
+    @staticmethod
+    def add_parser(subparser: argparse._SubParsersAction) -> None:  # type: ignore
+        """Adds a parser to the analyser subparser.
+
+        Args:
+            subparser: Analyser subparser to which to add the compression to
+                failure analyser parser.
+        """
+
+        parser: argparse.ArgumentParser = subparser.add_parser(  # type: ignore
+            "failure",
+            description="Analyses the data assuming it contains compression "
+            "to failure data",
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        )
+
+        parser.add_argument(  # type: ignore
+            "-a",
+            "--abort-strain",
+            help="The strain at which the test aborts even if the sample has "
+            "not yet failed",
+            type=ArgparseTypes.positive_non_zero_float,
+            default=95.0,
+        )
+        parser.add_argument(  # type: ignore
+            "-t",
+            "--toughness-strain",
+            help="The strain at which the toughness is calculated",
+            type=ArgparseTypes.positive_non_zero_float,
+            default=4.0,
+        )
+        parser.add_argument(  # type: ignore
+            "-s",
+            "--stiffness-strain",
+            help="The strain at which the stiffness is calculated",
+            type=ArgparseTypes.positive_non_zero_float,
+            default=4.0,
+        )
+
+
 if __name__ == "__main__":
     parser: argparse.ArgumentParser = AnalyserParser.create_parser()
     subparser: argparse._SubParsersAction = (  # type: ignore
@@ -316,6 +391,7 @@ if __name__ == "__main__":
 
     # Add the test-specific subparsers
     RelaxationAnalyserParser.add_parser(subparser)  # type: ignore
+    FailureAnalyserParser.add_parser(subparser)  # type: ignore
 
     # Parse the arguments
     parsed_arguments: argparse.Namespace = parser.parse_args()
@@ -324,6 +400,8 @@ if __name__ == "__main__":
     match str(parsed_arguments.test):
         case "relaxation":
             analysers = RelaxationAnalyserParser(parsed_arguments).create_analysers() # type: ignore
+        case "failure":
+            analysers = FailureAnalyserParser(parsed_arguments).create_analysers() # type: ignore
         case _:
             pass
 
