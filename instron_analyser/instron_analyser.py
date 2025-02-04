@@ -405,8 +405,8 @@ if __name__ == "__main__":
         case _:
             pass
 
-    for a in analysers: # type: ignore
-        a.analyse()
-        a.save()
-
-        print(a)
+    for i in range(len(analysers)): # type: ignore
+        print(f"{i + 1}/{len(analysers)}: {analysers[i].output_xlsx.name}") # type: ignore
+        
+        analysers[i].analyse() # type: ignore
+        analysers[i].save() # type: ignore

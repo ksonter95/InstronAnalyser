@@ -400,9 +400,6 @@ class Data:
         self.processed_data_frame = self.raw_data_frame
         self.sheet_name: str = sheet_name
 
-    def __str__(self) -> str:
-        return str(self.processed_data_frame.frame)
-
     @property
     def processed_data_frame(self) -> DataFrame:
         return self._processed_data_frame
@@ -502,11 +499,11 @@ class RelaxationData(ProcessedData):
 
     @property
     def processed_data_frame(self) -> RelaxationDataFrame:
-        return Data.processed_data_frame  # type: ignore
+        return super().processed_data_frame  # type: ignore
 
     @processed_data_frame.setter
     def processed_data_frame(self, value: RelaxationDataFrame) -> None:  # type: ignore
-        Data.processed_data_frame = value
+        super(RelaxationData, RelaxationData).processed_data_frame.__set__(self, value)  # type: ignore
 
     def process_raw_data(  # type: ignore
         self,
@@ -621,11 +618,11 @@ class FailureData(ProcessedData):
 
     @property
     def processed_data_frame(self) -> FailureDataFrame:
-        return Data.processed_data_frame  # type: ignore
+        return super().processed_data_frame  # type: ignore
 
     @processed_data_frame.setter
     def processed_data_frame(self, value: FailureDataFrame) -> None:  # type: ignore
-        Data.processed_data_frame = value
+        super(FailureData, FailureData).processed_data_frame.__set__(self, value)  # type: ignore
 
     @property
     def slipped(self) -> bool:

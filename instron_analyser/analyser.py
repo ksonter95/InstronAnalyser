@@ -119,22 +119,6 @@ class RelaxationAnalyser(Analyser):
         self.epsilon_pct: float = epsilon_pct
         self.regression_data_points: Optional[int] = regression_data_points
 
-    def __str__(self) -> str:
-
-        summary = f"{self.output_xlsx.name}\n"
-        summary += "Equation: F = a * e^(-t/tau) + b\n"
-        summary += "\n"
-
-        for i in range(self.relaxation_intervals):
-            summary += f"Strain (%) = {self.relaxation_strains_pct[i]}\n"
-            summary += f" - a   = {self.processed_data[i].a}\n"
-            summary += f" - b   = {self.processed_data[i].b}\n"
-            summary += f" - tau = {self.processed_data[i].tau}\n"
-
-        summary += "\n"
-
-        return summary
-
     @property
     def processed_data(self) -> list[data.RelaxationData]:  # type: ignore
         return super().processed_data  # type: ignore
@@ -207,7 +191,7 @@ class RelaxationAnalyser(Analyser):
 
     @summary.setter
     def summary(self, value: data.RelaxationSummary) -> None:  # type: ignore
-        Analyser.summary = value
+        super(RelaxationAnalyser, RelaxationAnalyser).summary.__set__(self, value)  # type: ignore
 
     def analyse(self) -> None:
         """
@@ -270,11 +254,6 @@ class FailureAnalyser(Analyser):
 
         self.processed_data.append(data.FailureData(self.raw_data.raw_data_frame))
 
-    def __str__(self) -> str:
-
-        # TODO
-        return super().__str__()
-
     @property
     def processed_data(self) -> list[data.FailureData]:  # type: ignore
         return super().processed_data  # type: ignore
@@ -289,7 +268,7 @@ class FailureAnalyser(Analyser):
 
     @summary.setter
     def summary(self, value: data.FailureSummary) -> None:  # type: ignore
-        Analyser.summary = value
+        super(FailureAnalyser, FailureAnalyser).summary.__set__(self, value)  # type: ignore
 
     def analyse(self) -> None:
         """
