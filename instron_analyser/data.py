@@ -189,6 +189,14 @@ class FailureDataFrame(DataFrame):
         self.toughness = pd.Series([0.0] * self._data_frame.index.size)  # type: ignore
 
     @property
+    def stiffness(self) -> "pd.Series[float]":
+        return self._data_frame["Stiffness (N/mm)"]  # type: ignore
+
+    @stiffness.setter
+    def stiffness(self, value: "pd.Series[float]") -> None:
+        self._data_frame["Stiffness (N/mm)"] = value
+
+    @property
     def toughness(self) -> "pd.Series[float]":
         return self._data_frame["Toughness (MPa)"]  # type: ignore
 
@@ -313,7 +321,8 @@ class FailureSummaryFrame(SummaryFrame):
                     "Toughness strain (%)",
                     "Toughness (MPa)",
                     "Stiffness strain (%)",
-                    "Stiffness (MPa)",
+                    "Stiffness (N/mm)",
+                    "E-modulus (MPa)",
                 ]
             )
         )
@@ -331,7 +340,8 @@ class FailureSummaryFrame(SummaryFrame):
         toughness_strain_pct: float,
         toughness_MPa: float,
         stiffness_strain_pct: float,
-        stiffness_MPa: float,
+        stiffness_N_mm: float,
+        e_modulus_MPa: float,
     ) -> None:
         """
         Append a row to the summary frame.
@@ -361,8 +371,10 @@ class FailureSummaryFrame(SummaryFrame):
                 area under the stress-strain curve up until a specified strain.
             stiffness_strain_pct: The strain at which the stiffness was
                 calculated.
-            stiffness_MPa: The stiffness of the sample, which is defined as the
+            stiffness_N_mm: The stiffness of the sample, which is defined as the
                 stress at a specified strain.
+            e_modulus_MPa: The Young's modulus of the sample, which is defined
+                as the slope of the stress-strain curve at a specified strain.
         """
 
         self._summary_frame.loc[len(self._summary_frame)] = [
@@ -377,7 +389,8 @@ class FailureSummaryFrame(SummaryFrame):
             toughness_strain_pct,
             toughness_MPa,
             stiffness_strain_pct,
-            stiffness_MPa,
+            stiffness_N_mm,
+            e_modulus_MPa,
         ]
 
 
@@ -605,12 +618,14 @@ class FailureData(ProcessedData):
 
     def __init__(self, raw_data_frame: DataFrame) -> None:
 
-        super().__init__(raw_data_frame, "Toughness")
+        super().__init__(raw_data_frame, "Toughness and Stiffness")
 
         self._abort_strain_pct: float = 0.0
         self._stiffness_strain_pct: float = 0.0
         self._toughness_strain_pct: float = 0.0
         self._yield_strain_pct: float = 0.0
+
+        self.e_modulus_MPa: float = 0.0
 
     @property
     def aborted(self) -> bool:
@@ -629,8 +644,8 @@ class FailureData(ProcessedData):
         return False  # TODO: implement
 
     @property
-    def stiffness_MPa(self) -> float:
-        return self.processed_data_frame.stress.loc[
+    def stiffness_N_mm(self) -> float:
+        return self.processed_data_frame.stiffness.loc[
             (self.processed_data_frame.strain - self._stiffness_strain_pct)
             .abs()
             .idxmin()  # type: ignore
@@ -693,6 +708,8 @@ class FailureData(ProcessedData):
         abort_strain_pct: float,
         toughness_strain_pct: float,
         stiffness_strain_pct: float,
+        e_modulus_strain1_pct: float,
+        e_modulus_strain2_pct: float,
     ) -> None:
         """
         Processes the raw data read from the CSV output of the Instron.
@@ -703,9 +720,12 @@ class FailureData(ProcessedData):
         Columns that are populated:
             - Toughness: The area under the stress-strain curve up until each
                 data point.
+            - Stiffness: The extent to which an object resists deformation in
+                response to an applied force.
 
         Summary parameters that are calculated:
-            -
+            - E-modulus: The slope of the stress-strain curve between the
+                specified strains as determined by linear regression.
 
 
         Args:
@@ -715,6 +735,12 @@ class FailureData(ProcessedData):
                 calculated.
             stiffness_strain_pct: The strain at which the stiffness is
                 calculated.
+            e_modulus_strain1_pct: The strain value which defines the first
+                datapoint on the stress-strain curve used to calculate the
+                Young's modulus.
+            e_modulus_strain2_pct: The strain value which defines the second
+                datapoint on the stress-strain curve used to calculate the
+                Young's modulus.
         """
 
         self._abort_strain_pct = abort_strain_pct
@@ -730,12 +756,57 @@ class FailureData(ProcessedData):
         self.processed_data_frame.toughness = pd.Series(  # type: ignore
             np.insert(
                 cumulative_trapezoid(
-                    self.processed_data_frame.stress, self.processed_data_frame.strain
+                    self.processed_data_frame.stress,
+                    # NOTE: convert from percentage to decimal
+                    self.processed_data_frame.strain / 100,
                 ),
                 0,
                 0,
             )
         )
+
+        # Add the stiffness column
+        # NOTE: k = F / δ
+        #       Where:
+        #           - k: stiffness
+        #           - F: force
+        #           - δ: displacement
+        self.processed_data_frame.stiffness = self.processed_data_frame.force / (
+            self.processed_data_frame.displacement
+        )
+
+        # Calculate the parameters of the linear equation that best fits the
+        # data points
+        [self.e_modulus_MPa, _], _ = curve_fit(  # type: ignore
+            self.y,
+            self.processed_data_frame.strain[
+                (self.processed_data_frame.strain > (e_modulus_strain1_pct))
+                & (self.processed_data_frame.strain < (e_modulus_strain2_pct))
+            ]
+            # NOTE: convert from percentage to decimal
+            / 100.0,
+            self.processed_data_frame.stress[
+                (self.processed_data_frame.strain > (e_modulus_strain1_pct))
+                & (self.processed_data_frame.strain < (e_modulus_strain2_pct))
+            ],
+        )
+
+    @staticmethod
+    def y(x: float, E: float, c: float) -> float:
+        """
+        Calculates the value of following equation:
+        y = E * x + c
+
+        Args:
+            x: Strain at which the stress is calculated.
+            E: Young's modulus (slope of the stress-strain curve).
+            c: Initial value of the function.
+
+        Returns:
+            Value of the function at strain x.
+        """
+
+        return E * x + c
 
 
 class Summary:
@@ -843,7 +914,8 @@ class FailureSummary(Summary):
         toughness_strain_pct: float,
         toughness_MPa: float,
         stiffness_strain_pct: float,
-        stiffness_MPa: float,
+        stiffness_N_mm: float,
+        e_modulus_MPa: float,
     ) -> None:
         """
         Append a row to the summary frame.
@@ -873,8 +945,10 @@ class FailureSummary(Summary):
                 area under the stress-strain curve up until a specified strain.
             stiffness_strain_pct: The strain at which the stiffness was
                 calculated.
-            stiffness_MPa: The stiffness of the sample, which is defined as the
+            stiffness_N_mm: The stiffness of the sample, which is defined as the
                 stress at a specified strain.
+            e_modulus_MPa: The Young's modulus of the sample, which is defined
+                as the slope of the stress-strain curve at a specified strain.
         """
 
         self.summary_frame.append_row(
@@ -889,5 +963,6 @@ class FailureSummary(Summary):
             toughness_strain_pct,
             toughness_MPa,
             stiffness_strain_pct,
-            stiffness_MPa,
+            stiffness_N_mm,
+            e_modulus_MPa,
         )

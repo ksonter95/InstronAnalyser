@@ -235,6 +235,12 @@ class FailureAnalyser(Analyser):
             to be aborted.
         toughness_strain_pct: The strain at which the toughness is calculated.
         stiffness_strain_pct: The strain at which the stiffness is calculated.
+        e_modulus_strain1_pct: The strain value which defines the first
+            datapoint on the stress-strain curve used to calculate the Young's
+            modulus.
+        e_modulus_strain2_pct: The strain value which defines the second
+            datapoint on the stress-strain curve used to calculate the Young's
+            modulus.
     """
 
     def __init__(
@@ -244,6 +250,8 @@ class FailureAnalyser(Analyser):
         abort_strain_pct: float,
         toughness_strain_pct: float,
         stiffness_strain_pct: float,
+        e_modulus_strain1_pct: float,
+        e_modulus_strain2_pct: float,
     ) -> None:
 
         super().__init__(input_csv, output_xlsx, data.FailureSummary())
@@ -251,6 +259,8 @@ class FailureAnalyser(Analyser):
         self.abort_strain_pct: float = abort_strain_pct
         self.toughness_strain_pct: float = toughness_strain_pct
         self.stiffness_strain_pct: float = stiffness_strain_pct
+        self.e_modulus_strain1_pct: float = e_modulus_strain1_pct
+        self.e_modulus_strain2_pct: float = e_modulus_strain2_pct
 
         self.processed_data.append(data.FailureData(self.raw_data.raw_data_frame))
 
@@ -278,7 +288,11 @@ class FailureAnalyser(Analyser):
         self.summary.clear_all_rows()
 
         self.processed_data[0].process_raw_data(
-            self.abort_strain_pct, self.toughness_strain_pct, self.stiffness_strain_pct
+            self.abort_strain_pct,
+            self.toughness_strain_pct,
+            self.stiffness_strain_pct,
+            self.e_modulus_strain1_pct,
+            self.e_modulus_strain2_pct,
         )
 
         self.summary.append_row(
@@ -293,5 +307,6 @@ class FailureAnalyser(Analyser):
             self.processed_data[0].toughness_strain_pct,
             self.processed_data[0].toughness_MPa,
             self.processed_data[0].stiffness_strain_pct,
-            self.processed_data[0].stiffness_MPa,
+            self.processed_data[0].stiffness_N_mm,
+            self.processed_data[0].e_modulus_MPa,
         )

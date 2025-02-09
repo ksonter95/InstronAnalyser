@@ -55,6 +55,31 @@ class ArgparseTypes:
         return Path(value)
 
     @staticmethod
+    def percentage_float(value: str) -> float:
+        """
+        Checks the argument to determine if it is a percentage float (i.e. it
+        can contain the values 0~100).
+
+        Args:
+            value: The number which is to be checked.
+
+        Raises:
+            argparse.ArgumentTypeError: If the number is not a percentage float.
+
+        Returns:
+            float: The number if it is valid.
+        """
+
+        try:
+            float_value = float(value)
+            if float_value < 0 or float_value > 100:
+                raise ValueError
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"'{value}' is not >=0 and <=100")
+
+        return float(value)
+
+    @staticmethod
     def positive_non_zero_float(value: str) -> float:
         """
         Checks the argument to determine if it is a non-zero positive float.
@@ -322,6 +347,8 @@ class FailureAnalyserParser(AnalyserParser):
         self.abort_strain_pct: float = parsed_arguments.abort_strain
         self.toughness_strain_pct: float = parsed_arguments.toughness_strain
         self.stiffness_strain_pct: float = parsed_arguments.stiffness_strain
+        self.e_modulus_strain1_pct: float = parsed_arguments.e_modulus_strain1
+        self.e_modulus_strain2_pct: float = parsed_arguments.e_modulus_strain2
 
     def create_analysers(self) -> list[analyser.FailureAnalyser]:
         """
@@ -339,6 +366,8 @@ class FailureAnalyserParser(AnalyserParser):
                 self.abort_strain_pct,
                 self.toughness_strain_pct,
                 self.stiffness_strain_pct,
+                self.e_modulus_strain1_pct,
+                self.e_modulus_strain2_pct,
             )
             for input_csv, output_xlsx in self.files
         ]
@@ -381,6 +410,24 @@ class FailureAnalyserParser(AnalyserParser):
             type=ArgparseTypes.positive_non_zero_float,
             default=4.0,
         )
+        parser.add_argument(  # type: ignore
+            "-e",
+            "--e-modulus_strain1",
+            help="The strain value which defines the first datapoint on the "
+            "stress-strain curve used to calculate the Young's modulus.  "
+            "It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)",
+            type=ArgparseTypes.percentage_float,
+            default=10,
+        )
+        parser.add_argument(  # type: ignore
+            "-f",
+            "--e-modulus_strain2",
+            help="The strain value which defines the second datapoint on the "
+            "stress-strain curve used to calculate the Young's modulus.  "
+            "It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)",
+            type=ArgparseTypes.percentage_float,
+            default=15,
+        )
 
 
 if __name__ == "__main__":
@@ -399,14 +446,14 @@ if __name__ == "__main__":
     analysers: list[analyser.Analyser]
     match str(parsed_arguments.test):
         case "relaxation":
-            analysers = RelaxationAnalyserParser(parsed_arguments).create_analysers() # type: ignore
+            analysers = RelaxationAnalyserParser(parsed_arguments).create_analysers()  # type: ignore
         case "failure":
-            analysers = FailureAnalyserParser(parsed_arguments).create_analysers() # type: ignore
+            analysers = FailureAnalyserParser(parsed_arguments).create_analysers()  # type: ignore
         case _:
             pass
 
-    for i in range(len(analysers)): # type: ignore
-        print(f"{i + 1}/{len(analysers)}: {analysers[i].output_xlsx.name}") # type: ignore
-        
-        analysers[i].analyse() # type: ignore
-        analysers[i].save() # type: ignore
+    for i in range(len(analysers)):  # type: ignore
+        print(f"{i + 1}/{len(analysers)}: {analysers[i].output_xlsx.name}")  # type: ignore
+
+        analysers[i].analyse()  # type: ignore
+        analysers[i].save()  # type: ignore
