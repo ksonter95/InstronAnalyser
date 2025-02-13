@@ -62,12 +62,12 @@ class Analyser:
             # Save the raw data
             self.raw_data.write_to_excel(writer)
 
+            # Save the analysis summary
+            self.summary.write_to_excel(writer)
+
             # Save all the processed data
             for d in self.processed_data:
                 d.write_to_excel(writer)
-
-            # Save the analysis summary
-            self.summary.write_to_excel(writer)
 
 
 class RelaxationAnalyser(Analyser):
@@ -209,12 +209,10 @@ class RelaxationAnalyser(Analyser):
 
             self.summary.append_row(
                 self.relaxation_strains_pct[i],
-                self.processed_data[i].min_force_N,
-                self.processed_data[i].max_force_N,
                 self.processed_data[i].min_stress_MPa,
                 self.processed_data[i].max_stress_MPa,
-                self.processed_data[i].min_e_modulus_MPa,
-                self.processed_data[i].max_e_modulus_MPa,
+                self.processed_data[i].min_force_N,
+                self.processed_data[i].max_force_N,
                 self.processed_data[i].a,
                 self.processed_data[i].b,
                 self.processed_data[i].tau,
@@ -296,17 +294,15 @@ class FailureAnalyser(Analyser):
         )
 
         self.summary.append_row(
-            self.processed_data[0].ultimate_strain_pct,
-            self.processed_data[0].ultimate_force_N,
-            self.processed_data[0].ultimate_strength_MPa,
-            self.processed_data[0].aborted,
-            self.processed_data[0].slipped,
-            self.processed_data[0].yield_strain_pct,
             self.processed_data[0].yield_force_N,
+            self.processed_data[0].yield_strain_pct,
             self.processed_data[0].yield_strength_MPa,
+            self.processed_data[0].ultimate_force_N,
+            self.processed_data[0].ultimate_strain_pct,
+            self.processed_data[0].ultimate_strength_MPa,
+            self.processed_data[0].e_modulus_MPa,
             self.processed_data[0].toughness_strain_pct,
             self.processed_data[0].toughness_MPa,
             self.processed_data[0].stiffness_strain_pct,
             self.processed_data[0].stiffness_N_mm,
-            self.processed_data[0].e_modulus_MPa,
         )

@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import warnings
 
 from pathlib import Path
 from scipy.integrate import cumulative_trapezoid  # type: ignore
@@ -27,15 +26,11 @@ class DataFrame:
 
     @property
     def displacement(self) -> "pd.Series[float]":
-        return self._data_frame["Displacement (mm)"]  # type: ignore
-
-    @property
-    def e_modulus(self) -> "pd.Series[float]":
-        return self._data_frame["E-modulus (MPa)"]  # type: ignore
+        return self._data_frame["Displacement [mm]"]  # type: ignore
 
     @property
     def force(self) -> "pd.Series[float]":
-        return self._data_frame["Force (N)"]  # type: ignore
+        return self._data_frame["Force [N]"]  # type: ignore
 
     @property
     def frame(self) -> pd.DataFrame:
@@ -47,15 +42,15 @@ class DataFrame:
 
     @property
     def strain(self) -> "pd.Series[float]":
-        return self._data_frame["Strain (%)"]  # type: ignore
+        return self._data_frame["Strain [%]"]  # type: ignore
 
     @property
     def stress(self) -> "pd.Series[float]":
-        return self._data_frame["Compressive stress (MPa)"]  # type: ignore
+        return self._data_frame["Compressive stress [MPa]"]  # type: ignore
 
     @property
     def time(self) -> "pd.Series[float]":
-        return self._data_frame["Time (s)"]  # type: ignore
+        return self._data_frame["Time [s]"]  # type: ignore
 
     @staticmethod
     def load(csv: Path) -> "DataFrame":
@@ -79,6 +74,9 @@ class DataFrame:
                     " ".join(map(str, c)).strip()
                     if not c[1].startswith("Unnamed")
                     else str(c[0])
+                ).translate(
+                    # NOTE: replace parenthesis with square brackets
+                    str.maketrans("()", "[]")
                 )
                 for c in data_frame.columns
             ]
@@ -91,11 +89,11 @@ class DataFrame:
             #  - Data must be in rows 21-... (0-indexed) and must be all floating
             #    point numbers
             headings: list[str] = [
-                "Time (s)",
-                "Displacement (mm)",
-                "Force (N)",
-                "Strain (%)",
-                "Compressive stress (MPa)",
+                "Time [s]",
+                "Displacement [mm]",
+                "Force [N]",
+                "Strain [%]",
+                "Compressive stress [MPa]",
             ]
             if (
                 data_frame.columns.tolist() != headings
@@ -105,18 +103,6 @@ class DataFrame:
 
         except:
             raise ValueError(f"Invalid CSV file: {csv}")
-
-        # Add the Young's modulus column
-        # E = σ / ε
-        #   - E = Young's modulus (in Pa)
-        #   - σ = stress (in Pa)
-        #   - ε = strain (unitless)
-        # NOTE: handling divide by zero runtime warning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=RuntimeWarning)
-            data_frame["E-modulus (MPa)"] = data_frame["Compressive stress (MPa)"] / (
-                data_frame["Strain (%)"] / 100
-            )
 
         return DataFrame(data_frame)
 
@@ -136,37 +122,29 @@ class RelaxationDataFrame(DataFrame):
 
         # Initially populate the processed data columns with default values
         self.relative_time = pd.Series([0.0] * self._data_frame.index.size)  # type: ignore
-        self.regression_force = pd.Series([0] * self._data_frame.index.size)  # type: ignore
+        self.regression_stress = pd.Series([0] * self._data_frame.index.size)  # type: ignore
 
     @property
-    def regression_force(self) -> "pd.Series[float]":
-        return self._data_frame["Regression Force (N)"]  # type: ignore
+    def regression_stress(self) -> "pd.Series[float]":
+        return self._data_frame["Regression Stress [MPa]"]  # type: ignore
 
-    @regression_force.setter
-    def regression_force(self, value: "pd.Series[float]") -> None:
-        self._data_frame["Regression Force (N)"] = value
-
-        # Move the regression force column to be directly after the force column
-        column: pd.Series = self._data_frame.pop("Regression Force (N)")  # type: ignore
-        self._data_frame.insert(  # type: ignore
-            self._data_frame.columns.get_loc("Force (N)") + 1,  # type: ignore
-            "Regression Force (N)",
-            column,
-        )
+    @regression_stress.setter
+    def regression_stress(self, value: "pd.Series[float]") -> None:
+        self._data_frame["Regression Stress [MPa]"] = value
 
     @property
     def relative_time(self) -> "pd.Series[float]":
-        return self._data_frame["Relative Time (s)"]  # type: ignore
+        return self._data_frame["Relative Time [s]"]  # type: ignore
 
     @relative_time.setter
     def relative_time(self, value: "pd.Series[float]") -> None:
-        self._data_frame["Relative Time (s)"] = value
+        self._data_frame["Relative Time [s]"] = value
 
         # Move the relative time column to be directly after the time column
-        column: pd.Series = self._data_frame.pop("Relative Time (s)")  # type: ignore
+        column: pd.Series = self._data_frame.pop("Relative Time [s]")  # type: ignore
         self._data_frame.insert(  # type: ignore
-            self._data_frame.columns.get_loc("Time (s)") + 1,  # type: ignore
-            "Relative Time (s)",
+            self._data_frame.columns.get_loc("Time [s]") + 1,  # type: ignore
+            "Relative Time [s]",
             column,
         )
 
@@ -190,19 +168,19 @@ class FailureDataFrame(DataFrame):
 
     @property
     def stiffness(self) -> "pd.Series[float]":
-        return self._data_frame["Stiffness (N/mm)"]  # type: ignore
+        return self._data_frame["Stiffness [N/mm]"]  # type: ignore
 
     @stiffness.setter
     def stiffness(self, value: "pd.Series[float]") -> None:
-        self._data_frame["Stiffness (N/mm)"] = value
+        self._data_frame["Stiffness [N/mm]"] = value
 
     @property
     def toughness(self) -> "pd.Series[float]":
-        return self._data_frame["Toughness (MPa)"]  # type: ignore
+        return self._data_frame["Toughness [MPa]"]  # type: ignore
 
     @toughness.setter
     def toughness(self, value: "pd.Series[float]") -> None:
-        self._data_frame["Toughness (MPa)"] = value
+        self._data_frame["Toughness [MPa]"] = value
 
 
 class SummaryFrame:
@@ -238,13 +216,11 @@ class RelaxationSummaryFrame(SummaryFrame):
         super().__init__(
             pd.DataFrame(
                 columns=[
-                    "Strain (%)",
-                    "Min force (N)",
-                    "Max force (N)",
-                    "Min stress (MPa)",
-                    "Max stress (MPa)",
-                    "Min E-modulus (MPa)",
-                    "Max E-modulus (MPa)",
+                    "Strain [%]",
+                    "Min stress [MPa]",
+                    "Max stress [MPa]",
+                    "Min force [N]",
+                    "Max force [N]",
                     "a",
                     "b",
                     "tau",
@@ -255,12 +231,10 @@ class RelaxationSummaryFrame(SummaryFrame):
     def append_row(
         self,
         strain_pct: float,
-        min_force_N: float,
-        max_force_N: float,
         min_stress_MPa: float,
         max_stress_MPa: float,
-        min_e_modulus_MPa: float,
-        max_e_modulus_MPa: float,
+        min_force_N: float,
+        max_force_N: float,
         a: float,
         b: float,
         tau: float,
@@ -270,12 +244,10 @@ class RelaxationSummaryFrame(SummaryFrame):
 
         Args:
             strain_pct: The relaxation strain.
-            min_force_N: The minimum force during relaxation.
-            max_force_N: The maximum force during relaxation.
             min_stress_MPa: The minimum stress during relaxation.
             max_stress_MPa: The maximum stress during relaxation.
-            min_e_modulus_MPa: The minimum E-modulus during relaxation.
-            max_e_modulus_MPa: The maximum E-modulus during relaxation.
+            min_force_N: The minimum force during relaxation.
+            max_force_N: The maximum force during relaxation.
             a: The exponential decay equation coefficient a
                 (y = a * e^(-t / tau) + b)
             b: The exponential decay equation coefficient b
@@ -286,12 +258,10 @@ class RelaxationSummaryFrame(SummaryFrame):
 
         self._summary_frame.loc[len(self._summary_frame)] = [
             strain_pct,
-            min_force_N,
-            max_force_N,
             min_stress_MPa,
             max_stress_MPa,
-            min_e_modulus_MPa,
-            max_e_modulus_MPa,
+            min_force_N,
+            max_force_N,
             a,
             b,
             tau,
@@ -310,61 +280,53 @@ class FailureSummaryFrame(SummaryFrame):
         super().__init__(
             pd.DataFrame(
                 columns=[
-                    "Ultimate strain (%)",
-                    "Ultimate force (N)",
-                    "Ultimate strength (MPa)",
-                    "Aborted?",
-                    "Slipped?",
-                    "Yield strain (%)",
-                    "Yield force (N)",
-                    "Yield strength (MPa)",
-                    "Toughness strain (%)",
-                    "Toughness (MPa)",
-                    "Stiffness strain (%)",
-                    "Stiffness (N/mm)",
-                    "E-modulus (MPa)",
+                    "Yield force [N]",
+                    "Yield strain [%]",
+                    "Yield strength [MPa]",
+                    "Ultimate force [N]",
+                    "Ultimate strain [%]",
+                    "Ultimate strength [MPa]",
+                    "E-modulus [MPa]",
+                    "Toughness strain [%]",
+                    "Toughness [MPa]",
+                    "Stiffness strain [%]",
+                    "Stiffness [N/mm]",
                 ]
             )
         )
 
     def append_row(
         self,
-        ultimate_strain_pct: float,
-        ultimate_force_N: float,
-        ultimate_strength_MPa: float,
-        aborted: float,
-        slipped: float,
-        yield_strain_pct: float,
         yield_force_N: float,
+        yield_strain_pct: float,
         yield_strength_MPa: float,
+        ultimate_force_N: float,
+        ultimate_strain_pct: float,
+        ultimate_strength_MPa: float,
+        e_modulus_MPa: float,
         toughness_strain_pct: float,
         toughness_MPa: float,
         stiffness_strain_pct: float,
         stiffness_N_mm: float,
-        e_modulus_MPa: float,
     ) -> None:
         """
         Append a row to the summary frame.
 
         Args:
-            ultimate_strain_pct: The strain at which the sample broke or the
-                test was aborted.
-            ultimate_force_N: The force at which the sample broke or the test
-                was aborted.
-            ultimate_strength_MPa: The stress at which the sample broke or the
-                test was aborted.
-            aborted: Flag indicating whether the test was aborted or if the
-                sample broke.  This flag is used to interpret the meaning of the
-                ultimate values.
-            slipped: Flag indicating whether the sample slipped during the test.
-                Slipped is defined as it partially breaking before continuing
-                on the achieve a greater ultimate strength.
-            yield_strain_pct: The strain at which the sample deformation changes
-                from elastic to plastic.
             yield_force_N: The force at which the sample deformation changes
+                from elastic to plastic.
+            yield_strain_pct: The strain at which the sample deformation changes
                 from elastic to plastic.
             yield_strength_MPa: The stress at which the sample deformation
                 changes from elastic to plastic.
+            ultimate_force_N: The force at which the sample broke or the test
+                was aborted.
+            ultimate_strain_pct: The strain at which the sample broke or the
+                test was aborted.
+            ultimate_strength_MPa: The stress at which the sample broke or the
+                test was aborted.
+            e_modulus_MPa: The Young's modulus of the sample, which is defined
+                as the slope of the stress-strain curve at a specified strain.
             toughness_strain_pct: The strain at which the toughness was
                 calculated.
             toughness_MPa: The toughness of the sample, which is defined as the
@@ -373,24 +335,20 @@ class FailureSummaryFrame(SummaryFrame):
                 calculated.
             stiffness_N_mm: The stiffness of the sample, which is defined as the
                 stress at a specified strain.
-            e_modulus_MPa: The Young's modulus of the sample, which is defined
-                as the slope of the stress-strain curve at a specified strain.
         """
 
         self._summary_frame.loc[len(self._summary_frame)] = [
-            ultimate_strain_pct,
-            ultimate_force_N,
-            ultimate_strength_MPa,
-            aborted,
-            slipped,
-            yield_strain_pct,
             yield_force_N,
+            yield_strain_pct,
             yield_strength_MPa,
+            ultimate_force_N,
+            ultimate_strain_pct,
+            ultimate_strength_MPa,
+            e_modulus_MPa,
             toughness_strain_pct,
             toughness_MPa,
             stiffness_strain_pct,
             stiffness_N_mm,
-            e_modulus_MPa,
         ]
 
 
@@ -427,6 +385,9 @@ class Data:
             sheet_name=self.sheet_name,
             index=False,
         )
+
+        # Autofit the column size
+        writer.sheets[self.sheet_name].autofit()
 
     def process_raw_data(self, *args: list[Any], **kwargs: dict[str, Any]) -> None:
         """
@@ -469,7 +430,7 @@ class ProcessedData(Data):
 class RelaxationData(ProcessedData):
     """
     Data storage class for the data where the strain is maintained while the
-    sample relaxes.  Columns containing the relative time and force regression
+    sample relaxes.  Columns containing the relative time and stress regression
     are also calculated and added to the data.
 
     Args:
@@ -487,20 +448,12 @@ class RelaxationData(ProcessedData):
         self.tau: float = 1.0
 
     @property
-    def max_e_modulus_MPa(self) -> float:
-        return self.processed_data_frame.e_modulus.max()  # type: ignore
-
-    @property
     def max_force_N(self) -> float:
         return self.processed_data_frame.force.max()  # type: ignore
 
     @property
     def max_stress_MPa(self) -> float:
         return self.processed_data_frame.stress.max()  # type: ignore
-
-    @property
-    def min_e_modulus_MPa(self) -> float:
-        return self.processed_data_frame.e_modulus.min()  # type: ignore
 
     @property
     def min_force_N(self) -> float:
@@ -533,8 +486,9 @@ class RelaxationData(ProcessedData):
         Columns that are populated:
             - Relative Time: Time elapsed since the start of the relaxation
                 phase.
-            - Force Regression: Force at each relative time point as calculated
-                by the exponential decay regression equation of the force.
+            - Stress Regression: Stress at each relative time point as
+                calculated by the exponential decay regression equation of the
+                stress.
 
         Summary parameters that are calculated:
             - Exponential decay regression equation parameters (a, b, and tau in
@@ -573,14 +527,14 @@ class RelaxationData(ProcessedData):
                 regression_data_points
                 or self.processed_data_frame.frame.index.size  # type: ignore
             ),
-            self.processed_data_frame.force.head(  # type: ignore
+            self.processed_data_frame.stress.head(  # type: ignore
                 regression_data_points
                 or self.processed_data_frame.frame.index.size  # type: ignore
             ),
         )
 
-        # Add the regression force column directly after the force column
-        self.processed_data_frame.regression_force = pd.Series(
+        # Add the regression stress column directly after the stress column
+        self.processed_data_frame.regression_stress = pd.Series(
             [
                 self.y(t, self.a, self.b, self.tau)  # type: ignore
                 for t in self.processed_data_frame.relative_time  # type: ignore
@@ -590,17 +544,17 @@ class RelaxationData(ProcessedData):
     @staticmethod
     def y(t: float, a: float, b: float, tau: float) -> float:
         """
-        Calculates the value of following equation:
+        Calculates the stress according to the following equation:
         y = a * e^(-t / tau) + b
 
         Args:
-            t: Time at which the function is to be computed.
+            t: Time at which the stress is to be calculated.
             a: Amplitude of the exponential decay.
             b: Baseline value of the function.
             tau: Time constant of the exponential decay.
 
         Returns:
-            Value of the function at time t.
+            Stress at time t.
         """
 
         return a * np.exp(-t / tau) + b
@@ -638,10 +592,6 @@ class FailureData(ProcessedData):
     @processed_data_frame.setter
     def processed_data_frame(self, value: FailureDataFrame) -> None:  # type: ignore
         super(FailureData, FailureData).processed_data_frame.__set__(self, value)  # type: ignore
-
-    @property
-    def slipped(self) -> bool:
-        return False  # TODO: implement
 
     @property
     def stiffness_N_mm(self) -> float:
@@ -794,16 +744,16 @@ class FailureData(ProcessedData):
     @staticmethod
     def y(x: float, E: float, c: float) -> float:
         """
-        Calculates the value of following equation:
+        Calculates the stress according to following equation:
         y = E * x + c
 
         Args:
-            x: Strain at which the stress is calculated.
+            x: Strain at which the stress is to be calculated.
             E: Young's modulus (slope of the stress-strain curve).
-            c: Initial value of the function.
+            c: Initial stress at zero strain of the function.
 
         Returns:
-            Value of the function at strain x.
+            Stress at strain x.
         """
 
         return E * x + c
@@ -832,6 +782,9 @@ class Summary:
             index=False,
         )
 
+        # Autofit the column size
+        writer.sheets[self.sheet_name].autofit()
+
 
 class RelaxationSummary(Summary):
     """
@@ -847,12 +800,10 @@ class RelaxationSummary(Summary):
     def append_row(
         self,
         strain_pct: float,
-        min_force_N: float,
-        max_force_N: float,
         min_stress_MPa: float,
         max_stress_MPa: float,
-        min_e_modulus_MPa: float,
-        max_e_modulus_MPa: float,
+        min_force_N: float,
+        max_force_N: float,
         a: float,
         b: float,
         tau: float,
@@ -862,12 +813,10 @@ class RelaxationSummary(Summary):
 
         Args:
             strain_pct: The relaxation strain.
-            min_force_N: The minimum force during relaxation.
-            max_force_N: The maximum force during relaxation.
             min_stress_MPa: The minimum stress during relaxation.
             max_stress_MPa: The maximum stress during relaxation.
-            min_e_modulus_MPa: The minimum E-modulus during relaxation.
-            max_e_modulus_MPa: The maximum E-modulus during relaxation.
+            min_force_N: The minimum force during relaxation.
+            max_force_N: The maximum force during relaxation.
             a: The exponential decay equation coefficient a
                 (y = a * e^(-t / tau) + b)
             b: The exponential decay equation coefficient b
@@ -878,12 +827,10 @@ class RelaxationSummary(Summary):
 
         self.summary_frame.append_row(
             strain_pct,
-            min_force_N,
-            max_force_N,
             min_stress_MPa,
             max_stress_MPa,
-            min_e_modulus_MPa,
-            max_e_modulus_MPa,
+            min_force_N,
+            max_force_N,
             a,
             b,
             tau,
@@ -903,42 +850,36 @@ class FailureSummary(Summary):
 
     def append_row(
         self,
-        ultimate_strain_pct: float,
-        ultimate_force_N: float,
-        ultimate_strength_MPa: float,
-        aborted: float,
-        slipped: float,
-        yield_strain_pct: float,
         yield_force_N: float,
+        yield_strain_pct: float,
         yield_strength_MPa: float,
+        ultimate_force_N: float,
+        ultimate_strain_pct: float,
+        ultimate_strength_MPa: float,
+        e_modulus_MPa: float,
         toughness_strain_pct: float,
         toughness_MPa: float,
         stiffness_strain_pct: float,
         stiffness_N_mm: float,
-        e_modulus_MPa: float,
     ) -> None:
         """
         Append a row to the summary frame.
 
         Args:
-            ultimate_strain_pct: The strain at which the sample broke or the
-                test was aborted.
-            ultimate_force_N: The force at which the sample broke or the test
-                was aborted.
-            ultimate_strength_MPa: The stress at which the sample broke or the
-                test was aborted.
-            aborted: Flag indicating whether the test was aborted or if the
-                sample broke.  This flag is used to interpret the meaning of the
-                ultimate values.
-            slipped: Flag indicating whether the sample slipped during the test.
-                Slipped is defined as it partially breaking before continuing
-                on the achieve a greater ultimate strength.
-            yield_strain_pct: The strain at which the sample deformation changes
-                from elastic to plastic.
             yield_force_N: The force at which the sample deformation changes
+                from elastic to plastic.
+            yield_strain_pct: The strain at which the sample deformation changes
                 from elastic to plastic.
             yield_strength_MPa: The stress at which the sample deformation
                 changes from elastic to plastic.
+            ultimate_force_N: The force at which the sample broke or the test
+                was aborted.
+            ultimate_strain_pct: The strain at which the sample broke or the
+                test was aborted.
+            ultimate_strength_MPa: The stress at which the sample broke or the
+                test was aborted.
+            e_modulus_MPa: The Young's modulus of the sample, which is defined
+                as the slope of the stress-strain curve at a specified strain.
             toughness_strain_pct: The strain at which the toughness was
                 calculated.
             toughness_MPa: The toughness of the sample, which is defined as the
@@ -947,22 +888,18 @@ class FailureSummary(Summary):
                 calculated.
             stiffness_N_mm: The stiffness of the sample, which is defined as the
                 stress at a specified strain.
-            e_modulus_MPa: The Young's modulus of the sample, which is defined
-                as the slope of the stress-strain curve at a specified strain.
         """
 
         self.summary_frame.append_row(
-            ultimate_strain_pct,
-            ultimate_force_N,
-            ultimate_strength_MPa,
-            aborted,
-            slipped,
-            yield_strain_pct,
             yield_force_N,
+            yield_strain_pct,
             yield_strength_MPa,
+            ultimate_force_N,
+            ultimate_strain_pct,
+            ultimate_strength_MPa,
+            e_modulus_MPa,
             toughness_strain_pct,
             toughness_MPa,
             stiffness_strain_pct,
             stiffness_N_mm,
-            e_modulus_MPa,
         )
