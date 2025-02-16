@@ -314,12 +314,12 @@ class Summary(instron_68tm.Summary):
                 from elastic to plastic.
             yield_strength_MPa: The stress at which the sample deformation
                 changes from elastic to plastic.
-            ultimate_force_N: The force at which the sample broke or the test
-                was aborted.
+            ultimate_force_N: The force at which the sample broke or the
+                experiment was aborted.
             ultimate_strain_pct: The strain at which the sample broke or the
-                test was aborted.
+                experiment was aborted.
             ultimate_strength_MPa: The stress at which the sample broke or the
-                test was aborted.
+                experiment was aborted.
             e_modulus_MPa: The Young's modulus of the sample, which is defined
                 as the slope of the stress-strain curve at a specified strain.
             toughness_strain_pct: The strain at which the toughness was
@@ -546,8 +546,8 @@ class Parser(instron_68tm.Parser):
         parser.add_argument(  # type: ignore
             "-a",
             "--abort-strain",
-            help="The strain at which the test aborts even if the sample has "
-            "not yet failed",
+            help="The strain at which the experiment aborts even if the sample "
+            "has not yet failed",
             type=instrument.ArgparseTypes.percentage_float,
             default=95.0,
         )
