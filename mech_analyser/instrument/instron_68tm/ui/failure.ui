@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Failure</class>
+ <widget class="QWidget" name="w_Failure">
+  <layout class="QGridLayout" name="gl_Failure">
+   <item row="0" column="0">
+    <widget class="QLabel" name="l_Abort">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>The strain at which the experiment aborts even if the sample has not yet failed</string>
+     </property>
+     <property name="text">
+      <string>Abort strain</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QDoubleSpinBox" name="sb_Abort">
+     <property name="toolTip">
+      <string>The strain at which the experiment aborts even if the sample has not yet failed</string>
+     </property>
+     <property name="suffix">
+      <string>%</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <double>100.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="5" rowspan="5">
+    <spacer name="s_Horizontal">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="l_Toughness">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>The strain at which the toughness is calculated</string>
+     </property>
+     <property name="text">
+      <string>Toughness strain</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QDoubleSpinBox" name="sb_Toughness">
+     <property name="toolTip">
+      <string>The strain at which the toughness is calculated</string>
+     </property>
+     <property name="suffix">
+      <string>%</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="l_Stiffness">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>The strain at which the stiffness is calculated</string>
+     </property>
+     <property name="text">
+      <string>Stiffness strain</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QDoubleSpinBox" name="sb_Stiffness">
+     <property name="toolTip">
+      <string>The strain at which the stiffness is calculated</string>
+     </property>
+     <property name="suffix">
+      <string>%</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+     <property name="minimum">
+      <double>0.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="l_Strain1">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>The strain range on the stress-strain curve over which the Young's modulus is calculated.  They are the ε values in the equation E = (σ2 - σ1) / (ε2 - ε1)</string>
+     </property>
+     <property name="text">
+      <string>Young's modulus</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QDoubleSpinBox" name="sb_Strain1">
+     <property name="toolTip">
+      <string>The strain value which defines the first datapoint on the stress-strain curve used to calculate the Young's modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)</string>
+     </property>
+     <property name="suffix">
+      <string>%</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QLabel" name="l_EModulus">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>to</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="3">
+    <widget class="QDoubleSpinBox" name="sb_Strain2">
+     <property name="toolTip">
+      <string>The strain value which defines the second datapoint on the stress-strain curve used to calculate the Young's modulus.  It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)</string>
+     </property>
+     <property name="suffix">
+      <string>%</string>
+     </property>
+     <property name="decimals">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="4">
+    <spacer name="s_Vertical">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
