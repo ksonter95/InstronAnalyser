@@ -1,9 +1,9 @@
 import argparse
-import ast
+import dataclasses
 import pandas as pd
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 # === Data frames ============================================================ #
 
@@ -83,6 +83,27 @@ class ProcessedFrame(Frame):
     pass
 
 
+# === Parameters ============================================================= #
+
+
+@dataclasses.dataclass
+class DataParameters:
+    """
+    Base class for all data parameters.
+    """
+
+    pass
+
+
+@dataclasses.dataclass
+class AnalyserParameters:
+    """
+    Base class for all analyser parameters.
+    """
+
+    pass
+
+
 # === Data =================================================================== #
 
 
@@ -115,13 +136,16 @@ class Data:
     def raw_frame(self) -> RawFrame:
         return self._raw_frame
 
-    def process(self, *args: list[Any], **kwargs: dict[str, Any]) -> None:
+    def process(self, parameters: DataParameters) -> None:
         """
         Processes the raw data frame.  This could include populating additional
         columns or calculating summary parameters of the dataset.
 
         NOTE: this is an abstract method that will be overwritten in the child
               classes.
+
+        Args:
+            parameters: The parameters to use when processing the data.
         """
 
         raise NotImplementedError
@@ -147,9 +171,13 @@ class Summary:
     def frame(self) -> pd.DataFrame:
         return self._frame
 
-    def append_row(self, *args: list[Any], **kwargs: dict[str, Any]) -> None:
+    def append_row(self, data: Data, parameters: DataParameters) -> None:
         """
         Append a row to the summary frame.
+
+        Args:
+            data: The data to append.
+            parameters: The parameters used when processing the data.
 
         NOTE: this is an abstract method that will be overwritten in the child
               classes.
@@ -191,28 +219,29 @@ class Analyser:
         output_xlsx: The path to the Excel file which will contain the analysis
             results.
         raw_frame: The raw experiment data frame.
+        parameters: The parameters to use when processing the data.
         summary: The summary of the analysis.
     """
 
     def __init__(
-        self, output_xlsx: Path, raw_frame: RawFrame, summary: Summary
+        self,
+        output_xlsx: Path,
+        raw_frame: RawFrame,
+        parameters: AnalyserParameters,
+        summary: Summary,
     ) -> None:
 
-        self._data: list[Data]
+        self._data: list[Data] = []
         self._output_xlsx: Path
+        self._parameters: AnalyserParameters = parameters
         self._raw_frame: RawFrame = raw_frame
         self._summary: Summary = summary
 
-        self.data = []
         self.output_xlsx = output_xlsx
 
     @property
     def data(self) -> list[Data]:
         return self._data
-
-    @data.setter
-    def data(self, value: list[Data]) -> None:
-        self._data = value
 
     @property
     def output_xlsx(self) -> Path:
@@ -221,6 +250,10 @@ class Analyser:
     @output_xlsx.setter
     def output_xlsx(self, value: Path) -> None:
         self._output_xlsx = value
+
+    @property
+    def parameters(self) -> AnalyserParameters:
+        return self._parameters
 
     @property
     def raw_frame(self) -> RawFrame:
@@ -304,37 +337,6 @@ class ArgparseTypes:
             raise argparse.ArgumentTypeError(f"Directory '{value}' does not exist")
 
         return Path(value)
-
-    @staticmethod
-    def list_percentage_float(value: str) -> list[float]:
-        """
-        Checks the argument to determine if it is a list percentage float (i.e.
-        a list of floats between 0 and 100).
-
-        Args:
-            value: The number which is to be checked.
-
-        Raises:
-            argparse.ArgumentTypeError: If the number is not a percentage float.
-
-        Returns:
-            float: The number if it is valid.
-        """
-
-        try:
-            float_list_value: list[float | int] = ast.literal_eval(value)
-            if not isinstance(float_list_value, list) or not all(  # type: ignore
-                (isinstance(i, float) or isinstance(i, int))  # type: ignore
-                and 0.0 <= i <= 100.0
-                for i in float_list_value
-            ):
-                raise ValueError
-        except ValueError:
-            raise argparse.ArgumentTypeError(
-                f"'{value}' is not a list of numbers >=0 and <=100"
-            )
-
-        return [float(i) for i in float_list_value]
 
     @staticmethod
     def percentage_float(value: str) -> float:

@@ -1,4 +1,5 @@
 import argparse
+import dataclasses
 import instrument.instrument as instrument
 import instrument.instron_68tm.instron_68tm as instron_68tm
 
@@ -48,6 +49,60 @@ class Frame(instron_68tm.ProcessedFrame):
         self._frame["Toughness [MPa]"] = value
 
 
+# === Parameters ============================================================= #
+
+
+@dataclasses.dataclass
+class DataParameters(instron_68tm.instrument.DataParameters):
+    """
+    Parameters of a compression-to-failure experiment using an Instron 68TM.
+
+    Args:
+        abort_strain_pct: The strain at which the experiment aborts even if the
+            sample has not yet failed.
+        toughness_strain_pct: The strain at which the toughness is calculated.
+        stiffness_strain_pct: The strain at which the stiffness is calculated.
+        e_modulus_strain1_pct: The strain value which defines the first
+            datapoint on the stress-strain curve used to calculate the Young's
+            modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)
+        e_modulus_strain2_pct: The strain value which defines the second
+            datapoint on the stress-strain curve used to calculate the Young's
+            modulus.  It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)
+    """
+
+    abort_strain_pct: float = 95.0
+    toughness_strain_pct: float = 4.0
+    stiffness_strain_pct: float = 4.0
+    e_modulus_strain1_pct: float = 5.0
+    e_modulus_strain2_pct: float = 10.0
+
+
+@dataclasses.dataclass
+class AnalyserParameters(instron_68tm.instrument.AnalyserParameters):
+    """
+    Parameters of an analyser of a compression-to-failure experiment using an
+    Instron 68TM.
+
+    Args:
+        abort_strain_pct: The strain at which the experiment aborts even if the
+            sample has not yet failed.
+        toughness_strain_pct: The strain at which the toughness is calculated.
+        stiffness_strain_pct: The strain at which the stiffness is calculated.
+        e_modulus_strain1_pct: The strain value which defines the first
+            datapoint on the stress-strain curve used to calculate the Young's
+            modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)
+        e_modulus_strain2_pct: The strain value which defines the second
+            datapoint on the stress-strain curve used to calculate the Young's
+            modulus.  It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)
+    """
+
+    abort_strain_pct: float = 95.0
+    toughness_strain_pct: float = 4.0
+    stiffness_strain_pct: float = 4.0
+    e_modulus_strain1_pct: float = 5.0
+    e_modulus_strain2_pct: float = 10.0
+
+
 # === Data =================================================================== #
 
 
@@ -70,15 +125,16 @@ class Data(instron_68tm.Data):
             ),
         )
 
-        self._abort_strain_pct: float = 0.0
+        self._aborted: bool = False
         self._e_modulus_MPa: float = 0.0
-        self._stiffness_strain_pct: float = 0.0
-        self._toughness_strain_pct: float = 0.0
-        self._yield_strain_pct: float = 0.0
+        self._stiffness_id: int = 0
+        self._toughness_id: int = 0
+        self._ultimate_id: int = 0
+        self._yield_id: int = 0
 
     @property
     def aborted(self) -> bool:
-        return self.ultimate_strain_pct >= self._abort_strain_pct
+        return self._aborted
 
     @property
     def e_modulus_MPa(self) -> float:
@@ -94,72 +150,48 @@ class Data(instron_68tm.Data):
 
     @property
     def stiffness_N_mm(self) -> float:
-        return self.processed_frame.stiffness.loc[
-            (self.processed_frame.strain - self._stiffness_strain_pct)
-            .abs()
-            .idxmin()  # type: ignore
-        ]
+        return self.processed_frame.stiffness.loc[self._stiffness_id]
 
     @property
     def stiffness_strain_pct(self) -> float:
-        return self._stiffness_strain_pct
+        return self.processed_frame.strain.loc[self._stiffness_id]
 
     @property
     def toughness_MPa(self) -> float:
-        return self.processed_frame.toughness.loc[
-            (self.processed_frame.strain - self._toughness_strain_pct)
-            .abs()
-            .idxmin()  # type: ignore
-        ]
+        return self.processed_frame.toughness.loc[self._toughness_id]
 
     @property
     def toughness_strain_pct(self) -> float:
-        return self._toughness_strain_pct
+        return self.processed_frame.strain.loc[self._toughness_id]
 
     @property
     def ultimate_force_N(self) -> float:
-        return self.processed_frame.force.loc[
-            self.processed_frame.stress.idxmax()  # type: ignore
-        ]
+        return self.processed_frame.force.loc[self._ultimate_id]
 
     @property
     def ultimate_strain_pct(self) -> float:
-        return self.processed_frame.strain.loc[
-            self.processed_frame.stress.idxmax()  # type: ignore
-        ]
+        return self.processed_frame.strain.loc[self._ultimate_id]
 
     @property
     def ultimate_strength_MPa(self) -> float:
-        return self.processed_frame.stress.max()  # type: ignore
+        return self.processed_frame.stress.loc[self._ultimate_id]
 
     @property
     def yield_force_N(self) -> float:
-        return self.processed_frame.force.loc[
-            (self.processed_frame.strain - self._yield_strain_pct)
-            .abs()
-            .idxmin()  # type: ignore
-        ]
+        # TODO: return self.processed_frame.force.loc[self._yield_id]
+        return 0.0
 
     @property
     def yield_strain_pct(self) -> float:
-        return self._yield_strain_pct
+        # TODO: return self.processed_frame.strain.loc[self._yield_id]
+        return 0.0
 
     @property
     def yield_strength_MPa(self) -> float:
-        return self.processed_frame.stress.loc[
-            (self.processed_frame.strain - self._yield_strain_pct)
-            .abs()
-            .idxmin()  # type: ignore
-        ]
+        # TODO: return self.processed_frame.stress.loc[self._yield_id]
+        return 0.0
 
-    def process(  # type: ignore
-        self,
-        abort_strain_pct: float,
-        toughness_strain_pct: float,
-        stiffness_strain_pct: float,
-        e_modulus_strain1_pct: float,
-        e_modulus_strain2_pct: float,
-    ) -> None:
+    def process(self, parameters: DataParameters) -> None:  # type: ignore
         """
         Processes the raw data from the compression-to-failure experiment using
         an Instron 68TM.
@@ -176,26 +208,27 @@ class Data(instron_68tm.Data):
         Summary parameters that are calculated:
             - E-modulus: The slope of the stress-strain curve between the
                 specified strains as determined by linear regression.
-
+            - Toughness strain: The measured strain closest to the strain at
+                which the toughness is to be calculated.
+            - Toughness: The area under the stress-strain curve up until the
+                toughness strain.
+            - Stiffness strain: The measured strain closest to the strain at
+                which the stiffness is to be calculated.
+            - Stiffness: The extent to which an object resists deformation in
+                response to an applied force at the stiffness strain.
+            - Yield force: The force at which the material begins to deform.
+            - Yield strain: The strain at which the material begins to deform.
+            - Yield strength: The stress at which the material begins to deform.
+            - Ultimate force: The maximum force that the material can withstand.
+            - Ultimate strain: The maximum strain that the material can
+                withstand.
+            - Ultimate strength: The maximum stress that the material can
+                withstand.
 
         Args:
-            abort_strain_pct: The strain threshold at which the experiment is
-                considered to be aborted.
-            toughness_strain_pct: The strain at which the toughness is
-                calculated.
-            stiffness_strain_pct: The strain at which the stiffness is
-                calculated.
-            e_modulus_strain1_pct: The strain value which defines the first
-                datapoint on the stress-strain curve used to calculate the
-                Young's modulus.
-            e_modulus_strain2_pct: The strain value which defines the second
-                datapoint on the stress-strain curve used to calculate the
-                Young's modulus.
+            parameters: The parameters to use when processing the
+                compression-to-failure Instron 68TM experiment data.
         """
-
-        self._abort_strain_pct = abort_strain_pct
-        self._toughness_strain_pct = toughness_strain_pct
-        self._stiffness_strain_pct = stiffness_strain_pct
 
         self.processed_frame = Frame(
             self.raw_frame.frame,
@@ -233,16 +266,31 @@ class Data(instron_68tm.Data):
         [self._e_modulus_MPa, _], _ = curve_fit(  # type: ignore
             self.y,
             self.processed_frame.strain[
-                (self.processed_frame.strain > (e_modulus_strain1_pct))
-                & (self.processed_frame.strain < (e_modulus_strain2_pct))
+                (self.processed_frame.strain > (parameters.e_modulus_strain1_pct))
+                & (self.processed_frame.strain < (parameters.e_modulus_strain2_pct))
             ]
             # NOTE: convert from percentage to decimal
             / 100.0,
             self.processed_frame.stress[
-                (self.processed_frame.strain > (e_modulus_strain1_pct))
-                & (self.processed_frame.strain < (e_modulus_strain2_pct))
+                (self.processed_frame.strain > (parameters.e_modulus_strain1_pct))
+                & (self.processed_frame.strain < (parameters.e_modulus_strain2_pct))
             ],
         )
+
+        # Calculate the remaining summary parameters
+        self._aborted = self.ultimate_strain_pct >= parameters.abort_strain_pct
+        self._stiffness_id = (
+            (self.processed_frame.strain - parameters.stiffness_strain_pct)
+            .abs()
+            .idxmin()  # type: ignore
+        )
+        self._toughness_id = (
+            (self.processed_frame.strain - parameters.toughness_strain_pct)
+            .abs()
+            .idxmin()  # type: ignore
+        )
+        self._ultimate_id = self.processed_frame.stress.idxmax()  # type: ignore
+        self._yield_id = 0  # TODO: implement
 
     @staticmethod
     def y(x: float, E: float, c: float) -> float:
@@ -290,60 +338,29 @@ class Summary(instron_68tm.Summary):
             )
         )
 
-    def append_row(  # type: ignore
-        self,
-        yield_force_N: float,
-        yield_strain_pct: float,
-        yield_strength_MPa: float,
-        ultimate_force_N: float,
-        ultimate_strain_pct: float,
-        ultimate_strength_MPa: float,
-        e_modulus_MPa: float,
-        toughness_strain_pct: float,
-        toughness_MPa: float,
-        stiffness_strain_pct: float,
-        stiffness_N_mm: float,
-    ) -> None:
+    def append_row(self, data: Data, parameters: DataParameters) -> None:  # type: ignore
         """
         Append a row to the summary frame.
 
         Args:
-            yield_force_N: The force at which the sample deformation changes
-                from elastic to plastic.
-            yield_strain_pct: The strain at which the sample deformation changes
-                from elastic to plastic.
-            yield_strength_MPa: The stress at which the sample deformation
-                changes from elastic to plastic.
-            ultimate_force_N: The force at which the sample broke or the
-                experiment was aborted.
-            ultimate_strain_pct: The strain at which the sample broke or the
-                experiment was aborted.
-            ultimate_strength_MPa: The stress at which the sample broke or the
-                experiment was aborted.
-            e_modulus_MPa: The Young's modulus of the sample, which is defined
-                as the slope of the stress-strain curve at a specified strain.
-            toughness_strain_pct: The strain at which the toughness was
-                calculated.
-            toughness_MPa: The toughness of the sample, which is defined as the
-                area under the stress-strain curve up until a specified strain.
-            stiffness_strain_pct: The strain at which the stiffness was
-                calculated.
-            stiffness_N_mm: The stiffness of the sample, which is defined as the
-                stress at a specified strain.
+            data: The data of a compression-to-failure Instron 68TM experiment
+                to be appended.
+            parameters: The parameters of a compression-to-failure experiment
+                using an Instron 68TM used to process the data.
         """
 
         self._frame.loc[len(self._frame)] = [
-            yield_force_N,
-            yield_strain_pct,
-            yield_strength_MPa,
-            ultimate_force_N,
-            ultimate_strain_pct,
-            ultimate_strength_MPa,
-            e_modulus_MPa,
-            toughness_strain_pct,
-            toughness_MPa,
-            stiffness_strain_pct,
-            stiffness_N_mm,
+            data.yield_force_N,
+            data.yield_strain_pct,
+            data.yield_strength_MPa,
+            data.ultimate_force_N,
+            data.ultimate_strain_pct,
+            data.ultimate_strength_MPa,
+            data.e_modulus_MPa,
+            data.toughness_strain_pct,
+            data.toughness_MPa,
+            data.stiffness_strain_pct,
+            data.stiffness_N_mm,
         ]
 
 
@@ -359,96 +376,32 @@ class Analyser(instron_68tm.Analyser):
             compression-to-failure Instron 68TM experiment.
         output_xlsx: The path to the Excel file which will contain the analysis
             results.
-        abort_strain_pct: The strain threshold at which the experiment is
-            considered to be aborted.
-        toughness_strain_pct: The strain at which the toughness is calculated.
-        stiffness_strain_pct: The strain at which the stiffness is calculated.
-        e_modulus_strain1_pct: The strain value which defines the first
-            datapoint on the stress-strain curve used to calculate the Young's
-            modulus.
-        e_modulus_strain2_pct: The strain value which defines the second
-            datapoint on the stress-strain curve used to calculate the Young's
-            modulus.
+        parameters: The parameters to use when analysing the
+            compression-to-failure Instron 68TM experiment.
     """
 
     def __init__(
         self,
         input_csv: Path,
         output_xlsx: Path,
-        abort_strain_pct: float,
-        toughness_strain_pct: float,
-        stiffness_strain_pct: float,
-        e_modulus_strain1_pct: float,
-        e_modulus_strain2_pct: float,
+        parameters: AnalyserParameters,
     ) -> None:
 
-        super().__init__(input_csv, output_xlsx, Summary())
-
-        self._abort_strain_pct: float
-        self._e_modulus_strain1_pct: float
-        self._e_modulus_strain2_pct: float
-        self._stiffness_strain_pct: float
-        self._toughness_strain_pct: float
-
-        self.abort_strain_pct = abort_strain_pct
-        self.e_modulus_strain1_pct = e_modulus_strain1_pct
-        self.e_modulus_strain2_pct = e_modulus_strain2_pct
-        self.stiffness_strain_pct = stiffness_strain_pct
-        self.toughness_strain_pct = toughness_strain_pct
+        super().__init__(input_csv, output_xlsx, parameters, Summary())
 
         self.data.append(Data(self.raw_frame))
-
-    @property
-    def abort_strain_pct(self) -> float:
-        return self._abort_strain_pct
-
-    @abort_strain_pct.setter
-    def abort_strain_pct(self, value: float) -> None:
-        self._abort_strain_pct = value
 
     @property
     def data(self) -> list[Data]:  # type: ignore
         return super().data  # type: ignore
 
-    @data.setter
-    def data(self, value: list[Data]) -> None:  # type: ignore
-        super(Analyser, Analyser).data.__set__(self, value)  # type: ignore
-
     @property
-    def e_modulus_strain1_pct(self) -> float:
-        return self._e_modulus_strain1_pct
-
-    @e_modulus_strain1_pct.setter
-    def e_modulus_strain1_pct(self, value: float) -> None:
-        self._e_modulus_strain1_pct = value
-
-    @property
-    def e_modulus_strain2_pct(self) -> float:
-        return self._e_modulus_strain2_pct
-
-    @e_modulus_strain2_pct.setter
-    def e_modulus_strain2_pct(self, value: float) -> None:
-        self._e_modulus_strain2_pct = value
-
-    @property
-    def stiffness_strain_pct(self) -> float:
-        return self._stiffness_strain_pct
-
-    @stiffness_strain_pct.setter
-    def stiffness_strain_pct(self, value: float) -> None:
-        self._stiffness_strain_pct = value
+    def parameters(self) -> AnalyserParameters:  # type: ignore
+        return super().parameters  # type: ignore
 
     @property
     def summary(self) -> Summary:
         return super().summary  # type: ignore
-
-    @property
-    def toughness_strain_pct(self) -> float:
-        return self._toughness_strain_pct
-
-    @toughness_strain_pct.setter
-    def toughness_strain_pct(self, value: float) -> None:
-        self._toughness_strain_pct = value
 
     def analyse(self) -> None:
         """
@@ -458,27 +411,16 @@ class Analyser(instron_68tm.Analyser):
 
         self.summary.clear_all_rows()
 
-        self.data[0].process(
-            self._abort_strain_pct,
-            self._toughness_strain_pct,
-            self._stiffness_strain_pct,
-            self._e_modulus_strain1_pct,
-            self._e_modulus_strain2_pct,
-        )
-
-        self.summary.append_row(
-            self.data[0].yield_force_N,
-            self.data[0].yield_strain_pct,
-            self.data[0].yield_strength_MPa,
-            self.data[0].ultimate_force_N,
-            self.data[0].ultimate_strain_pct,
-            self.data[0].ultimate_strength_MPa,
-            self.data[0].e_modulus_MPa,
-            self.data[0].toughness_strain_pct,
-            self.data[0].toughness_MPa,
-            self.data[0].stiffness_strain_pct,
-            self.data[0].stiffness_N_mm,
-        )
+        for i in range(len(self.data)):
+            parameters = DataParameters(
+                self.parameters.abort_strain_pct,
+                self.parameters.toughness_strain_pct,
+                self.parameters.stiffness_strain_pct,
+                self.parameters.e_modulus_strain1_pct,
+                self.parameters.e_modulus_strain2_pct,
+            )
+            self.data[i].process(parameters)
+            self.summary.append_row(self.data[i], parameters)
 
 
 # === Command-line parsers =================================================== #
@@ -496,11 +438,13 @@ class Parser(instron_68tm.Parser):
 
         super().__init__(parsed_arguments)
 
-        self._abort_strain_pct: float = parsed_arguments.abort_strain
-        self._toughness_strain_pct: float = parsed_arguments.toughness_strain
-        self._stiffness_strain_pct: float = parsed_arguments.stiffness_strain
-        self._e_modulus_strain1_pct: float = parsed_arguments.e_modulus_strain1
-        self._e_modulus_strain2_pct: float = parsed_arguments.e_modulus_strain2
+        self._parameters = AnalyserParameters(
+            parsed_arguments.abort_strain,
+            parsed_arguments.toughness_strain,
+            parsed_arguments.stiffness_strain,
+            parsed_arguments.e_modulus_strain1,
+            parsed_arguments.e_modulus_strain2,
+        )
 
     def create_analysers(self) -> list[Analyser]:
         """
@@ -513,15 +457,7 @@ class Parser(instron_68tm.Parser):
         """
 
         return [
-            Analyser(
-                input_csv,
-                output_xlsx,
-                self._abort_strain_pct,
-                self._toughness_strain_pct,
-                self._stiffness_strain_pct,
-                self._e_modulus_strain1_pct,
-                self._e_modulus_strain2_pct,
-            )
+            Analyser(input_csv, output_xlsx, self._parameters)
             for input_csv, output_xlsx in self._files
         ]
 

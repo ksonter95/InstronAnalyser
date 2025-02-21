@@ -111,6 +111,9 @@ class ProcessedFrame(instrument.ProcessedFrame, Frame):
     pass
 
 
+# === Parameters ============================================================= #
+
+
 # === Data =================================================================== #
 
 
@@ -167,20 +170,28 @@ class Analyser(instrument.Analyser):
             68TM experiment.
         output_xlsx: The path to the Excel file which will contain the analysis
             results.
+        parameters: The parameters to use when processing the data.
         summary: The summary of the analysis.
     """
 
-    def __init__(self, input_csv: Path, output_xlsx: Path, summary: Summary) -> None:
+    def __init__(
+        self,
+        input_csv: Path,
+        output_xlsx: Path,
+        parameters: instrument.AnalyserParameters,
+        summary: Summary,
+    ) -> None:
 
-        super().__init__(output_xlsx, RawFrame.load(input_csv), summary)
+        super().__init__(
+            output_xlsx,
+            RawFrame.load(input_csv),
+            parameters,
+            summary,
+        )
 
     @property
     def data(self) -> list[Data]:  # type: ignore
         return super().data  # type: ignore
-
-    @data.setter
-    def data(self, value: list[Data]) -> None:  # type: ignore
-        super(Analyser, Analyser).data.__set__(self, value)  # type: ignore
 
     @property
     def raw_frame(self) -> RawFrame:

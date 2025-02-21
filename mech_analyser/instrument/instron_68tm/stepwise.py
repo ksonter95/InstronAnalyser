@@ -1,4 +1,5 @@
 import argparse
+import dataclasses
 import instrument.instrument as instrument
 import instrument.instron_68tm.instron_68tm as instron_68tm
 
@@ -60,6 +61,57 @@ class Frame(instron_68tm.ProcessedFrame):
         )
 
 
+# === Parameters ============================================================= #
+
+
+@dataclasses.dataclass
+class DataParameters(instron_68tm.instrument.DataParameters):
+    """
+    Parameters of a stepwise compression experiment using an Instron 68TM.
+
+    Args:
+        relaxation_strain_pct: The strain at which the sample is maintained
+            while the sample relaxes.
+        epsilon_pct: Tolerance for the strain within which it is considered to
+            be within the relaxation phase.
+        regression_data_points: Maximum number of data points to be included in
+            the regression analysis.
+    """
+
+    relaxation_strain_pct: float = 5.0
+    epsilon_pct: float = 0.1
+    regression_data_points: Optional[int] = None
+
+
+@dataclasses.dataclass
+class AnalyserParameters(instron_68tm.instrument.AnalyserParameters):
+    """
+    Parameters of an analyser of a stepwise compression experiment using an
+    Instron 68TM.
+
+    Args:
+        relaxation_strain_intervals: The number of intervals at which the sample
+            has been configured to relax.  This in combination with the first
+            strain gives the relaxation strains.  For instance, if the first
+            strain is 5%, and the number of intervals is 6, then the experiment
+            will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.
+        relaxation_strain_start_pct: The first strain at which the sample has
+            been configured to relax.  This in combination with the number of
+            intervals gives the relaxation strains.  For instance, if the first
+            strain is 5%, and the number of intervals is 6, then the experiment
+            will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.
+        epsilon_pct: Tolerance for the strain within which it is considered to
+            be within the relaxation phase.
+        regression_data_points: Maximum number of data points to be included in
+            the regression analysis.
+    """
+
+    relaxation_strain_intervals: int = 6
+    relaxation_strain_start_pct: float = 5.0
+    epsilon_pct: float = 0.1
+    regression_data_points: Optional[int] = None
+
+
 # === Data =================================================================== #
 
 
@@ -82,6 +134,8 @@ class Data(instron_68tm.Data):
         # Regression equation parameters for equation y = a * e^(-t / tau) + b
         self._a: float = 0.0
         self._b: float = 0.0
+        self._max_id: int = 0
+        self._min_id: int = 0
         self._tau: float = 1.0
 
     @property
@@ -94,18 +148,22 @@ class Data(instron_68tm.Data):
 
     @property
     def max_force_N(self) -> float:
+        return self.processed_frame.force.loc[self._max_id]
         return self.processed_frame.force.max()  # type: ignore
 
     @property
     def max_stress_MPa(self) -> float:
+        return self.processed_frame.stress.loc[self._max_id]
         return self.processed_frame.stress.max()  # type: ignore
 
     @property
     def min_force_N(self) -> float:
+        return self.processed_frame.force.loc[self._min_id]
         return self.processed_frame.force.min()  # type: ignore
 
     @property
     def min_stress_MPa(self) -> float:
+        return self.processed_frame.stress.loc[self._min_id]
         return self.processed_frame.stress.min()  # type: ignore
 
     @property
@@ -120,12 +178,7 @@ class Data(instron_68tm.Data):
     def tau(self) -> float:
         return self._tau
 
-    def process(  # type: ignore
-        self,
-        relaxation_strain_pct: float,
-        epsilon_pct: float,
-        regression_data_points: Optional[int],
-    ) -> None:
+    def process(self, parameters: DataParameters) -> None:  # type: ignore
         """
         Processes the raw data from the stepwise compression experiment using an
         Instron 68TM.
@@ -143,24 +196,27 @@ class Data(instron_68tm.Data):
         Summary parameters that are calculated:
             - Exponential decay regression equation parameters (a, b, and tau in
                 y = a * e^(-t / tau) + b)
+            - Maximum and minimum force and stress values within the dataset.
 
         Args:
-            relaxation_strain_pct: The strain at which the sample is maintained
-                while the sample relaxes.
-            epsilon_pct: Tolerance for the strain within which it is considered
-                to be within the relaxation phase.
-            regression_data_points: Maximum number of data points to be included
-                in the regression analysis.
+            parameters: The parameters to use when processing the stepwise
+                compression Instron 68TM experiment data.
         """
 
         # Filter the raw data to only obtain the data within the relation phase
         # of the sample for the specified strain
         self.processed_frame = Frame(
             self.raw_frame.frame[
-                (self.raw_frame.strain > (relaxation_strain_pct - epsilon_pct))
-                & (self.raw_frame.strain < (relaxation_strain_pct + epsilon_pct))
+                (
+                    self.raw_frame.strain
+                    > (parameters.relaxation_strain_pct - parameters.epsilon_pct)
+                )
+                & (
+                    self.raw_frame.strain
+                    < (parameters.relaxation_strain_pct + parameters.epsilon_pct)
+                )
             ],
-            f"Strain = {round(relaxation_strain_pct, 1)}%",
+            f"Strain = {round(parameters.relaxation_strain_pct, 1)}%",
         )
 
         # Add the relative time column
@@ -173,11 +229,11 @@ class Data(instron_68tm.Data):
         [self._a, self._b, self._tau], _ = curve_fit(  # type: ignore
             self.y,
             self.processed_frame.relative_time.head(  # type: ignore
-                regression_data_points
+                parameters.regression_data_points
                 or self.processed_frame.frame.index.size  # type: ignore
             ),
             self.processed_frame.stress.head(  # type: ignore
-                regression_data_points
+                parameters.regression_data_points
                 or self.processed_frame.frame.index.size  # type: ignore
             ),
         )
@@ -189,6 +245,10 @@ class Data(instron_68tm.Data):
                 for t in self.processed_frame.relative_time  # type: ignore
             ]
         )
+
+        # Calculate the remaining summary parameters
+        self._max_id = self.processed_frame.force.idxmax()  # type: ignore
+        self._min_id = self.processed_frame.force.idxmin()  # type: ignore
 
     @staticmethod
     def y(t: float, a: float, b: float, tau: float) -> float:
@@ -234,44 +294,27 @@ class Summary(instron_68tm.Summary):
             )
         )
 
-    def append_row(  # type: ignore
-        self,
-        strain_pct: float,
-        min_stress_MPa: float,
-        max_stress_MPa: float,
-        min_force_N: float,
-        max_force_N: float,
-        a: float,
-        b: float,
-        tau: float,
-    ) -> None:
+    def append_row(self, data: Data, parameters: DataParameters) -> None:  # type: ignore
         """
         Append a row to the underlying pd.DataFrame representation of the
         summary.
 
         Args:
-            strain_pct: The relaxation strain.
-            min_stress_MPa: The minimum stress during relaxation.
-            max_stress_MPa: The maximum stress during relaxation.
-            min_force_N: The minimum force during relaxation.
-            max_force_N: The maximum force during relaxation.
-            a: The exponential decay equation coefficient a
-                (y = a * e^(-t / tau) + b)
-            b: The exponential decay equation coefficient b
-                (y = a * e^(-t / tau) + b)
-            tau: The exponential decay equation coefficient tau
-                (y = a * e^(-t / tau) + b)
+            data: The data of a stepwise compression Instron 68TM experiment
+                to be appended.
+            parameters: The parameters of a stepwise compression experiment
+                using an Instron 68TM used to process the data.
         """
 
         self._frame.loc[len(self._frame)] = [
-            strain_pct,
-            min_stress_MPa,
-            max_stress_MPa,
-            min_force_N,
-            max_force_N,
-            a,
-            b,
-            tau,
+            parameters.relaxation_strain_pct,
+            data.min_stress_MPa,
+            data.max_stress_MPa,
+            data.min_force_N,
+            data.max_force_N,
+            data.a,
+            data.b,
+            data.tau,
         ]
 
 
@@ -287,75 +330,29 @@ class Analyser(instron_68tm.Analyser):
             stepwise compression Instron 68TM experiment.
         output_xlsx: The path to the Excel file which will contain the analysis
             results.
-        relaxation_strains_pct: The strains at which the sample has been
-            configured to relax.
-        epsilon_pct: Tolerance for the strain within which it is considered to
-            be maintained for each relaxation interval.
-        regression_data_points: Maximum number of data points to be included in
-            the regression analysis.
+        parameters: The parameters to use when analysing the stepwise
+            compression Instron 68TM experiment.
     """
 
     def __init__(
         self,
         input_csv: Path,
         output_xlsx: Path,
-        relaxation_strains_pct: list[float],
-        epsilon_pct: float,
-        regression_data_points: Optional[int],
+        parameters: AnalyserParameters,
     ) -> None:
 
-        super().__init__(input_csv, output_xlsx, Summary())
+        super().__init__(input_csv, output_xlsx, parameters, Summary())
 
-        self._regression_data_points: Optional[int]
-        self._relaxation_strains_pct: list[float]
-        self._epsilon_pct: float
-
-        self.epsilon_pct = epsilon_pct
-        self.regression_data_points = regression_data_points
-        self.relaxation_strains_pct = relaxation_strains_pct
+        for _ in range(parameters.relaxation_strain_intervals):
+            self.data.append(Data(self.raw_frame))
 
     @property
     def data(self) -> list[Data]:  # type: ignore
         return super().data  # type: ignore
 
-    @data.setter
-    def data(self, value: list[Data]) -> None:  # type: ignore
-        super(Analyser, Analyser).data.__set__(self, value)  # type: ignore
-
     @property
-    def epsilon_pct(self) -> float:
-        return self._epsilon_pct
-
-    @epsilon_pct.setter
-    def epsilon_pct(self, value: float) -> None:
-        self._epsilon_pct = value
-
-    @property
-    def regression_data_points(self) -> Optional[int]:
-        return self._regression_data_points
-
-    @regression_data_points.setter
-    def regression_data_points(self, value: Optional[int]) -> None:
-        self._regression_data_points = value
-
-    @property
-    def relaxation_strains_pct(self) -> list[float]:
-        return self._relaxation_strains_pct
-
-    @relaxation_strains_pct.setter
-    def relaxation_strains_pct(self, value: list[float]) -> None:
-        self._relaxation_strains_pct = value
-
-        # Resize the processed data based on the number of relaxation intervals
-        if len(self.data) > len(self._relaxation_strains_pct):
-            del self.data[len(self._relaxation_strains_pct) :]
-        else:
-            self.data.extend(
-                [
-                    Data(self.raw_frame)
-                    for _ in range(len(self._relaxation_strains_pct) - len(self.data))
-                ]
-            )
+    def parameters(self) -> AnalyserParameters:  # type: ignore
+        return super().parameters  # type: ignore
 
     @property
     def summary(self) -> Summary:
@@ -366,25 +363,29 @@ class Analyser(instron_68tm.Analyser):
         Analyses the output of the stepwise compression Instron 68TM experiment.
         """
 
+        # Resize the processed data based on the number of relaxation intervals
+        if len(self.data) > self.parameters.relaxation_strain_intervals:
+            del self.data[self.parameters.relaxation_strain_intervals :]
+        else:
+            self.data.extend(
+                [
+                    Data(self.raw_frame)
+                    for _ in range(
+                        self.parameters.relaxation_strain_intervals - len(self.data)
+                    )
+                ]
+            )
+
         self.summary.clear_all_rows()
 
-        for i in range(len(self._relaxation_strains_pct)):
-            self.data[i].process(
-                self._relaxation_strains_pct[i],
-                self._epsilon_pct,
-                self._regression_data_points,
+        for i in range(len(self.data)):
+            parameters = DataParameters(
+                self.parameters.relaxation_strain_start_pct * (i + 1),
+                self.parameters.epsilon_pct,
+                self.parameters.regression_data_points,
             )
-
-            self.summary.append_row(
-                self._relaxation_strains_pct[i],
-                self.data[i].min_stress_MPa,
-                self.data[i].max_stress_MPa,
-                self.data[i].min_force_N,
-                self.data[i].max_force_N,
-                self.data[i].a,
-                self.data[i].b,
-                self.data[i].tau,
-            )
+            self.data[i].process(parameters)
+            self.summary.append_row(self.data[i], parameters)
 
 
 # === Command-line parsers =================================================== #
@@ -402,9 +403,12 @@ class Parser(instron_68tm.Parser):
 
         super().__init__(parsed_arguments)
 
-        self._epsilon_pct: float = parsed_arguments.epsilon
-        self._regression_data_points: int = parsed_arguments.regression_data_points
-        self._relaxation_strains_pct: list[float] = parsed_arguments.relaxation_strains
+        self._parameters = AnalyserParameters(
+            parsed_arguments.relaxation_strain_intervals,
+            parsed_arguments.relaxation_strain_start,
+            parsed_arguments.epsilon,
+            parsed_arguments.regression_data_points,
+        )
 
     def create_analysers(self) -> list[Analyser]:
         """
@@ -417,13 +421,7 @@ class Parser(instron_68tm.Parser):
         """
 
         return [
-            Analyser(
-                input_csv,
-                output_xlsx,
-                self._relaxation_strains_pct,
-                self._epsilon_pct,
-                self._regression_data_points,
-            )
+            Analyser(input_csv, output_xlsx, self._parameters)
             for input_csv, output_xlsx in self._files
         ]
 
@@ -446,11 +444,28 @@ class Parser(instron_68tm.Parser):
         )
 
         parser.add_argument(  # type: ignore
-            "-r",
-            "--relaxation-strains",
-            help="The strains at which the sample has been configured to relax",
-            type=instrument.ArgparseTypes.list_percentage_float,
-            default="[5, 10, 15, 20, 25, 30]",
+            "-i",
+            "--relaxation-strain-intervals",
+            help="The number of intervals at which the sample has been "
+            "configured to relax.  This in combination with "
+            "--relaxation-strain-start gives the relaxation strains.  For "
+            "instance, if --relaxation-strain-start is 5.0 and "
+            "--relaxation-strain-intervals is 6, then the experiment will "
+            "relax the sample at 5, 10, 15, 20, 25, 30",
+            type=instrument.ArgparseTypes.positive_non_zero_integer,
+            default=6,
+        )
+        parser.add_argument(  # type: ignore
+            "-s",
+            "--relaxation-strain-start",
+            help="The first strain at which the sample has been configured to "
+            "relax.  This in combination with --relaxation-strain-intervals "
+            "gives the relaxation strains.  For instance, if "
+            "--relaxation-strain-start is 5.0, and "
+            "--relaxation-strain-intervals is 6, then the experiment will "
+            "relax the sample at 5, 10, 15, 20, 25, 30",
+            type=instrument.ArgparseTypes.percentage_float,
+            default=5.0,
         )
         parser.add_argument(  # type: ignore
             "-e",
