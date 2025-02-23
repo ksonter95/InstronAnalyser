@@ -1,14 +1,14 @@
 import argparse
-import instrument.instrument as instrument
-import instrument.instron_68tm.failure as failure
-import instrument.instron_68tm.instron_68tm as instron_68tm
-import instrument.instron_68tm.stepwise as stepwise
+import experiment.experiment as experiment
+import experiment.instron_68tm.experiment as instron_68tm
+import experiment.instron_68tm.failure.experiment as failure
+import experiment.instron_68tm.stepwise.experiment as stepwise
 
 
 if __name__ == "__main__":
-    parser: argparse.ArgumentParser = instrument.Parser.create_parser()
+    parser: argparse.ArgumentParser = experiment.Parser.create_parser()
     subparser: argparse._SubParsersAction = (  # type: ignore
-        instrument.Parser.create_subparser(parser)  # type: ignore
+        experiment.Parser.create_subparser(parser)  # type: ignore
     )
 
     # Add the instrument-specific parsers
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Parse the arguments
     parsed_arguments: argparse.Namespace = parser.parse_args()
 
-    analysers: list[instrument.Analyser]
+    analysers: list[experiment.Analyser]
     match str(parsed_arguments.instrument):
         case "Instron-68TM":
             match str(parsed_arguments.experiment):

@@ -1,8 +1,8 @@
 import argparse
 import dataclasses
-import instrument.instrument as instrument
-import instrument.instron_68tm.instron_68tm as instron_68tm
-import instrument.instron_68tm.ui.failure as ui
+import experiment.experiment as experiment
+import experiment.instron_68tm.experiment as instron_68tm
+import experiment.instron_68tm.failure.view as view
 
 import numpy as np
 import pandas as pd
@@ -54,7 +54,7 @@ class Frame(instron_68tm.ProcessedFrame):
 
 
 @dataclasses.dataclass
-class DataParameters(instron_68tm.instrument.DataParameters):
+class DataParameters(experiment.DataParameters):
     """
     Parameters of a compression-to-failure experiment using an Instron 68TM.
 
@@ -79,7 +79,7 @@ class DataParameters(instron_68tm.instrument.DataParameters):
 
 
 @dataclasses.dataclass
-class AnalyserParameters(instron_68tm.instrument.AnalyserParameters):
+class AnalyserParameters(experiment.AnalyserParameters):
     """
     Parameters of an analyser of a compression-to-failure experiment using an
     Instron 68TM.
@@ -485,21 +485,21 @@ class Parser(instron_68tm.Parser):
             "--abort-strain",
             help="The strain at which the experiment aborts even if the sample "
             "has not yet failed",
-            type=instrument.ArgparseTypes.percentage_float,
+            type=experiment.ArgparseTypes.percentage_float,
             default=95.0,
         )
         parser.add_argument(  # type: ignore
             "-t",
             "--toughness-strain",
             help="The strain at which the toughness is calculated",
-            type=instrument.ArgparseTypes.percentage_float,
+            type=experiment.ArgparseTypes.percentage_float,
             default=4.0,
         )
         parser.add_argument(  # type: ignore
             "-s",
             "--stiffness-strain",
             help="The strain at which the stiffness is calculated",
-            type=instrument.ArgparseTypes.percentage_float,
+            type=experiment.ArgparseTypes.percentage_float,
             default=4.0,
         )
         parser.add_argument(  # type: ignore
@@ -508,7 +508,7 @@ class Parser(instron_68tm.Parser):
             help="The strain value which defines the first datapoint on the "
             "stress-strain curve used to calculate the Young's modulus.  "
             "It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)",
-            type=instrument.ArgparseTypes.percentage_float,
+            type=experiment.ArgparseTypes.percentage_float,
             default=10,
         )
         parser.add_argument(  # type: ignore
@@ -517,7 +517,7 @@ class Parser(instron_68tm.Parser):
             help="The strain value which defines the second datapoint on the "
             "stress-strain curve used to calculate the Young's modulus.  "
             "It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)",
-            type=instrument.ArgparseTypes.percentage_float,
+            type=experiment.ArgparseTypes.percentage_float,
             default=15,
         )
 
@@ -532,7 +532,7 @@ class Widget(instron_68tm.Widget):
     """
 
     def __init__(self) -> None:
-        super().__init__(ui.Ui_Failure(), AnalyserParameters())  # type: ignore
+        super().__init__(view.Ui_Failure(), AnalyserParameters())  # type: ignore
 
     @property
     def experiment(self) -> str:
@@ -543,8 +543,8 @@ class Widget(instron_68tm.Widget):
         return super().parameters  # type: ignore
 
     @property
-    def ui(self) -> ui.Ui_Failure:  # type: ignore
-        return super().ui  # type: ignore
+    def view(self) -> view.Ui_Failure:  # type: ignore
+        return super().view  # type: ignore
 
     def init(self) -> None:
         """
@@ -554,11 +554,11 @@ class Widget(instron_68tm.Widget):
         """
 
         # Set the input fields to the defaults
-        self.ui.sb_Abort.setValue(self.parameters.abort_strain_pct)
-        self.ui.sb_Toughness.setValue(self.parameters.toughness_strain_pct)
-        self.ui.sb_Stiffness.setValue(self.parameters.stiffness_strain_pct)
-        self.ui.sb_Strain1.setValue(self.parameters.e_modulus_strain1_pct)
-        self.ui.sb_Strain2.setValue(self.parameters.e_modulus_strain2_pct)
+        self.view.sb_Abort.setValue(self.parameters.abort_strain_pct)
+        self.view.sb_Toughness.setValue(self.parameters.toughness_strain_pct)
+        self.view.sb_Stiffness.setValue(self.parameters.stiffness_strain_pct)
+        self.view.sb_Strain1.setValue(self.parameters.e_modulus_strain1_pct)
+        self.view.sb_Strain2.setValue(self.parameters.e_modulus_strain2_pct)
 
         # Connect signals with slots
         # NOTE: none
@@ -569,8 +569,8 @@ class Widget(instron_68tm.Widget):
         widget input fields.
         """
 
-        self.parameters.abort_strain_pct = self.ui.sb_Abort.value()
-        self.parameters.toughness_strain_pct = self.ui.sb_Toughness.value()
-        self.parameters.stiffness_strain_pct = self.ui.sb_Stiffness.value()
-        self.parameters.e_modulus_strain1_pct = self.ui.sb_Strain1.value()
-        self.parameters.e_modulus_strain2_pct = self.ui.sb_Strain2.value()
+        self.parameters.abort_strain_pct = self.view.sb_Abort.value()
+        self.parameters.toughness_strain_pct = self.view.sb_Toughness.value()
+        self.parameters.stiffness_strain_pct = self.view.sb_Stiffness.value()
+        self.parameters.e_modulus_strain1_pct = self.view.sb_Strain1.value()
+        self.parameters.e_modulus_strain2_pct = self.view.sb_Strain2.value()

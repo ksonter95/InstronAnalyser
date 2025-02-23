@@ -1,5 +1,5 @@
 import argparse
-import instrument.instrument as instrument
+import experiment.experiment as experiment
 import pandas as pd
 
 from pathlib import Path
@@ -34,7 +34,7 @@ class Frame:
         return self._frame["Time [s]"]  # type: ignore
 
 
-class RawFrame(instrument.RawFrame, Frame):
+class RawFrame(experiment.RawFrame, Frame):
     """
     Raw output of an Instron 68TM experiment.
 
@@ -98,7 +98,7 @@ class RawFrame(instrument.RawFrame, Frame):
         return RawFrame(frame)
 
 
-class ProcessedFrame(instrument.ProcessedFrame, Frame):
+class ProcessedFrame(experiment.ProcessedFrame, Frame):
     """
     Base class for all processed outputs of an Instron 68TM experiment.
 
@@ -117,7 +117,7 @@ class ProcessedFrame(instrument.ProcessedFrame, Frame):
 # === Data =================================================================== #
 
 
-class Data(instrument.Data):
+class Data(experiment.Data):
     """
     Base class for all data of an Instron 68TM experiment.
 
@@ -147,7 +147,7 @@ class Data(instrument.Data):
 # === Results ================================================================ #
 
 
-class Summary(instrument.Summary):
+class Summary(experiment.Summary):
     """
     Base class for all Instron 68TM summaries.
 
@@ -161,7 +161,7 @@ class Summary(instrument.Summary):
 # === Analysers ============================================================== #
 
 
-class Analyser(instrument.Analyser):
+class Analyser(experiment.Analyser):
     """
     Base class for all Instron 68TM analysers.
 
@@ -179,7 +179,7 @@ class Analyser(instrument.Analyser):
         self,
         input_csv: Path,
         output_xlsx: Path,
-        parameters: instrument.AnalyserParameters,
+        parameters: experiment.AnalyserParameters,
         summary: Summary,
     ) -> None:
 
@@ -206,7 +206,7 @@ class Analyser(instrument.Analyser):
 # === Command-line parsers =================================================== #
 
 
-class Parser(instrument.Parser):
+class Parser(experiment.Parser):
     """
     Base class for all Instron 68TM command-line parsers.
 
@@ -266,12 +266,12 @@ class Parser(instrument.Parser):
 # === User Interface Widgets ================================================= #
 
 
-class Widget(instrument.Widget):
+class Widget(experiment.Widget):
     """
     Base class for all Instron 68TM user interface widgets.
 
     Args:
-        ui: Generated user interface widget.
+        view: Generated user interface widget.
         parameters: The parameters to use when analysing the experiment.
     """
 

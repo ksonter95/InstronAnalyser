@@ -506,7 +506,7 @@ class Parser:
 # === User Interface Widgets ================================================= #
 
 
-class UiBase(Protocol):
+class ViewBase(Protocol):
     """
     Structural subtype base class for generated user interface widgets.
     """
@@ -520,19 +520,19 @@ class Widget(QWidget):
     Base class for all user interface widgets.
 
     Args:
-        ui: Generated user interface widget.
+        view: Generated user interface widget.
         parameters: The parameters to use when analysing the experiment.
     """
 
     _WIDGETS: list["Widget"] = []
 
-    def __init__(self, ui: UiBase, parameters: AnalyserParameters) -> None:
+    def __init__(self, view: ViewBase, parameters: AnalyserParameters) -> None:
         super().__init__()
 
         self._parameters: AnalyserParameters = parameters
-        self._ui: UiBase = ui
+        self._view: ViewBase = view
 
-        self.ui.setupUi(self)
+        self.view.setupUi(self)
 
         Widget._WIDGETS.append(self)
 
@@ -549,8 +549,8 @@ class Widget(QWidget):
         return self._parameters
 
     @property
-    def ui(self) -> UiBase:
-        return self._ui
+    def view(self) -> ViewBase:
+        return self._view
 
     def activate(self, configuration_viewer: QStackedWidget) -> None:
         """

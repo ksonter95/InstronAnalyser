@@ -1,8 +1,8 @@
 import argparse
 import dataclasses
-import instrument.instrument as instrument
-import instrument.instron_68tm.instron_68tm as instron_68tm
-import instrument.instron_68tm.ui.stepwise as ui
+import experiment.experiment as experiment
+import experiment.instron_68tm.experiment as instron_68tm
+import experiment.instron_68tm.stepwise.view as view
 
 
 import numpy as np
@@ -66,7 +66,7 @@ class Frame(instron_68tm.ProcessedFrame):
 
 
 @dataclasses.dataclass
-class DataParameters(instron_68tm.instrument.DataParameters):
+class DataParameters(experiment.DataParameters):
     """
     Parameters of a stepwise compression experiment using an Instron 68TM.
 
@@ -85,7 +85,7 @@ class DataParameters(instron_68tm.instrument.DataParameters):
 
 
 @dataclasses.dataclass
-class AnalyserParameters(instron_68tm.instrument.AnalyserParameters):
+class AnalyserParameters(instron_68tm.experiment.AnalyserParameters):
     """
     Parameters of an analyser of a stepwise compression experiment using an
     Instron 68TM.
@@ -453,7 +453,7 @@ class Parser(instron_68tm.Parser):
             "instance, if --relaxation-strain-start is 5.0 and "
             "--relaxation-strain-intervals is 6, then the experiment will "
             "relax the sample at 5, 10, 15, 20, 25, 30",
-            type=instrument.ArgparseTypes.positive_non_zero_integer,
+            type=experiment.ArgparseTypes.positive_non_zero_integer,
             default=6,
         )
         parser.add_argument(  # type: ignore
@@ -465,7 +465,7 @@ class Parser(instron_68tm.Parser):
             "--relaxation-strain-start is 5.0, and "
             "--relaxation-strain-intervals is 6, then the experiment will "
             "relax the sample at 5, 10, 15, 20, 25, 30",
-            type=instrument.ArgparseTypes.percentage_float,
+            type=experiment.ArgparseTypes.percentage_float,
             default=5.0,
         )
         parser.add_argument(  # type: ignore
@@ -473,14 +473,14 @@ class Parser(instron_68tm.Parser):
             "--epsilon",
             help="Allowable percentage tolerance on the specified strain for "
             "creating the dataset at the required strain",
-            type=instrument.ArgparseTypes.percentage_float,
+            type=experiment.ArgparseTypes.percentage_float,
             default=0.01,
         )
         parser.add_argument(  # type: ignore
             "-n",
             "--regression-data-points",
             help="Number of data points to include in the regression analysis",
-            type=instrument.ArgparseTypes.positive_non_zero_integer,
+            type=experiment.ArgparseTypes.positive_non_zero_integer,
         )
 
 
@@ -493,7 +493,7 @@ class Widget(instron_68tm.Widget):
     """
 
     def __init__(self) -> None:
-        super().__init__(ui.Ui_Stepwise(), AnalyserParameters())  # type: ignore
+        super().__init__(view.Ui_Stepwise(), AnalyserParameters())  # type: ignore
 
     @property
     def experiment(self) -> str:
@@ -504,8 +504,8 @@ class Widget(instron_68tm.Widget):
         return super().parameters  # type: ignore
 
     @property
-    def ui(self) -> ui.Ui_Stepwise:  # type: ignore
-        return super().ui  # type: ignore
+    def view(self) -> view.Ui_Stepwise:  # type: ignore
+        return super().view  # type: ignore
 
     def init(self) -> None:
         """
@@ -515,22 +515,22 @@ class Widget(instron_68tm.Widget):
         """
 
         # Set the input fields to the defaults
-        self.ui.sb_RelaxationStrainsIntervals.setValue(
+        self.view.sb_RelaxationStrainsIntervals.setValue(
             self.parameters.relaxation_strain_intervals
         )
-        self.ui.sb_RelaxationStrainsStart.setValue(
+        self.view.sb_RelaxationStrainsStart.setValue(
             self.parameters.relaxation_strain_start_pct
         )
-        self.ui.sb_Epsilon.setValue(self.parameters.epsilon_pct)
-        self.ui.sb_RegressionPoints.setValue(
+        self.view.sb_Epsilon.setValue(self.parameters.epsilon_pct)
+        self.view.sb_RegressionPoints.setValue(
             self.parameters.regression_data_points or 0
         )
-        self.ui.cb_RegressionPoints.setChecked(
+        self.view.cb_RegressionPoints.setChecked(
             self.parameters.regression_data_points is not None
         )
 
         # Connect signals with slots
-        self.ui.cb_RegressionPoints.checkStateChanged.connect(
+        self.view.cb_RegressionPoints.checkStateChanged.connect(
             self._handle_cb_RegressionPoints
         )
 
@@ -544,15 +544,15 @@ class Widget(instron_68tm.Widget):
         """
 
         self.parameters.relaxation_strain_intervals = (
-            self.ui.sb_RelaxationStrainsIntervals.value()
+            self.view.sb_RelaxationStrainsIntervals.value()
         )
         self.parameters.relaxation_strain_start_pct = (
-            self.ui.sb_RelaxationStrainsStart.value()
+            self.view.sb_RelaxationStrainsStart.value()
         )
-        self.parameters.epsilon_pct = self.ui.sb_Epsilon.value()
+        self.parameters.epsilon_pct = self.view.sb_Epsilon.value()
         self.parameters.regression_data_points = (
-            self.ui.sb_RegressionPoints.value()
-            if self.ui.cb_RegressionPoints.isChecked()
+            self.view.sb_RegressionPoints.value()
+            if self.view.cb_RegressionPoints.isChecked()
             else None
         )
 
@@ -562,6 +562,6 @@ class Widget(instron_68tm.Widget):
         cb_RegressionPoints.
         """
 
-        self.ui.sb_RegressionPoints.setDisabled(
-            not self.ui.cb_RegressionPoints.isChecked()
+        self.view.sb_RegressionPoints.setDisabled(
+            not self.view.cb_RegressionPoints.isChecked()
         )
