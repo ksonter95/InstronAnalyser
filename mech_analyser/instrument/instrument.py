@@ -2,8 +2,9 @@ import argparse
 import dataclasses
 import pandas as pd
 
+from PySide6.QtWidgets import QStackedWidget, QWidget
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Protocol
 
 # === Data frames ============================================================ #
 
@@ -219,7 +220,7 @@ class Analyser:
         output_xlsx: The path to the Excel file which will contain the analysis
             results.
         raw_frame: The raw experiment data frame.
-        parameters: The parameters to use when processing the data.
+        parameters: The parameters to use when analysing the experiment.
         summary: The summary of the analysis.
     """
 
@@ -500,3 +501,145 @@ class Parser:
             required=True,
             help="Mechanical instrument to which the data belongs",
         )
+
+
+# === User Interface Widgets ================================================= #
+
+
+class UiBase(Protocol):
+    """
+    Structural subtype base class for generated user interface widgets.
+    """
+
+    def setupUi(self, parent: QWidget) -> None: ...
+    def retranslateUi(self, parent: QWidget) -> None: ...
+
+
+class Widget(QWidget):
+    """
+    Base class for all user interface widgets.
+
+    Args:
+        ui: Generated user interface widget.
+        parameters: The parameters to use when analysing the experiment.
+    """
+
+    _WIDGETS: list["Widget"] = []
+
+    def __init__(self, ui: UiBase, parameters: AnalyserParameters) -> None:
+        super().__init__()
+
+        self._parameters: AnalyserParameters = parameters
+        self._ui: UiBase = ui
+
+        self.ui.setupUi(self)
+
+        Widget._WIDGETS.append(self)
+
+    @property
+    def experiment(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def instrument(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def parameters(self) -> AnalyserParameters:
+        return self._parameters
+
+    @property
+    def ui(self) -> UiBase:
+        return self._ui
+
+    def activate(self, configuration_viewer: QStackedWidget) -> None:
+        """
+        Activates and displays the widget within the configuration viewer.
+
+        Args:
+            configuration_viewer: The configuration viewer in which to display
+                the widget.
+        """
+
+        configuration_viewer.setCurrentWidget(self)
+
+    def init(self) -> None:
+        """
+        Initialises the widget by setting the input fields to the defaults of
+        the parameters to use when analysing the experiment and connecting any
+        signals with an associated slot.
+
+        NOTE: this is an abstract method that will be overwritten in the child
+              classes.
+        """
+
+        raise NotImplementedError
+
+    def sync_parameters(self) -> None:
+        """
+        Synchronise the parameters to use when analysing the experiment with the
+        widget input fields.
+
+        NOTE: this is an abstract method that will be overwritten in the child
+              classes.
+        """
+
+        raise NotImplementedError
+
+    @classmethod
+    def get_experiments(cls, instrument: str) -> list[str]:
+        """
+        Obtains the list of experiments associated with the specified
+        instrument.
+
+        Args:
+            instrument: The instrument for which to obtain the list of
+                associated experiments.
+
+        Returns:
+            list[str]: A list of experiments associated with the specified
+                instrument.
+        """
+
+        experiments: list[str] = [
+            w.experiment for w in cls._WIDGETS if w.instrument == instrument
+        ]
+        experiments.sort()
+
+        return experiments
+
+    @classmethod
+    def get_instruments(cls) -> list[str]:
+        """
+        Obtains the list of recognised instruments.
+
+        Returns:
+            list[str]: The list of recognised instruments.
+        """
+
+        instruments: list[str] = list(set([w.instrument for w in cls._WIDGETS]))
+        instruments.sort()
+
+        return instruments
+
+    @classmethod
+    def get_widget(cls, instrument: str, experiment: str) -> Optional["Widget"]:
+        """
+        Obtains the widget associated with the specified instrument and
+        experiment.
+
+        Args:
+            instrument: Instrument for which to obtain the widget.
+            experiment: Experiment for which to obtain the widget.
+
+        Returns:
+            Widget: The widget associated with the specified instrument and
+                experiment.
+            None: No such widget exists.
+        """
+
+        for widget in cls._WIDGETS:
+            if widget.instrument == instrument and widget.experiment == experiment:
+                return widget
+
+        return None

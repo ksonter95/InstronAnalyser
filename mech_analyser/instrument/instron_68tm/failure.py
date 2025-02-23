@@ -2,6 +2,7 @@ import argparse
 import dataclasses
 import instrument.instrument as instrument
 import instrument.instron_68tm.instron_68tm as instron_68tm
+import instrument.instron_68tm.ui.failure as ui
 
 import numpy as np
 import pandas as pd
@@ -519,3 +520,57 @@ class Parser(instron_68tm.Parser):
             type=instrument.ArgparseTypes.percentage_float,
             default=15,
         )
+
+
+# === User Interface Widgets ================================================= #
+
+
+class Widget(instron_68tm.Widget):
+    """
+    User interface widget for the compression-to-failure Instron 68TM
+    experiment.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(ui.Ui_Failure(), AnalyserParameters())  # type: ignore
+
+    @property
+    def experiment(self) -> str:
+        return "Compression-to-failure"
+
+    @property
+    def parameters(self) -> AnalyserParameters:
+        return super().parameters  # type: ignore
+
+    @property
+    def ui(self) -> ui.Ui_Failure:  # type: ignore
+        return super().ui  # type: ignore
+
+    def init(self) -> None:
+        """
+        Initialises the widget by setting the input fields to the defaults of
+        the parameters to use when analysing the experiment and connecting any
+        signals with an associated slot.
+        """
+
+        # Set the input fields to the defaults
+        self.ui.sb_Abort.setValue(self.parameters.abort_strain_pct)
+        self.ui.sb_Toughness.setValue(self.parameters.toughness_strain_pct)
+        self.ui.sb_Stiffness.setValue(self.parameters.stiffness_strain_pct)
+        self.ui.sb_Strain1.setValue(self.parameters.e_modulus_strain1_pct)
+        self.ui.sb_Strain2.setValue(self.parameters.e_modulus_strain2_pct)
+
+        # Connect signals with slots
+        # NOTE: none
+
+    def sync_parameters(self) -> None:
+        """
+        Synchronise the parameters to use when analysing the experiment with the
+        widget input fields.
+        """
+
+        self.parameters.abort_strain_pct = self.ui.sb_Abort.value()
+        self.parameters.toughness_strain_pct = self.ui.sb_Toughness.value()
+        self.parameters.stiffness_strain_pct = self.ui.sb_Stiffness.value()
+        self.parameters.e_modulus_strain1_pct = self.ui.sb_Strain1.value()
+        self.parameters.e_modulus_strain2_pct = self.ui.sb_Strain2.value()

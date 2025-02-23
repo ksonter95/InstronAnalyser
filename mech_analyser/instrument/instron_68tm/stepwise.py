@@ -2,6 +2,7 @@ import argparse
 import dataclasses
 import instrument.instrument as instrument
 import instrument.instron_68tm.instron_68tm as instron_68tm
+import instrument.instron_68tm.ui.stepwise as ui
 
 
 import numpy as np
@@ -480,4 +481,87 @@ class Parser(instron_68tm.Parser):
             "--regression-data-points",
             help="Number of data points to include in the regression analysis",
             type=instrument.ArgparseTypes.positive_non_zero_integer,
+        )
+
+
+# === User Interface Widgets ================================================= #
+
+
+class Widget(instron_68tm.Widget):
+    """
+    User interface widget for the stepwise compression Instron 68TM experiment.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(ui.Ui_Stepwise(), AnalyserParameters())  # type: ignore
+
+    @property
+    def experiment(self) -> str:
+        return "Stepwise compression"
+
+    @property
+    def parameters(self) -> AnalyserParameters:
+        return super().parameters  # type: ignore
+
+    @property
+    def ui(self) -> ui.Ui_Stepwise:  # type: ignore
+        return super().ui  # type: ignore
+
+    def init(self) -> None:
+        """
+        Initialises the widget by setting the input fields to the defaults of
+        the parameters to use when analysing the experiment and connecting any
+        signals with an associated slot.
+        """
+
+        # Set the input fields to the defaults
+        self.ui.sb_RelaxationStrainsIntervals.setValue(
+            self.parameters.relaxation_strain_intervals
+        )
+        self.ui.sb_RelaxationStrainsStart.setValue(
+            self.parameters.relaxation_strain_start_pct
+        )
+        self.ui.sb_Epsilon.setValue(self.parameters.epsilon_pct)
+        self.ui.sb_RegressionPoints.setValue(
+            self.parameters.regression_data_points or 0
+        )
+        self.ui.cb_RegressionPoints.setChecked(
+            self.parameters.regression_data_points is not None
+        )
+
+        # Connect signals with slots
+        self.ui.cb_RegressionPoints.checkStateChanged.connect(
+            self._handle_cb_RegressionPoints
+        )
+
+        # Set initial views
+        self._handle_cb_RegressionPoints()
+
+    def sync_parameters(self) -> None:
+        """
+        Synchronise the parameters to use when analysing the experiment with the
+        widget input fields.
+        """
+
+        self.parameters.relaxation_strain_intervals = (
+            self.ui.sb_RelaxationStrainsIntervals.value()
+        )
+        self.parameters.relaxation_strain_start_pct = (
+            self.ui.sb_RelaxationStrainsStart.value()
+        )
+        self.parameters.epsilon_pct = self.ui.sb_Epsilon.value()
+        self.parameters.regression_data_points = (
+            self.ui.sb_RegressionPoints.value()
+            if self.ui.cb_RegressionPoints.isChecked()
+            else None
+        )
+
+    def _handle_cb_RegressionPoints(self) -> None:
+        """
+        Sets the visibility of sb_RegressionPoints to the state of
+        cb_RegressionPoints.
+        """
+
+        self.ui.sb_RegressionPoints.setDisabled(
+            not self.ui.cb_RegressionPoints.isChecked()
         )

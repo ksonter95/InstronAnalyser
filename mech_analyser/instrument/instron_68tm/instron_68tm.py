@@ -170,7 +170,8 @@ class Analyser(instrument.Analyser):
             68TM experiment.
         output_xlsx: The path to the Excel file which will contain the analysis
             results.
-        parameters: The parameters to use when processing the data.
+        parameters: The parameters to use when analysing the Instron 68TM
+            experiment.
         summary: The summary of the analysis.
     """
 
@@ -260,3 +261,20 @@ class Parser(instrument.Parser):
             required=True,
             help="Instron 68TM experiment for which the data is to be analysed",
         )
+
+
+# === User Interface Widgets ================================================= #
+
+
+class Widget(instrument.Widget):
+    """
+    Base class for all Instron 68TM user interface widgets.
+
+    Args:
+        ui: Generated user interface widget.
+        parameters: The parameters to use when analysing the experiment.
+    """
+
+    @property
+    def instrument(self) -> str:
+        return "Instron 68TM"
