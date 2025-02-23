@@ -546,6 +546,23 @@ class Widget(instron_68tm.Widget):
     def view(self) -> view.Ui_Failure:  # type: ignore
         return super().view  # type: ignore
 
+    def create_analyser(  # type: ignore
+        self, input_csv: Path, output_xlsx: Path, parameters: AnalyserParameters
+    ) -> Analyser:
+        """
+        Creates the experiment analyser.
+
+        Args:
+            input_csv: The path to the CSV file containing the output of the
+                compression-to-failure Instron 68TM experiment.
+            output_xlsx: The path to the Excel file which will contain the
+                analysis results.
+            parameters: The parameters to use when analysing the
+                compression-to-failure Instron 68TM experiment.
+        """
+
+        return Analyser(input_csv, output_xlsx, parameters)
+
     def init(self) -> None:
         """
         Initialises the widget by setting the input fields to the defaults of

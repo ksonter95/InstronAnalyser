@@ -2,7 +2,13 @@ import experiment.experiment as experiment
 import importlib
 import os
 
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QMainWindow,
+    QTableWidgetItem,
+)
+from pathlib import Path
 from typing import Optional
 from ui.window import Ui_MainWindow
 
@@ -121,22 +127,58 @@ class Window(QMainWindow):
             self._widget_manager.add(widget)
 
         # Determine the instrument options
-        self._window.cb_Instrument.clear()
         self._window.cb_Instrument.addItems(self._widget_manager.get_instruments())
 
         # Connect the experiment selection to the configuration view
         self._window.cb_Experiment.currentIndexChanged.connect(
-            self._handle_cb_Experiment
+            self._handle_cb_Experiment_changed
         )
         self._window.cb_Instrument.currentIndexChanged.connect(
-            self._handle_cb_Instrument
+            self._handle_cb_Instrument_changed
         )
 
-        # Set the initial view
-        self._handle_cb_Instrument()
-        self._handle_cb_Experiment()
+        # Connect the button functionalities
+        self._files: list[tuple[Path, Path]] = []
+        self._output_directory: Optional[Path] = None
+        self._window.pb_OpenDirectory.clicked.connect(
+            self._handle_pb_OpenDirectory_clicked
+        )
+        self._window.pb_OpenCsv.clicked.connect(self._handle_pb_OpenCsv_clicked)
+        self._window.pb_SaveDirectory.clicked.connect(
+            self._handle_pb_SaveDirectory_clicked
+        )
+        self._window.pb_Configuration.clicked.connect(
+            self._handle_pb_Configuration_clicked
+        )
+        self._window.pb_Run.clicked.connect(self._handle_pb_Run_clicked)
 
-    def _handle_cb_Experiment(self) -> None:
+        # Initially disable the configuration and output tabs
+        self._window.tw_Main.setTabEnabled(1, False)
+        self._window.tw_Main.setTabEnabled(2, False)
+
+        # Set the initial view
+        self._handle_cb_Instrument_changed()
+        self._handle_cb_Experiment_changed()
+        self._update_tbl_Files()
+
+    def _create_output_xlsx(self, input_csv: Path) -> Path:
+        """
+        Creates the Excel output file path from the CSV input file path.
+
+        Args:
+            input_csv: Path to the CSV input file.
+
+        Returns:
+            Path: Path to the Excel output file.
+        """
+
+        output_xlsx: Path = input_csv.with_suffix(".xlsx")
+        if self._output_directory is not None:
+            output_xlsx = self._output_directory / output_xlsx.name
+
+        return output_xlsx
+
+    def _handle_cb_Experiment_changed(self) -> None:
         """
         Activates the widget corresponding to the instrument and experiment.
         """
@@ -149,7 +191,7 @@ class Window(QMainWindow):
         if widget is not None:
             widget.activate(self._window.sw_Configuration)
 
-    def _handle_cb_Instrument(self) -> None:
+    def _handle_cb_Instrument_changed(self) -> None:
         """
         Updates the experiment selection based on the selected instrument.
         """
@@ -160,6 +202,113 @@ class Window(QMainWindow):
                 self._window.cb_Instrument.currentText()
             )
         )
+
+    def _handle_pb_Configuration_clicked(self) -> None:
+        """
+        Enables the configuration tab and sets it as the current tab.
+        """
+
+        self._window.tw_Main.setTabEnabled(1, True)
+        self._window.tw_Main.setCurrentIndex(1)
+
+    def _handle_pb_OpenCsv_clicked(self) -> None:
+        """
+        Opens a file dialog box to search for the CSV experiment outputs and
+        then updates the tbl_Files with the selected files.
+        """
+
+        input_csvs, _ = QFileDialog.getOpenFileNames(
+            self, "Select CSV Files", "", "CSV Files (*.csv);;All Files (*)"
+        )
+
+        for input_csv in [Path(f) for f in input_csvs]:
+            self._files.append((input_csv, self._create_output_xlsx(input_csv)))
+
+        self._update_tbl_Files()
+
+    def _handle_pb_OpenDirectory_clicked(self) -> None:
+        """
+        Opens a directory dialog box to search for the CSV experiment outputs
+        and then updates the tbl_Files with the selected files.
+        """
+
+        input_directory: Path = Path(
+            QFileDialog.getExistingDirectory(self, "Select Directory", "")
+        )
+
+        for input_csv in input_directory.iterdir():
+            if not input_csv.is_file() or not input_csv.suffix == ".csv":
+                continue
+
+            self._files.append((input_csv, self._create_output_xlsx(input_csv)))
+
+        self._update_tbl_Files()
+
+    def _handle_pb_Run_clicked(self) -> None:
+        """
+        Enables the output tab, sets it as the current tab, and begins the
+        analysis.
+        """
+
+        # Enable the output tab and set it to be the current tab
+        self._window.tw_Main.setTabEnabled(2, True)
+        self._window.tw_Main.setCurrentIndex(2)
+
+        # Create all of the analysers
+        widget: experiment.Widget = self._window.sw_Configuration.currentWidget()  # type: ignore
+        widget.sync_parameters()
+        analysers: list[experiment.Analyser] = [
+            widget.create_analyser(input_csv, output_xlsx, widget.parameters)
+            for input_csv, output_xlsx in self._files
+        ]
+
+        # Analyse all of the experiments
+        for i in range(self._window.tbl_Files.rowCount()):
+            self._window.tbl_Output.setRowCount(i + 1)
+            self._window.tbl_Output.setItem(
+                i,
+                0,
+                QTableWidgetItem(
+                    f"{i + 1}/{len(analysers)}: {analysers[i].output_xlsx.name}"
+                ),
+            )
+            self._window.tbl_Output.scrollToBottom()
+            QApplication.processEvents()
+
+            analysers[i].analyse()
+            analysers[i].save()
+
+    def _handle_pb_SaveDirectory_clicked(self) -> None:
+        """
+        Opens a directory dialog box to search for the directory to contain the
+        experiment analysis outputs and then updates the tbl_Files with the
+        selected output directory.
+        """
+
+        self._output_directory = Path(
+            QFileDialog.getExistingDirectory(self, "Select Directory", "")
+        )
+
+        for i, (_, output_xlsx) in enumerate(self._files):
+            self._files[i] = (_, self._output_directory / output_xlsx.name)
+
+        self._update_tbl_Files()
+
+    def _update_tbl_Files(self) -> None:
+        """
+        Updates the files table.
+        """
+
+        self._window.tbl_Files.setRowCount(len(self._files))
+
+        for r in range(self._window.tbl_Files.rowCount()):
+            self._window.tbl_Files.setItem(
+                r, 0, QTableWidgetItem(self._files[r][0].name)
+            )
+            for c in range(len(self._files[r])):
+                self._window.tbl_Files.setItem(
+                    r, c + 1, QTableWidgetItem(str(self._files[r][c]))
+                )
 
 
 class Application(QApplication):

@@ -507,6 +507,23 @@ class Widget(instron_68tm.Widget):
     def view(self) -> view.Ui_Stepwise:  # type: ignore
         return super().view  # type: ignore
 
+    def create_analyser(  # type: ignore
+        self, input_csv: Path, output_xlsx: Path, parameters: AnalyserParameters
+    ) -> Analyser:
+        """
+        Creates the experiment analyser.
+
+        Args:
+            input_csv: The path to the CSV file containing the output of the
+                stepwise compression Instron 68TM experiment.
+            output_xlsx: The path to the Excel file which will contain the
+                analysis results.
+            parameters: The parameters to use when analysing the stepwise
+                compression Instron 68TM experiment.
+        """
+
+        return Analyser(input_csv, output_xlsx, parameters)
+
     def init(self) -> None:
         """
         Initialises the widget by setting the input fields to the defaults of
@@ -531,11 +548,11 @@ class Widget(instron_68tm.Widget):
 
         # Connect signals with slots
         self.view.cb_RegressionPoints.checkStateChanged.connect(
-            self._handle_cb_RegressionPoints
+            self._handle_cb_RegressionPoints_changed
         )
 
         # Set initial views
-        self._handle_cb_RegressionPoints()
+        self._handle_cb_RegressionPoints_changed()
 
     def sync_parameters(self) -> None:
         """
@@ -556,7 +573,7 @@ class Widget(instron_68tm.Widget):
             else None
         )
 
-    def _handle_cb_RegressionPoints(self) -> None:
+    def _handle_cb_RegressionPoints_changed(self) -> None:
         """
         Sets the visibility of sb_RegressionPoints to the state of
         cb_RegressionPoints.

@@ -524,8 +524,6 @@ class Widget(QWidget):
         parameters: The parameters to use when analysing the experiment.
     """
 
-    _WIDGETS: list["Widget"] = []
-
     def __init__(self, view: ViewBase, parameters: AnalyserParameters) -> None:
         super().__init__()
 
@@ -533,8 +531,6 @@ class Widget(QWidget):
         self._view: ViewBase = view
 
         self.view.setupUi(self)
-
-        Widget._WIDGETS.append(self)
 
     @property
     def experiment(self) -> str:
@@ -562,6 +558,22 @@ class Widget(QWidget):
         """
 
         configuration_viewer.setCurrentWidget(self)
+
+    def create_analyser(
+        self, input_csv: Path, output_xlsx: Path, parameters: AnalyserParameters
+    ) -> Analyser:
+        """
+        Creates the experiment analyser.
+
+        Args:
+            input_csv: The path to the CSV file containing the output of the
+                experiment.
+            output_xlsx: The path to the Excel file which will contain the
+                analysis results.
+            parameters: The parameters to use when analysing the experiment.
+        """
+
+        raise NotImplementedError
 
     def init(self) -> None:
         """
