@@ -332,8 +332,6 @@ class ArgparseTypes:
             Path: The path to the directory if it exists.
         """
 
-        print(Path(value).resolve(), flush=True)
-
         if not Path(value).is_dir():
             raise argparse.ArgumentTypeError(f"Directory '{value}' does not exist")
 

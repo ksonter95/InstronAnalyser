@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>MechAnalyser</string>
   </property>
   <widget class="QTabWidget" name="tw_Main">
    <property name="currentIndex">
