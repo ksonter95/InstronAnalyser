@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'stepwise.ui'
+## Form generated from reading UI file 'view.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.2
 ##
@@ -19,10 +19,11 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QDoubleSpinBox, QGridLay
     QLabel, QSizePolicy, QSpacerItem, QSpinBox,
     QWidget)
 
-class Ui_Stepwise(object):
+class Ui_w_Stepwise(object):
     def setupUi(self, w_Stepwise):
         if not w_Stepwise.objectName():
             w_Stepwise.setObjectName(u"w_Stepwise")
+        w_Stepwise.resize(472, 157)
         self.gl_Stepwise = QGridLayout(w_Stepwise)
         self.gl_Stepwise.setObjectName(u"gl_Stepwise")
         self.l_RelaxationStrains = QLabel(w_Stepwise)
@@ -86,6 +87,7 @@ class Ui_Stepwise(object):
 
         self.sb_RegressionPoints = QSpinBox(w_Stepwise)
         self.sb_RegressionPoints.setObjectName(u"sb_RegressionPoints")
+        self.sb_RegressionPoints.setMaximum(100000)
 
         self.gl_Stepwise.addWidget(self.sb_RegressionPoints, 2, 2, 1, 1)
 
@@ -101,35 +103,35 @@ class Ui_Stepwise(object):
 
     def retranslateUi(self, w_Stepwise):
 #if QT_CONFIG(tooltip)
-        self.l_RelaxationStrains.setToolTip(QCoreApplication.translate("Stepwise", u"The strains at which the sample has been configured to relax", None))
+        self.l_RelaxationStrains.setToolTip(QCoreApplication.translate("w_Stepwise", u"The strains at which the sample has been configured to relax", None))
 #endif // QT_CONFIG(tooltip)
-        self.l_RelaxationStrains.setText(QCoreApplication.translate("Stepwise", u"Relaxation strains", None))
+        self.l_RelaxationStrains.setText(QCoreApplication.translate("w_Stepwise", u"Relaxation strains", None))
 #if QT_CONFIG(tooltip)
-        self.sb_RelaxationStrainsIntervals.setToolTip(QCoreApplication.translate("Stepwise", u"The number of intervals at which the sample has been configured to relax.  This in combination with the first strain gives the relaxation strains.  For instance, if the first strain is 5%, and the number of intervals is 6, then the experiment will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.", None))
+        self.sb_RelaxationStrainsIntervals.setToolTip(QCoreApplication.translate("w_Stepwise", u"The number of intervals at which the sample has been configured to relax.  This in combination with the first strain gives the relaxation strains.  For instance, if the first strain is 5%, and the number of intervals is 6, then the experiment will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.", None))
 #endif // QT_CONFIG(tooltip)
-        self.l_RelaxationStrainsText.setText(QCoreApplication.translate("Stepwise", u"intervals, starting at", None))
+        self.l_RelaxationStrainsText.setText(QCoreApplication.translate("w_Stepwise", u"intervals, starting at", None))
 #if QT_CONFIG(tooltip)
-        self.sb_RelaxationStrainsStart.setToolTip(QCoreApplication.translate("Stepwise", u"The first strain at which the sample has been configured to relax.  This in combination with the number of intervals gives the relaxation strains.  For instance, if the first strain is 5%, and the number of intervals is 6, then the experiment will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.", None))
+        self.sb_RelaxationStrainsStart.setToolTip(QCoreApplication.translate("w_Stepwise", u"The first strain at which the sample has been configured to relax.  This in combination with the number of intervals gives the relaxation strains.  For instance, if the first strain is 5%, and the number of intervals is 6, then the experiment will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.", None))
 #endif // QT_CONFIG(tooltip)
-        self.sb_RelaxationStrainsStart.setSuffix(QCoreApplication.translate("Stepwise", u"%", None))
+        self.sb_RelaxationStrainsStart.setSuffix(QCoreApplication.translate("w_Stepwise", u"%", None))
 #if QT_CONFIG(tooltip)
-        self.l_Epsilon.setToolTip(QCoreApplication.translate("Stepwise", u"Allowable percentage tolerance on the strain for creating the dataset at the required relaxation strain", None))
+        self.l_Epsilon.setToolTip(QCoreApplication.translate("w_Stepwise", u"Allowable percentage tolerance on the strain for creating the dataset at the required relaxation strain", None))
 #endif // QT_CONFIG(tooltip)
-        self.l_Epsilon.setText(QCoreApplication.translate("Stepwise", u"Epsilon", None))
+        self.l_Epsilon.setText(QCoreApplication.translate("w_Stepwise", u"Epsilon", None))
 #if QT_CONFIG(tooltip)
-        self.sb_Epsilon.setToolTip(QCoreApplication.translate("Stepwise", u"Allowable percentage tolerance on the strain for creating the dataset at the required relaxation strain", None))
+        self.sb_Epsilon.setToolTip(QCoreApplication.translate("w_Stepwise", u"Allowable percentage tolerance on the strain for creating the dataset at the required relaxation strain", None))
 #endif // QT_CONFIG(tooltip)
-        self.sb_Epsilon.setSuffix(QCoreApplication.translate("Stepwise", u"%", None))
+        self.sb_Epsilon.setSuffix(QCoreApplication.translate("w_Stepwise", u"%", None))
 #if QT_CONFIG(tooltip)
-        self.l_RegressionPoints.setToolTip(QCoreApplication.translate("Stepwise", u"Number of data points to include in the regression analysis", None))
+        self.l_RegressionPoints.setToolTip(QCoreApplication.translate("w_Stepwise", u"Number of data points to include in the regression analysis", None))
 #endif // QT_CONFIG(tooltip)
-        self.l_RegressionPoints.setText(QCoreApplication.translate("Stepwise", u"Regression points", None))
+        self.l_RegressionPoints.setText(QCoreApplication.translate("w_Stepwise", u"Regression points", None))
 #if QT_CONFIG(tooltip)
-        self.cb_RegressionPoints.setToolTip(QCoreApplication.translate("Stepwise", u"If unchecked, all datapoints will be used in the regression analysis", None))
+        self.cb_RegressionPoints.setToolTip(QCoreApplication.translate("w_Stepwise", u"If unchecked, all datapoints will be used in the regression analysis", None))
 #endif // QT_CONFIG(tooltip)
         self.cb_RegressionPoints.setText("")
 #if QT_CONFIG(tooltip)
-        self.sb_RegressionPoints.setToolTip(QCoreApplication.translate("Stepwise", u"Number of data points to include in the regression analysis", None))
+        self.sb_RegressionPoints.setToolTip(QCoreApplication.translate("w_Stepwise", u"Number of data points to include in the regression analysis", None))
 #endif // QT_CONFIG(tooltip)
         pass
     # retranslateUi

@@ -15,7 +15,7 @@
   </property>
   <widget class="QTabWidget" name="tw_Main">
    <property name="currentIndex">
-    <number>2</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="t_Files">
     <attribute name="title">
@@ -24,6 +24,9 @@
     <layout class="QGridLayout" name="gl_Files">
      <item row="0" column="0" colspan="5">
       <widget class="QTableWidget" name="tbl_Files">
+       <property name="editTriggers">
+        <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+       </property>
        <property name="rowCount">
         <number>0</number>
        </property>
@@ -202,8 +205,31 @@
      <string>Output</string>
     </attribute>
     <layout class="QGridLayout" name="gl_Output">
-     <item row="0" column="0">
+     <item row="1" column="1">
+      <widget class="QPushButton" name="pb_Continue">
+       <property name="text">
+        <string>Continue...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <spacer name="s_OutputHorizontal">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="0" colspan="2">
       <widget class="QTableWidget" name="tbl_Output">
+       <property name="editTriggers">
+        <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+       </property>
        <property name="rowCount">
         <number>0</number>
        </property>

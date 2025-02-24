@@ -532,7 +532,7 @@ class Widget(instron_68tm.Widget):
     """
 
     def __init__(self) -> None:
-        super().__init__(view.Ui_Failure(), AnalyserParameters())  # type: ignore
+        super().__init__(view.Ui_w_Failure(), AnalyserParameters())  # type: ignore
 
     @property
     def experiment(self) -> str:
@@ -543,7 +543,7 @@ class Widget(instron_68tm.Widget):
         return super().parameters  # type: ignore
 
     @property
-    def view(self) -> view.Ui_Failure:  # type: ignore
+    def view(self) -> view.Ui_w_Failure:  # type: ignore
         return super().view  # type: ignore
 
     def create_analyser(  # type: ignore

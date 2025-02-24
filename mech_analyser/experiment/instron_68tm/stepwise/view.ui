@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Stepwise</class>
+ <class>w_Stepwise</class>
  <widget class="QWidget" name="w_Stepwise">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>472</width>
+    <height>157</height>
+   </rect>
+  </property>
   <layout class="QGridLayout" name="gl_Stepwise">
    <item row="0" column="0">
     <widget class="QLabel" name="l_RelaxationStrains">
@@ -130,6 +138,9 @@
     <widget class="QSpinBox" name="sb_RegressionPoints">
      <property name="toolTip">
       <string>Number of data points to include in the regression analysis</string>
+     </property>
+     <property name="maximum">
+      <number>100000</number>
      </property>
     </widget>
    </item>

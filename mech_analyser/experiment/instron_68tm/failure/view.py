@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'failure.ui'
+## Form generated from reading UI file 'view.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.2
 ##
@@ -18,10 +18,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QDoubleSpinBox, QGridLayout, QLabel,
     QSizePolicy, QSpacerItem, QWidget)
 
-class Ui_Failure(object):
+class Ui_w_Failure(object):
     def setupUi(self, w_Failure):
         if not w_Failure.objectName():
             w_Failure.setObjectName(u"w_Failure")
+        w_Failure.resize(349, 188)
         self.gl_Failure = QGridLayout(w_Failure)
         self.gl_Failure.setObjectName(u"gl_Failure")
         self.l_Abort = QLabel(w_Failure)
@@ -110,42 +111,42 @@ class Ui_Failure(object):
 
     def retranslateUi(self, w_Failure):
 #if QT_CONFIG(tooltip)
-        self.l_Abort.setToolTip(QCoreApplication.translate("Failure", u"The strain at which the experiment aborts even if the sample has not yet failed", None))
+        self.l_Abort.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the experiment aborts even if the sample has not yet failed", None))
 #endif // QT_CONFIG(tooltip)
-        self.l_Abort.setText(QCoreApplication.translate("Failure", u"Abort strain", None))
+        self.l_Abort.setText(QCoreApplication.translate("w_Failure", u"Abort strain", None))
 #if QT_CONFIG(tooltip)
-        self.sb_Abort.setToolTip(QCoreApplication.translate("Failure", u"The strain at which the experiment aborts even if the sample has not yet failed", None))
+        self.sb_Abort.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the experiment aborts even if the sample has not yet failed", None))
 #endif // QT_CONFIG(tooltip)
-        self.sb_Abort.setSuffix(QCoreApplication.translate("Failure", u"%", None))
+        self.sb_Abort.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
 #if QT_CONFIG(tooltip)
-        self.l_Toughness.setToolTip(QCoreApplication.translate("Failure", u"The strain at which the toughness is calculated", None))
+        self.l_Toughness.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the toughness is calculated", None))
 #endif // QT_CONFIG(tooltip)
-        self.l_Toughness.setText(QCoreApplication.translate("Failure", u"Toughness strain", None))
+        self.l_Toughness.setText(QCoreApplication.translate("w_Failure", u"Toughness strain", None))
 #if QT_CONFIG(tooltip)
-        self.sb_Toughness.setToolTip(QCoreApplication.translate("Failure", u"The strain at which the toughness is calculated", None))
+        self.sb_Toughness.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the toughness is calculated", None))
 #endif // QT_CONFIG(tooltip)
-        self.sb_Toughness.setSuffix(QCoreApplication.translate("Failure", u"%", None))
+        self.sb_Toughness.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
 #if QT_CONFIG(tooltip)
-        self.l_Stiffness.setToolTip(QCoreApplication.translate("Failure", u"The strain at which the stiffness is calculated", None))
+        self.l_Stiffness.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the stiffness is calculated", None))
 #endif // QT_CONFIG(tooltip)
-        self.l_Stiffness.setText(QCoreApplication.translate("Failure", u"Stiffness strain", None))
+        self.l_Stiffness.setText(QCoreApplication.translate("w_Failure", u"Stiffness strain", None))
 #if QT_CONFIG(tooltip)
-        self.sb_Stiffness.setToolTip(QCoreApplication.translate("Failure", u"The strain at which the stiffness is calculated", None))
+        self.sb_Stiffness.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the stiffness is calculated", None))
 #endif // QT_CONFIG(tooltip)
-        self.sb_Stiffness.setSuffix(QCoreApplication.translate("Failure", u"%", None))
+        self.sb_Stiffness.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
 #if QT_CONFIG(tooltip)
-        self.l_Strain1.setToolTip(QCoreApplication.translate("Failure", u"The strain range on the stress-strain curve over which the Young's modulus is calculated.  They are the \u03b5 values in the equation E = (\u03c32 - \u03c31) / (\u03b52 - \u03b51)", None))
+        self.l_Strain1.setToolTip(QCoreApplication.translate("w_Failure", u"The strain range on the stress-strain curve over which the Young's modulus is calculated.  They are the \u03b5 values in the equation E = (\u03c32 - \u03c31) / (\u03b52 - \u03b51)", None))
 #endif // QT_CONFIG(tooltip)
-        self.l_Strain1.setText(QCoreApplication.translate("Failure", u"Young's modulus", None))
+        self.l_Strain1.setText(QCoreApplication.translate("w_Failure", u"Young's modulus", None))
 #if QT_CONFIG(tooltip)
-        self.sb_Strain1.setToolTip(QCoreApplication.translate("Failure", u"The strain value which defines the first datapoint on the stress-strain curve used to calculate the Young's modulus.  It is \u03b51 in the equation E = (\u03c32 - \u03c31) / (\u03b52 - \u03b51)", None))
+        self.sb_Strain1.setToolTip(QCoreApplication.translate("w_Failure", u"The strain value which defines the first datapoint on the stress-strain curve used to calculate the Young's modulus.  It is \u03b51 in the equation E = (\u03c32 - \u03c31) / (\u03b52 - \u03b51)", None))
 #endif // QT_CONFIG(tooltip)
-        self.sb_Strain1.setSuffix(QCoreApplication.translate("Failure", u"%", None))
-        self.l_EModulus.setText(QCoreApplication.translate("Failure", u"to", None))
+        self.sb_Strain1.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
+        self.l_EModulus.setText(QCoreApplication.translate("w_Failure", u"to", None))
 #if QT_CONFIG(tooltip)
-        self.sb_Strain2.setToolTip(QCoreApplication.translate("Failure", u"The strain value which defines the second datapoint on the stress-strain curve used to calculate the Young's modulus.  It is \u03b52 in the equation E = (\u03c32 - \u03c31) / (\u03b52 - \u03b51)", None))
+        self.sb_Strain2.setToolTip(QCoreApplication.translate("w_Failure", u"The strain value which defines the second datapoint on the stress-strain curve used to calculate the Young's modulus.  It is \u03b52 in the equation E = (\u03c32 - \u03c31) / (\u03b52 - \u03b51)", None))
 #endif // QT_CONFIG(tooltip)
-        self.sb_Strain2.setSuffix(QCoreApplication.translate("Failure", u"%", None))
+        self.sb_Strain2.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
         pass
     # retranslateUi
 

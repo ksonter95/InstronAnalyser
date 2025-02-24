@@ -15,10 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QGridLayout, QHeaderView,
-    QLabel, QMainWindow, QMenuBar, QPushButton,
-    QSizePolicy, QSpacerItem, QStackedWidget, QTabWidget,
-    QTableWidget, QTableWidgetItem, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QGridLayout,
+    QHeaderView, QLabel, QMainWindow, QMenuBar,
+    QPushButton, QSizePolicy, QSpacerItem, QStackedWidget,
+    QTabWidget, QTableWidget, QTableWidgetItem, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -41,6 +41,7 @@ class Ui_MainWindow(object):
         __qtablewidgetitem2 = QTableWidgetItem()
         self.tbl_Files.setHorizontalHeaderItem(2, __qtablewidgetitem2)
         self.tbl_Files.setObjectName(u"tbl_Files")
+        self.tbl_Files.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tbl_Files.setRowCount(0)
         self.tbl_Files.setColumnCount(3)
         self.tbl_Files.horizontalHeader().setVisible(True)
@@ -135,17 +136,27 @@ class Ui_MainWindow(object):
         self.t_Output.setObjectName(u"t_Output")
         self.gl_Output = QGridLayout(self.t_Output)
         self.gl_Output.setObjectName(u"gl_Output")
+        self.pb_Continue = QPushButton(self.t_Output)
+        self.pb_Continue.setObjectName(u"pb_Continue")
+
+        self.gl_Output.addWidget(self.pb_Continue, 1, 1, 1, 1)
+
+        self.s_OutputHorizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gl_Output.addItem(self.s_OutputHorizontal, 1, 0, 1, 1)
+
         self.tbl_Output = QTableWidget(self.t_Output)
         if (self.tbl_Output.columnCount() < 1):
             self.tbl_Output.setColumnCount(1)
         self.tbl_Output.setObjectName(u"tbl_Output")
+        self.tbl_Output.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tbl_Output.setRowCount(0)
         self.tbl_Output.setColumnCount(1)
         self.tbl_Output.horizontalHeader().setVisible(False)
         self.tbl_Output.horizontalHeader().setStretchLastSection(True)
         self.tbl_Output.verticalHeader().setVisible(False)
 
-        self.gl_Output.addWidget(self.tbl_Output, 0, 0, 1, 1)
+        self.gl_Output.addWidget(self.tbl_Output, 0, 0, 1, 2)
 
         self.tw_Main.addTab(self.t_Output, "")
         MainWindow.setCentralWidget(self.tw_Main)
@@ -163,7 +174,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.tw_Main.setCurrentIndex(2)
+        self.tw_Main.setCurrentIndex(0)
         self.sw_Configuration.setCurrentIndex(-1)
 
 
@@ -202,6 +213,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.pb_Run.setText(QCoreApplication.translate("MainWindow", u"Run", None))
         self.tw_Main.setTabText(self.tw_Main.indexOf(self.t_Configuration), QCoreApplication.translate("MainWindow", u"Configuration", None))
+        self.pb_Continue.setText(QCoreApplication.translate("MainWindow", u"Continue...", None))
         self.tw_Main.setTabText(self.tw_Main.indexOf(self.t_Output), QCoreApplication.translate("MainWindow", u"Output", None))
     # retranslateUi
 

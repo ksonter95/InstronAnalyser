@@ -114,6 +114,9 @@ class Window(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
+        self._files: list[tuple[Path, Path]] = []
+        self._output_directory: Optional[Path] = None
+
         # Create the main window
         self._window = Ui_MainWindow()
         self._window.setupUi(self)  # type: ignore
@@ -138,8 +141,6 @@ class Window(QMainWindow):
         )
 
         # Connect the button functionalities
-        self._files: list[tuple[Path, Path]] = []
-        self._output_directory: Optional[Path] = None
         self._window.pb_OpenDirectory.clicked.connect(
             self._handle_pb_OpenDirectory_clicked
         )
@@ -151,15 +152,9 @@ class Window(QMainWindow):
             self._handle_pb_Configuration_clicked
         )
         self._window.pb_Run.clicked.connect(self._handle_pb_Run_clicked)
+        self._window.pb_Continue.clicked.connect(self._handle_pb_Continue_clicked)
 
-        # Initially disable the configuration and output tabs
-        self._window.tw_Main.setTabEnabled(1, False)
-        self._window.tw_Main.setTabEnabled(2, False)
-
-        # Set the initial view
-        self._handle_cb_Instrument_changed()
-        self._handle_cb_Experiment_changed()
-        self._update_tbl_Files()
+        self._reset()
 
     def _create_output_xlsx(self, input_csv: Path) -> Path:
         """
@@ -211,6 +206,13 @@ class Window(QMainWindow):
         self._window.tw_Main.setTabEnabled(1, True)
         self._window.tw_Main.setCurrentIndex(1)
 
+    def _handle_pb_Continue_clicked(self) -> None:
+        """
+        Resets the window.
+        """
+
+        self._reset()
+
     def _handle_pb_OpenCsv_clicked(self) -> None:
         """
         Opens a file dialog box to search for the CSV experiment outputs and
@@ -251,6 +253,8 @@ class Window(QMainWindow):
         """
 
         # Enable the output tab and set it to be the current tab
+        self._window.tw_Main.setTabEnabled(0, False)
+        self._window.tw_Main.setTabEnabled(1, False)
         self._window.tw_Main.setTabEnabled(2, True)
         self._window.tw_Main.setCurrentIndex(2)
 
@@ -278,6 +282,8 @@ class Window(QMainWindow):
             analysers[i].analyse()
             analysers[i].save()
 
+        self._window.pb_Continue.setEnabled(True)
+
     def _handle_pb_SaveDirectory_clicked(self) -> None:
         """
         Opens a directory dialog box to search for the directory to contain the
@@ -294,6 +300,28 @@ class Window(QMainWindow):
 
         self._update_tbl_Files()
 
+    def _reset(self) -> None:
+        """
+        Resets the window.
+        """
+
+        # Initially disable the configuration and output tabs
+        self._window.tw_Main.setTabEnabled(0, True)
+        self._window.tw_Main.setTabEnabled(1, False)
+        self._window.tw_Main.setTabEnabled(2, False)
+
+        # Reset the files
+        self._files.clear()
+        self._output_directory = None
+        self._update_tbl_Files()
+
+        # Set the initial instrument and experiment drop down menus
+        self._handle_cb_Instrument_changed()
+        self._handle_cb_Experiment_changed()
+
+        # Disable the continue button
+        self._window.pb_Continue.setEnabled(False)
+
     def _update_tbl_Files(self) -> None:
         """
         Updates the files table.
@@ -303,12 +331,17 @@ class Window(QMainWindow):
 
         for r in range(self._window.tbl_Files.rowCount()):
             self._window.tbl_Files.setItem(
-                r, 0, QTableWidgetItem(self._files[r][0].name)
+                r, 0, QTableWidgetItem(self._files[r][0].stem)
             )
             for c in range(len(self._files[r])):
                 self._window.tbl_Files.setItem(
                     r, c + 1, QTableWidgetItem(str(self._files[r][c]))
                 )
+
+        self._window.tbl_Files.resizeColumnsToContents()
+        self._window.tbl_Files.horizontalHeader().setVisible(
+            self._window.tbl_Files.rowCount() != 0
+        )
 
 
 class Application(QApplication):
