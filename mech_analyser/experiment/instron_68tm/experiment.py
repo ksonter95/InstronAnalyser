@@ -234,7 +234,7 @@ class Parser(experiment.Parser):
         """
 
         parser: argparse.ArgumentParser = subparser.add_parser(  # type: ignore
-            "Instron-68TM",
+            Path(__file__).parent.name,
             description="Analyses the data from an Instron 68TM",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )

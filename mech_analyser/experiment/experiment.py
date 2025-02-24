@@ -419,6 +419,17 @@ class Parser:
                     (input_csv, self._create_output_xlsx(input_csv, output_directory))
                 )
 
+    def create_analysers(self) -> list[Analyser]:
+        """
+        Creates the experiment analysers from the parsed command-line arguments.
+
+        Returns:
+            list[Analyser]: List of all compression-to-failure Instron 68TM
+                experiment analysers.
+        """
+
+        raise NotImplementedError
+
     def _create_output_xlsx(
         self, input_csv: Path, output_directory: Optional[Path]
     ) -> Path:

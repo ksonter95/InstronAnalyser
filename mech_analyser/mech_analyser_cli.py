@@ -1,46 +1,71 @@
 import argparse
 import experiment.experiment as experiment
-import experiment.instron_68tm.experiment as instron_68tm
-import experiment.instron_68tm.failure.experiment as failure
-import experiment.instron_68tm.stepwise.experiment as stepwise
+import importlib
+import os
 
+from types import ModuleType
+
+_EXPERIMENTS_DIR: str = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "experiment")
+)
+_EXPERIMENTS: dict[str, dict[str, dict[str, ModuleType] | ModuleType]] = {
+    d1: {
+        "module": importlib.import_module(f"experiment.{d1}.experiment"),
+        "experiments": {
+            d2: importlib.import_module(f"experiment.{d1}.{d2}.experiment")
+            for d2 in os.listdir(os.path.join(_EXPERIMENTS_DIR, d1))
+            if os.path.isdir(os.path.join(_EXPERIMENTS_DIR, d1, d2))
+            and not d2.startswith("_")
+            and os.path.exists(os.path.join(_EXPERIMENTS_DIR, d1, d2, "experiment.py"))
+        },
+    }
+    for d1 in os.listdir(_EXPERIMENTS_DIR)
+    if os.path.isdir(os.path.join(_EXPERIMENTS_DIR, d1)) and not d1.startswith("_")
+}
 
 if __name__ == "__main__":
     parser: argparse.ArgumentParser = experiment.Parser.create_parser()
-    subparser: argparse._SubParsersAction = (  # type: ignore
-        experiment.Parser.create_subparser(parser)  # type: ignore
-    )
+    subparser: argparse._SubParsersAction = experiment.Parser.create_subparser(parser)  # type: ignore
 
-    # Add the instrument-specific parsers
-    instron_68tm_parser: argparse.ArgumentParser = instron_68tm.Parser.add_parser(  # type: ignore
-        subparser
-    )
-    instron_68tm_subparser: argparse._SubParsersAction = (  # type: ignore
-        instron_68tm.Parser.create_subparser(instron_68tm_parser)  # type: ignore
-    )
+    # Dynamically add instruments and their experiment parsers
+    for _, instrument_imports in _EXPERIMENTS.items():
+        if not hasattr(instrument_imports["module"], "Parser"):
+            continue
+        instrument_parser: argparse.ArgumentParser = getattr(
+            instrument_imports["module"], "Parser"
+        ).add_parser(subparser)
+        instrument_subparser: argparse._SubParsersAction = getattr(  # type: ignore
+            instrument_imports["module"], "Parser"
+        ).create_subparser(instrument_parser)
 
-    # Add the Instron 68TM-specific parsers
-    stepwise.Parser.add_parser(instron_68tm_subparser)  # type: ignore
-    failure.Parser.add_parser(instron_68tm_subparser)  # type: ignore
+        for _, experiment_imports in instrument_imports["experiments"].items():
+            if not hasattr(experiment_imports, "Parser"):
+                continue
+
+            getattr(experiment_imports, "Parser").add_parser(instrument_subparser)
 
     # Parse the arguments
     parsed_arguments: argparse.Namespace = parser.parse_args()
 
-    analysers: list[experiment.Analyser]
-    match str(parsed_arguments.instrument):
-        case "Instron-68TM":
-            match str(parsed_arguments.experiment):
-                case "stepwise":
-                    analysers = stepwise.Parser(parsed_arguments).create_analysers()  # type: ignore
-                case "failure":
-                    analysers = failure.Parser(parsed_arguments).create_analysers()  # type: ignore
-                case _:
-                    pass
-        case _:
-            pass
+    # Create the experiment analysers
+    analysers: list[experiment.Analyser] = []
+    for instrument_name, instrument_imports in _EXPERIMENTS.items():
+        if str(parsed_arguments.instrument) != instrument_name:
+            continue
 
-    for i in range(len(analysers)):  # type: ignore
-        print(f"{i + 1}/{len(analysers)}: {analysers[i].output_xlsx.name}")  # type: ignore
+        for experiment_name, experiment_imports in instrument_imports[
+            "experiments"
+        ].items():
+            if str(parsed_arguments.experiment) != experiment_name:
+                continue
 
-        analysers[i].analyse()  # type: ignore
-        analysers[i].save()  # type: ignore
+            analysers = getattr(experiment_imports, "Parser")(
+                parsed_arguments
+            ).create_analysers()
+
+    # Analyse the experiments
+    for i in range(len(analysers)):
+        print(f"{i + 1}/{len(analysers)}: {analysers[i].output_xlsx.name}")
+
+        analysers[i].analyse()
+        analysers[i].save()

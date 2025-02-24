@@ -411,7 +411,7 @@ class Parser(instron_68tm.Parser):
             parsed_arguments.regression_data_points,
         )
 
-    def create_analysers(self) -> list[Analyser]:
+    def create_analysers(self) -> list[Analyser]:  # type: ignore
         """
         Creates the stepwise compression Instron 68TM experiment analysers from
         the parsed command-line arguments.
@@ -438,7 +438,7 @@ class Parser(instron_68tm.Parser):
         """
 
         parser: argparse.ArgumentParser = subparser.add_parser(  # type: ignore
-            "stepwise",
+            Path(__file__).parent.name,
             description="Analyses the data from a stepwise compression Instron "
             "68TM experiment",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
