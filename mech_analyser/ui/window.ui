@@ -22,7 +22,7 @@
      <string>Files</string>
     </attribute>
     <layout class="QGridLayout" name="gl_Files">
-     <item row="0" column="0" colspan="5">
+     <item row="0" column="0" colspan="6">
       <widget class="QTableWidget" name="tbl_Files">
        <property name="editTriggers">
         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
@@ -100,6 +100,13 @@
       </spacer>
      </item>
      <item row="1" column="4">
+      <widget class="QPushButton" name="pb_Clear">
+       <property name="text">
+        <string>Clear...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="5">
       <widget class="QPushButton" name="pb_Configuration">
        <property name="toolTip">
         <string>Configure the experiment analysis</string>

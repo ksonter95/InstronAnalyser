@@ -150,6 +150,7 @@ class Window(QMainWindow):
         self._window.pb_SaveDirectory.clicked.connect(
             self._handle_pb_SaveDirectory_clicked
         )
+        self._window.pb_Clear.clicked.connect(self._handle_pb_Clear_clicked)
         self._window.pb_Configuration.clicked.connect(
             self._handle_pb_Configuration_clicked
         )
@@ -199,6 +200,13 @@ class Window(QMainWindow):
                 self._window.cb_Instrument.currentText()
             )
         )
+
+    def _handle_pb_Clear_clicked(self) -> None:
+        """
+        Resets the window.
+        """
+
+        self._reset()
 
     def _handle_pb_Configuration_clicked(self) -> None:
         """

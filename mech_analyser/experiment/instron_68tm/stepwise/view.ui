@@ -30,7 +30,7 @@
    <item row="0" column="2">
     <widget class="QSpinBox" name="sb_RelaxationStrainsIntervals">
      <property name="toolTip">
-      <string>The number of intervals at which the sample has been configured to relax.  This in combination with the first strain gives the relaxation strains.  For instance, if the first strain is 5%, and the number of intervals is 6, then the experiment will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.</string>
+      <string>The number of intervals at which the sample has been configured to relax.  This in combination with the step size gives the relaxation strains.  For instance, if the step size is 5%, and the number of intervals is 6, then the experiment will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.</string>
      </property>
     </widget>
    </item>
@@ -43,14 +43,14 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>intervals, starting at</string>
+      <string>intervals, with step size</string>
      </property>
     </widget>
    </item>
    <item row="0" column="4">
     <widget class="QDoubleSpinBox" name="sb_RelaxationStrainsStart">
      <property name="toolTip">
-      <string>The first strain at which the sample has been configured to relax.  This in combination with the number of intervals gives the relaxation strains.  For instance, if the first strain is 5%, and the number of intervals is 6, then the experiment will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.</string>
+      <string>The step between consecutive strains at which the sample has been configured to relax.  This in combination with the number of intervals gives the relaxation strains.  For instance, if the step size is 5%, and the number of intervals is 6, then the experiment will relax the sample at 5%, 10%, 15%, 20%, 25%, 30%.</string>
      </property>
      <property name="suffix">
       <string>%</string>

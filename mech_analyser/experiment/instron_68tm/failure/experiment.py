@@ -74,8 +74,8 @@ class DataParameters(experiment.DataParameters):
     abort_strain_pct: float = 95.0
     toughness_strain_pct: float = 4.0
     stiffness_strain_pct: float = 4.0
-    e_modulus_strain1_pct: float = 5.0
-    e_modulus_strain2_pct: float = 10.0
+    e_modulus_strain1_pct: float = 10.0
+    e_modulus_strain2_pct: float = 15.0
 
 
 @dataclasses.dataclass
@@ -100,8 +100,8 @@ class AnalyserParameters(experiment.AnalyserParameters):
     abort_strain_pct: float = 95.0
     toughness_strain_pct: float = 4.0
     stiffness_strain_pct: float = 4.0
-    e_modulus_strain1_pct: float = 5.0
-    e_modulus_strain2_pct: float = 10.0
+    e_modulus_strain1_pct: float = 10.0
+    e_modulus_strain2_pct: float = 15.0
 
 
 # === Data =================================================================== #

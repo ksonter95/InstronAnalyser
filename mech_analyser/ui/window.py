@@ -31,6 +31,25 @@ class Ui_MainWindow(object):
         self.t_Files.setObjectName(u"t_Files")
         self.gl_Files = QGridLayout(self.t_Files)
         self.gl_Files.setObjectName(u"gl_Files")
+        self.pb_Configuration = QPushButton(self.t_Files)
+        self.pb_Configuration.setObjectName(u"pb_Configuration")
+
+        self.gl_Files.addWidget(self.pb_Configuration, 1, 5, 1, 1)
+
+        self.pb_SaveDirectory = QPushButton(self.t_Files)
+        self.pb_SaveDirectory.setObjectName(u"pb_SaveDirectory")
+
+        self.gl_Files.addWidget(self.pb_SaveDirectory, 1, 2, 1, 1)
+
+        self.s_FilesHorizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gl_Files.addItem(self.s_FilesHorizontal, 1, 3, 1, 1)
+
+        self.pb_OpenCsv = QPushButton(self.t_Files)
+        self.pb_OpenCsv.setObjectName(u"pb_OpenCsv")
+
+        self.gl_Files.addWidget(self.pb_OpenCsv, 1, 1, 1, 1)
+
         self.tbl_Files = QTableWidget(self.t_Files)
         if (self.tbl_Files.columnCount() < 3):
             self.tbl_Files.setColumnCount(3)
@@ -47,31 +66,17 @@ class Ui_MainWindow(object):
         self.tbl_Files.horizontalHeader().setVisible(True)
         self.tbl_Files.horizontalHeader().setStretchLastSection(True)
 
-        self.gl_Files.addWidget(self.tbl_Files, 0, 0, 1, 5)
+        self.gl_Files.addWidget(self.tbl_Files, 0, 0, 1, 6)
 
         self.pb_OpenDirectory = QPushButton(self.t_Files)
         self.pb_OpenDirectory.setObjectName(u"pb_OpenDirectory")
 
         self.gl_Files.addWidget(self.pb_OpenDirectory, 1, 0, 1, 1)
 
-        self.pb_OpenCsv = QPushButton(self.t_Files)
-        self.pb_OpenCsv.setObjectName(u"pb_OpenCsv")
+        self.pb_Clear = QPushButton(self.t_Files)
+        self.pb_Clear.setObjectName(u"pb_Clear")
 
-        self.gl_Files.addWidget(self.pb_OpenCsv, 1, 1, 1, 1)
-
-        self.pb_SaveDirectory = QPushButton(self.t_Files)
-        self.pb_SaveDirectory.setObjectName(u"pb_SaveDirectory")
-
-        self.gl_Files.addWidget(self.pb_SaveDirectory, 1, 2, 1, 1)
-
-        self.s_FilesHorizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gl_Files.addItem(self.s_FilesHorizontal, 1, 3, 1, 1)
-
-        self.pb_Configuration = QPushButton(self.t_Files)
-        self.pb_Configuration.setObjectName(u"pb_Configuration")
-
-        self.gl_Files.addWidget(self.pb_Configuration, 1, 4, 1, 1)
+        self.gl_Files.addWidget(self.pb_Clear, 1, 4, 1, 1)
 
         self.tw_Main.addTab(self.t_Files, "")
         self.t_Configuration = QWidget()
@@ -183,6 +188,18 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MechAnalyser", None))
+#if QT_CONFIG(tooltip)
+        self.pb_Configuration.setToolTip(QCoreApplication.translate("MainWindow", u"Configure the experiment analysis", None))
+#endif // QT_CONFIG(tooltip)
+        self.pb_Configuration.setText(QCoreApplication.translate("MainWindow", u"Configure...", None))
+#if QT_CONFIG(tooltip)
+        self.pb_SaveDirectory.setToolTip(QCoreApplication.translate("MainWindow", u"Choose the directory to which the processed Excel spreadsheets will be written", None))
+#endif // QT_CONFIG(tooltip)
+        self.pb_SaveDirectory.setText(QCoreApplication.translate("MainWindow", u"Save to...", None))
+#if QT_CONFIG(tooltip)
+        self.pb_OpenCsv.setToolTip(QCoreApplication.translate("MainWindow", u"Choose the experiment output files saved as .csv", None))
+#endif // QT_CONFIG(tooltip)
+        self.pb_OpenCsv.setText(QCoreApplication.translate("MainWindow", u"Open CSVs...", None))
         ___qtablewidgetitem = self.tbl_Files.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("MainWindow", u"Name", None));
         ___qtablewidgetitem1 = self.tbl_Files.horizontalHeaderItem(1)
@@ -193,18 +210,7 @@ class Ui_MainWindow(object):
         self.pb_OpenDirectory.setToolTip(QCoreApplication.translate("MainWindow", u"Choose the directory containing the experiment output files", None))
 #endif // QT_CONFIG(tooltip)
         self.pb_OpenDirectory.setText(QCoreApplication.translate("MainWindow", u"Open Directory...", None))
-#if QT_CONFIG(tooltip)
-        self.pb_OpenCsv.setToolTip(QCoreApplication.translate("MainWindow", u"Choose the experiment output files saved as .csv", None))
-#endif // QT_CONFIG(tooltip)
-        self.pb_OpenCsv.setText(QCoreApplication.translate("MainWindow", u"Open CSVs...", None))
-#if QT_CONFIG(tooltip)
-        self.pb_SaveDirectory.setToolTip(QCoreApplication.translate("MainWindow", u"Choose the directory to which the processed Excel spreadsheets will be written", None))
-#endif // QT_CONFIG(tooltip)
-        self.pb_SaveDirectory.setText(QCoreApplication.translate("MainWindow", u"Save to...", None))
-#if QT_CONFIG(tooltip)
-        self.pb_Configuration.setToolTip(QCoreApplication.translate("MainWindow", u"Configure the experiment analysis", None))
-#endif // QT_CONFIG(tooltip)
-        self.pb_Configuration.setText(QCoreApplication.translate("MainWindow", u"Configure...", None))
+        self.pb_Clear.setText(QCoreApplication.translate("MainWindow", u"Clear...", None))
         self.tw_Main.setTabText(self.tw_Main.indexOf(self.t_Files), QCoreApplication.translate("MainWindow", u"Files", None))
         self.l_Instrument.setText(QCoreApplication.translate("MainWindow", u"Instrument:", None))
         self.l_Experiment.setText(QCoreApplication.translate("MainWindow", u"Experiment:", None))
