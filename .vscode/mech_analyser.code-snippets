@@ -1,30 +1,5 @@
 {
-    "Python Function": {
-        "prefix": "website-function",
-        "body": [
-            "def ${1:function}(${2}):",
-            "\t\"\"\"@brief ${3}",
-            "",
-            "\t@details This function implements the following objectives:",
-            "\t\t- ${4}",
-            "\t\"\"\"",
-            "\t${0}"
-        ],
-        "description": "Inserts the template for a Python function."
-    },
-    "Python Class Function": {
-        "prefix": "website-class-function",
-        "body": [
-            "def ${1:function}(self${2}):",
-            "\t\"\"\"@brief ${3}",
-            "",
-            "\t@details This function implements the following objectives:",
-            "\t\t- ${4}",
-            "\t\"\"\"",
-            "\t${0}"
-        ],
-        "description": "Inserts the template for a Python class function."
-    },
+    // === Functio  templates =============================================== //
 
     // === File templates =================================================== //
     "Instrument Experiment Module": {
@@ -612,75 +587,5 @@
             "</ui>",
         ],
         "description": "Inserts the template for a widget .ui file."
-    },
-
-    // === Class templates ================================================== //
-    "Python Class": {
-        "prefix": "website-class",
-        "body": [
-            "class ${1:### Insert class name ###}(${2:object}):",
-            "\t\"\"\"@brief ${3:### Insert short class description ###}",
-            "",
-            "\t${4:### Insert long class description ###}",
-            "\t\"\"\"",
-            "",
-            "\t${0}"
-        ],
-        "description": "Inserts the template for a Python class."
-    },
-    "Python Custom Class 1": {
-        "prefix": "website-custom-class-1",
-        "body": [
-            "class ${1:### Insert class name ###}Model(${2:models.Model}):",
-            "\t\"\"\"@brief ${3:Database model for ...}\"\"\"",
-            "",
-            "\t# Primary key",
-            "\tid = models.BigAutoField(",
-            "\t\t\tverbose_name=\"id\",",
-            "\t\t\tprimary_key=True,",
-            "\t\t\tnull=False,",
-            "\t\t\tblank=False,",
-            "\t\t\teditable=False,",
-            "\t\t\tunique=True",
-            "\t)",
-            "\t${0}",
-            "",
-            "\tclass Meta:",
-            "\t\t\"\"\"@brief Metadata associated with the model.\"\"\"",
-            "",
-            "\t\t# The name of the database table to use for the model",
-            "\t\tdb_table = \"${TM_FILEPATH/(.*apps\\/)(.*)(\\/models\\/.*)/$2/}__${4:${1/([A-Z]+[a-z]*$)|([A-Z]+[a-z]*)/${1:/downcase}${2:/downcase}${2:+_}/g}s}\"",
-            "\t\t# A human-readable name for the object, singular",
-            "\t\tverbose_name = \"${5:${1/([A-Z]+[a-z]*$)|([A-Z]+[a-z]*)/${1:/downcase}${2:/downcase}${2:+ }/g}}\"",
-            "\t\t# A human-readable name for the object, plural",
-            "\t\tverbose_name_plural = \"${6:${1/([A-Z]+[a-z]*$)|([A-Z]+[a-z]*)/${1:/downcase}${2:/downcase}${2:+ }/g}s}\"",
-            "",
-            "\tdef __str__(self):",
-            "\t\t\"\"\"@brief Obtains the human-readable representation of the model.",
-            "",
-            "\t\t@details This function implements the following objectives:",
-            "\t\t\t- Obtain the human-readable representation of the model.",
-            "",
-            "\t\t@returns The human-readable representation of the model.",
-            "\t\t\"\"\"",
-            "",
-            "\t\treturn ${7:\"### Insert human-readable representation here ###\"}",
-            "",
-            "\tdef save(self, *args, **kwargs):",
-            "\t\t\"\"\"@brief Saves an object to the database.",
-            "",            
-            "\t\t@details This function implements the following objectives:",
-            "\t\t\t- Execute the inherited save() method.",
-            "",
-            "\t\t@param [in]\t\targs Unknown positional arguments passed to the function",
-            "\t\twhen it is executed.",
-            "\t\t@param [in]\t\tkwargs Unknown keyword arguments passed to the function",
-            "\t\twhen it is executed.",
-            "\t\t\"\"\"",
-            "",
-            "\t\t# Execute inherited save() method",
-            "\t\tsuper(${1}Model, self).save(*args, **kwargs)"
-        ],
-        "description": "Inserts the template for a Python Django model class."
     },
 }
