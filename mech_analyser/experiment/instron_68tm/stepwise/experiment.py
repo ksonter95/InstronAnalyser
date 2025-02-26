@@ -417,7 +417,7 @@ class Parser(instron_68tm.Parser):
         the parsed command-line arguments.
 
         Returns:
-            list[Analyser]: List of all stepwise compression Instron 68Tm
+            list[Analyser]: List of all stepwise compression Instron 68TM
                 experiment analysers.
         """
 
