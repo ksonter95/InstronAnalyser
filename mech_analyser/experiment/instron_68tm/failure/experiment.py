@@ -580,6 +580,9 @@ class Widget(instron_68tm.Widget):
         # Connect signals with slots
         # NOTE: none
 
+        # Set initial views
+        # NOTE: not required
+
     def sync_parameters(self) -> None:
         """
         Synchronise the parameters to use when analysing the experiment with the

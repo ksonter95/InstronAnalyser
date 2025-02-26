@@ -1,6 +1,4 @@
 {
-    // === Functio  templates =============================================== //
-
     // === File templates =================================================== //
     "Instrument Experiment Module": {
         "prefix": "new experiment (instrument)",
@@ -506,18 +504,18 @@
             "    \"\"\"",
             "",
             "    def __init__(self) -> None:",
-            "        super().__init__(view.${6:### Insert experiment widget}(), AnalyserParameters())  # type: ignore",
+            "        super().__init__(view.Ui_w_${TM_DIRECTORY/.*\\/(.*)\\/?.*/${1:/capitalize}/}(), AnalyserParameters())  # type: ignore",
             "",
             "    @property",
             "    def experiment(self) -> str:",
-            "        return \"${7:### Insert capitalised experiment name ###}\"",
+            "        return \"${3/(.*)/${1:/capitalize}/}\"",
             "",
             "    @property",
             "    def parameters(self) -> AnalyserParameters:",
             "        return super().parameters  # type: ignore",
             "",
             "    @property",
-            "    def view(self) -> view.${6}:  # type: ignore",
+            "    def view(self) -> view.Ui_w_${TM_DIRECTORY/.*\\/(.*)\\/?.*/${1:/capitalize}/}:  # type: ignore",
             "        return super().view  # type: ignore",
             "",
             "    def create_analyser(  # type: ignore",
@@ -569,8 +567,8 @@
         "body": [
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
             "<ui version=\"4.0\">",
-            " <class>w_${1:### Insert experiment name ###}</class>",
-            " <widget class=\"QWidget\" name=\"w_${1:### Insert experiment name ###}\">",
+            " <class>w_${TM_DIRECTORY/.*\\/(.*)\\/?.*/${1:/capitalize}/}</class>",
+            " <widget class=\"QWidget\" name=\"w_${TM_DIRECTORY/.*\\/(.*)\\/?.*/${1:/capitalize}/}\">",
             "  <property name=\"geometry\">",
             "   <rect>",
             "    <x>0</x>",
@@ -579,7 +577,7 @@
             "    <height>188</height>",
             "   </rect>",
             "  </property>",
-            "  <layout class=\"QGridLayout\" name=\"gl_${1:### Insert experiment name ###}\">",
+            "  <layout class=\"QGridLayout\" name=\"gl_${TM_DIRECTORY/.*\\/(.*)\\/?.*/${1:/capitalize}/}\">",
             "  </layout>",
             " </widget>",
             " <resources/>",
@@ -587,5 +585,74 @@
             "</ui>",
         ],
         "description": "Inserts the template for a widget .ui file."
+    },
+
+    // === Function templates =============================================== //
+    "Instrument Frame Column Getter": {
+        "prefix": "new frame column getter (instrument)",
+        "body": [
+            "@property",
+            "def ${1:property}(self) -> ${2:\"pd.Series[float]\"}:",
+            "    return self._frame[\"${3:Column} [${4:units}]\"]  # type: ignore"
+        ],
+        "description": "Inserts the template for an instrument frame column getter."
+    },
+    "Frame Column Getter and Setter": {
+        "prefix": "new frame column getter and setter",
+        "body": [
+            "@property",
+            "def ${1:property}(self) -> ${2:\"pd.Series[float]\"}:",
+            "    return self._frame[\"${3:Column} [${4:units}]\"]  # type: ignore",
+            "",
+            "@${1}.setter",
+            "def ${1}(self, value: ${2}) -> None:",
+            "    self._frame[\"${3} [${4}]\"] = value"
+        ],
+        "description": "Inserts the template for a frame column getter and setter."
+    },
+    "Data Parameter Getter": {
+        "prefix": "new data parameter getter",
+        "body": [
+            "@property",
+            "def ${1:property}(self) -> ${2:float}:",
+            "    return ${3:self._property}"
+        ],
+        "description": "Inserts the template for a data parameter getter."
+    },
+
+    // === Code block templates ============================================= //
+    "Frame Column Creation": {
+        "prefix": "new frame column creator",
+        "body": [
+            "self.${1:property} = pd.Series([${2:0.0}] * self._frame.index.size)  # type: ignore"
+        ],
+        "description": "Inserts the template for a frame column creation."
+    },
+    "Parser Argument Addition": {
+        "prefix": "new parser argument addition",
+        "body": [
+            "parser.add_argument(  # type: ignore",
+            "    \"-${1:x}\",",
+            "    \"--${2:xxx}\",",
+            "    help=\"${3:### Add help text ###}\",",
+            "    type=${4:float},",
+            "    default=${5:0.0},",
+            ")"
+        ],
+        "description": "Inserts the template for a parser argument addition."
+    },
+    "Widget Input Field Initialisation": {
+        "prefix": "new widget input field initialisation",
+        "body": [
+            "self.view.${1:sb_Parameter}.${2:setValue}(self.parameters.${3:parameter})",
+        ],
+        "description": "Inserts the template for a widget input field initialisation."
+    },
+    "Widget Parameter Synchronisation": {
+        "prefix": "new widget parameter synchronisation",
+        "body": [
+            "self.parameters.${1:parameter} = self.view.${2:sb_Parameter}.${3:value}()",
+        ],
+        "description": "Inserts the template for a widget parameter synchronisation."
     },
 }
