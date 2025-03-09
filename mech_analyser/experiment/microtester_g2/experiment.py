@@ -1,6 +1,7 @@
 import argparse
 import experiment.experiment as experiment
 import pandas as pd
+import re
 
 from pathlib import Path
 
@@ -13,7 +14,37 @@ class Frame:
     Base class for all MicroTester G2 data frames.
     """
 
-    # TODO
+    @property
+    def base_displacement(self) -> "pd.Series[float]":
+        return self._frame["Base Displacement [um]"]  # type: ignore
+
+    @property
+    def current_size(self) -> "pd.Series[float]":
+        return self._frame["Current Size [um]"]  # type: ignore
+
+    @property
+    def cycle(self) -> "pd.Series[str]":
+        return self._frame["Cycle"]  # type: ignore
+
+    @property
+    def force(self) -> "pd.Series[float]":
+        return self._frame["Force [uN]"]  # type: ignore
+
+    @property
+    def name(self) -> "pd.Series[str]":
+        return self._frame["Set Name"]  # type: ignore
+
+    @property
+    def temperature(self) -> "pd.Series[float]":
+        return self._frame["Temperature [°C]"]  # type: ignore
+
+    @property
+    def time(self) -> "pd.Series[int]":
+        return self._frame["Time [ms]"]  # type: ignore
+
+    @property
+    def tip_displacement(self) -> "pd.Series[float]":
+        return self._frame["Tip Displacement [um]"]  # type: ignore
 
 
 class RawFrame(experiment.RawFrame, Frame):
@@ -35,11 +66,40 @@ class RawFrame(experiment.RawFrame, Frame):
 
         try:
             # Read the CSV file
-            frame: pd.DataFrame = pd.read_csv(csv)  # type: ignore
-            # TODO
+            frame: pd.DataFrame = pd.read_csv(csv, header=0, encoding="cp1252")  # type: ignore
+            # NOTE: add a space between parameter and units
+            frame.columns = [" (".join(c.split("(")) for c in frame.columns]
+            # NOTE: remove excess spaces
+            frame.columns = [re.sub(r"\s+", " ", c) for c in frame.columns]
+            # NOTE: replace parenthesis with square brackets
+            frame.columns = [
+                c.translate(str.maketrans("()", "[]")) for c in frame.columns
+            ]
 
             # Validate the CSV file
-            # TODO
+            #  - Data headings must be in row 0, columns 0-7 (0-indexed) and
+            #    must be:
+            #       Set Name, Cycle, Time(ms), Force(uN),Tip Displacement(um),
+            #       Base Displacement(um),Current Size (um), Temperature (°C)
+            #  - Data must be in rows 1-... (0-indexed) and must be all strings
+            #    for columns 0-1, integers for columns 2, and floating point
+            #    numbers for columns 3-7 (0-indexed)
+            headings: list[str] = [
+                "Set Name",
+                "Cycle",
+                "Time [ms]",
+                "Force [uN]",
+                "Tip Displacement [um]",
+                "Base Displacement [um]",
+                "Current Size [um]",
+                "Temperature [°C]",
+            ]
+            if (
+                frame.columns.tolist() != headings
+                # NOTE: further checking could be done here
+                or not frame.notna().all().all()  # type: ignore
+            ):
+                raise ValueError
 
         except:
             raise ValueError(f"Invalid CSV file: {csv}")
@@ -114,8 +174,8 @@ class Analyser(experiment.Analyser):
     Base class for all MicroTester G2 analysers.
 
     Args:
-        input_csv: The path to the CSV file containing the output of the MicroTester G2
-            experiment.
+        input_csv: The path to the CSV file containing the output of the
+            MicroTester G2 experiment.
         output_xlsx: The path to the Excel file which will contain the analysis
             results.
         parameters: The parameters to use when analysing the MicroTester G2
@@ -174,8 +234,8 @@ class Parser(experiment.Parser):
         Adds the MicroTester G2 command-line parser to the instrument subparser.
 
         Args:
-            subparser: The instrument subparser to which to add the MicroTester G2
-                parser.
+            subparser: The instrument subparser to which to add the MicroTester
+                G2 parser.
 
         Returns:
             argparse.ArgumentParser: Created MicroTester G2 command-line parser.
@@ -197,8 +257,8 @@ class Parser(experiment.Parser):
         Creates the MicroTester G2 experiment subparser.
 
         Args:
-            parser: MicroTester G2 parser to which the experiment subparser is to
-                be added.
+            parser: MicroTester G2 parser to which the experiment subparser is
+                to be added.
 
         Returns:
             argparse._SubParsersAction: Created experiment subparser.
