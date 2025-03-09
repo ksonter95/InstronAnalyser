@@ -363,6 +363,82 @@ class ArgparseTypes:
         return float(value)
 
     @staticmethod
+    def poisson_float(value: str) -> float:
+        """
+        Checks the argument to determine if it is a Poisson's float
+        (0 <= value <= 0.5).
+
+        Args:
+            value: The number which is to be checked.
+
+        Raises:
+            argparse.ArgumentTypeError: If the number is not a Poisson's float.
+
+        Returns:
+            float: The number if it is valid.
+        """
+
+        try:
+            float_value = float(value)
+            if float_value < 0 or float_value > 0.5:
+                raise ValueError
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"'{value}' is not a Poisson's float")
+
+        return float(value)
+
+    @staticmethod
+    def positive_integer(value: str) -> int:
+        """
+        Checks the argument to determine if it is a positive integer.
+
+        Args:
+            value: The number which is to be checked.
+
+        Raises:
+            argparse.ArgumentTypeError: If the number is not a positive integer.
+
+        Returns:
+            float: The number if it is valid.
+        """
+
+        try:
+            integer_value = int(value)
+            if integer_value < 0:
+                raise ValueError
+        except ValueError:
+            raise argparse.ArgumentTypeError(f"'{value}' is not a positive integer")
+
+        return int(value)
+
+    @staticmethod
+    def positive_non_zero_float(value: str) -> float:
+        """
+        Checks the argument to determine if it is a non-zero positive float.
+
+        Args:
+            value: The number which is to be checked.
+
+        Raises:
+            argparse.ArgumentTypeError: If the number is not a non-zero positive
+                float.
+
+        Returns:
+            float: The number if it is valid.
+        """
+
+        try:
+            float_value = float(value)
+            if float_value <= 0:
+                raise ValueError
+        except ValueError:
+            raise argparse.ArgumentTypeError(
+                f"'{value}' is not a positive non-zero float"
+            )
+
+        return float(value)
+
+    @staticmethod
     def positive_non_zero_integer(value: str) -> int:
         """
         Checks the argument to determine if it is a non-zero positive integer.

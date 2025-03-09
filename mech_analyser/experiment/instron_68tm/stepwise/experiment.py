@@ -132,7 +132,6 @@ class Data(instron_68tm.Data):
             Frame(pd.DataFrame(columns=raw_frame.frame.columns), "Strain = ?%"),
         )
 
-        # Regression equation parameters for equation y = a * e^(-t / tau) + b
         self._a: float = 0.0
         self._b: float = 0.0
         self._max_id: int = 0
@@ -150,22 +149,18 @@ class Data(instron_68tm.Data):
     @property
     def max_force_N(self) -> float:
         return self.processed_frame.force.loc[self._max_id]
-        return self.processed_frame.force.max()  # type: ignore
 
     @property
     def max_stress_MPa(self) -> float:
         return self.processed_frame.stress.loc[self._max_id]
-        return self.processed_frame.stress.max()  # type: ignore
 
     @property
     def min_force_N(self) -> float:
         return self.processed_frame.force.loc[self._min_id]
-        return self.processed_frame.force.min()  # type: ignore
 
     @property
     def min_stress_MPa(self) -> float:
         return self.processed_frame.stress.loc[self._min_id]
-        return self.processed_frame.stress.min()  # type: ignore
 
     @property
     def processed_frame(self) -> Frame:
@@ -190,7 +185,7 @@ class Data(instron_68tm.Data):
         Columns that are populated:
             - Relative Time: Time elapsed since the start of the relaxation
                 phase.
-            - Stress Regression: Stress at each relative time point as
+            - Regression stress: Stress at each relative time point as
                 calculated by the exponential decay regression equation of the
                 stress.
 

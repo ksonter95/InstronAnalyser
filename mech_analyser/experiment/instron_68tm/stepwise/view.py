@@ -23,7 +23,7 @@ class Ui_w_Stepwise(object):
     def setupUi(self, w_Stepwise):
         if not w_Stepwise.objectName():
             w_Stepwise.setObjectName(u"w_Stepwise")
-        w_Stepwise.resize(472, 157)
+        w_Stepwise.resize(572, 153)
         self.gl_Stepwise = QGridLayout(w_Stepwise)
         self.gl_Stepwise.setObjectName(u"gl_Stepwise")
         self.l_RelaxationStrains = QLabel(w_Stepwise)
@@ -39,24 +39,24 @@ class Ui_w_Stepwise(object):
         self.sb_RelaxationStrainsIntervals = QSpinBox(w_Stepwise)
         self.sb_RelaxationStrainsIntervals.setObjectName(u"sb_RelaxationStrainsIntervals")
 
-        self.gl_Stepwise.addWidget(self.sb_RelaxationStrainsIntervals, 0, 2, 1, 1)
+        self.gl_Stepwise.addWidget(self.sb_RelaxationStrainsIntervals, 0, 1, 1, 1)
 
         self.l_RelaxationStrainsText = QLabel(w_Stepwise)
         self.l_RelaxationStrainsText.setObjectName(u"l_RelaxationStrainsText")
         sizePolicy.setHeightForWidth(self.l_RelaxationStrainsText.sizePolicy().hasHeightForWidth())
         self.l_RelaxationStrainsText.setSizePolicy(sizePolicy)
 
-        self.gl_Stepwise.addWidget(self.l_RelaxationStrainsText, 0, 3, 1, 1)
+        self.gl_Stepwise.addWidget(self.l_RelaxationStrainsText, 0, 2, 1, 1)
 
         self.sb_RelaxationStrainsStart = QDoubleSpinBox(w_Stepwise)
         self.sb_RelaxationStrainsStart.setObjectName(u"sb_RelaxationStrainsStart")
         self.sb_RelaxationStrainsStart.setDecimals(1)
 
-        self.gl_Stepwise.addWidget(self.sb_RelaxationStrainsStart, 0, 4, 1, 1)
+        self.gl_Stepwise.addWidget(self.sb_RelaxationStrainsStart, 0, 3, 1, 1)
 
         self.s_Horizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gl_Stepwise.addItem(self.s_Horizontal, 0, 5, 4, 1)
+        self.gl_Stepwise.addItem(self.s_Horizontal, 0, 4, 4, 1)
 
         self.l_Epsilon = QLabel(w_Stepwise)
         self.l_Epsilon.setObjectName(u"l_Epsilon")
@@ -69,31 +69,27 @@ class Ui_w_Stepwise(object):
         self.sb_Epsilon.setObjectName(u"sb_Epsilon")
         self.sb_Epsilon.setMaximum(1.000000000000000)
 
-        self.gl_Stepwise.addWidget(self.sb_Epsilon, 1, 2, 1, 1)
-
-        self.l_RegressionPoints = QLabel(w_Stepwise)
-        self.l_RegressionPoints.setObjectName(u"l_RegressionPoints")
-        sizePolicy.setHeightForWidth(self.l_RegressionPoints.sizePolicy().hasHeightForWidth())
-        self.l_RegressionPoints.setSizePolicy(sizePolicy)
-
-        self.gl_Stepwise.addWidget(self.l_RegressionPoints, 2, 0, 1, 1)
+        self.gl_Stepwise.addWidget(self.sb_Epsilon, 1, 1, 1, 1)
 
         self.cb_RegressionPoints = QCheckBox(w_Stepwise)
         self.cb_RegressionPoints.setObjectName(u"cb_RegressionPoints")
-        sizePolicy.setHeightForWidth(self.cb_RegressionPoints.sizePolicy().hasHeightForWidth())
-        self.cb_RegressionPoints.setSizePolicy(sizePolicy)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.cb_RegressionPoints.sizePolicy().hasHeightForWidth())
+        self.cb_RegressionPoints.setSizePolicy(sizePolicy1)
 
-        self.gl_Stepwise.addWidget(self.cb_RegressionPoints, 2, 1, 1, 1)
+        self.gl_Stepwise.addWidget(self.cb_RegressionPoints, 2, 0, 1, 1)
 
         self.sb_RegressionPoints = QSpinBox(w_Stepwise)
         self.sb_RegressionPoints.setObjectName(u"sb_RegressionPoints")
         self.sb_RegressionPoints.setMaximum(100000)
 
-        self.gl_Stepwise.addWidget(self.sb_RegressionPoints, 2, 2, 1, 1)
+        self.gl_Stepwise.addWidget(self.sb_RegressionPoints, 2, 1, 1, 1)
 
         self.s_Vertical = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gl_Stepwise.addItem(self.s_Vertical, 3, 0, 1, 5)
+        self.gl_Stepwise.addItem(self.s_Vertical, 3, 0, 1, 4)
 
 
         self.retranslateUi(w_Stepwise)
@@ -123,13 +119,9 @@ class Ui_w_Stepwise(object):
 #endif // QT_CONFIG(tooltip)
         self.sb_Epsilon.setSuffix(QCoreApplication.translate("w_Stepwise", u"%", None))
 #if QT_CONFIG(tooltip)
-        self.l_RegressionPoints.setToolTip(QCoreApplication.translate("w_Stepwise", u"Number of data points to include in the regression analysis", None))
-#endif // QT_CONFIG(tooltip)
-        self.l_RegressionPoints.setText(QCoreApplication.translate("w_Stepwise", u"Regression points", None))
-#if QT_CONFIG(tooltip)
         self.cb_RegressionPoints.setToolTip(QCoreApplication.translate("w_Stepwise", u"If unchecked, all datapoints will be used in the regression analysis", None))
 #endif // QT_CONFIG(tooltip)
-        self.cb_RegressionPoints.setText("")
+        self.cb_RegressionPoints.setText(QCoreApplication.translate("w_Stepwise", u"Regression points", None))
 #if QT_CONFIG(tooltip)
         self.sb_RegressionPoints.setToolTip(QCoreApplication.translate("w_Stepwise", u"Number of data points to include in the regression analysis", None))
 #endif // QT_CONFIG(tooltip)
