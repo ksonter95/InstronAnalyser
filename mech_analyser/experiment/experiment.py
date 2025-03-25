@@ -27,6 +27,10 @@ class Frame:
         self.sheet_name: str = sheet_name
 
     @property
+    def columns(self) -> list[str]:
+        return [i for i in self._frame.columns]
+
+    @property
     def frame(self) -> pd.DataFrame:
         return self._frame
 
@@ -157,7 +161,7 @@ class Data:
 
 class Summary:
     """
-    Base class for all summaraies.
+    Base class for all summaries.
 
     Args:
         frame: Underlying pd.DataFrame representation of the summary.
@@ -167,6 +171,10 @@ class Summary:
 
         self._frame: pd.DataFrame = frame.copy(deep=True)
         self._frame.reset_index(drop=True, inplace=True)
+
+    @property
+    def collate_vertical(self) -> bool:
+        return len(self._frame) == 1
 
     @property
     def frame(self) -> pd.DataFrame:
@@ -207,6 +215,175 @@ class Summary:
 
         # Autofit the column size
         writer.sheets["Summary"].autofit()
+
+
+# === Collations ============================================================= #
+
+
+class Collation:
+    """
+    Base class for all collations.
+
+    Args:
+        sheet_name: The name of the Excel sheet to which the data will be
+            written.
+    """
+
+    def __init__(self, sheet_name: str) -> None:
+
+        self._frame: pd.DataFrame = pd.DataFrame()
+
+        self.sheet_name: str = sheet_name
+
+    @property
+    def frame(self) -> pd.DataFrame:
+        return self._frame
+
+    def write_to_excel(self, writer: pd.ExcelWriter) -> None:
+        """
+        Writes the underlying pd.DataFrame representation of the collations to
+        an Excel file.
+
+        Args:
+            writer: Excel writer used to write the collations to an Excel file.
+        """
+
+        # NOTE: Header and data written separately to avoid blank row between
+        #       them
+        self._frame.drop(self.frame.index).to_excel(  # type: ignore
+            writer, sheet_name=self.sheet_name
+        )
+        self._frame.to_excel(  # type: ignore
+            writer, startrow=1, header=False, sheet_name=self.sheet_name
+        )
+
+        # Autofit the column size
+        writer.sheets[self.sheet_name].autofit()
+
+
+class RawCollation(Collation):
+    """
+    Base class of all raw data frame collations.
+
+    Args:
+        - columns: The columns from the raw data frame to collate.
+    """
+
+    def __init__(self, columns: list[str]) -> None:
+        super().__init__("Raw Data")
+
+        self._columns: list[str] = columns
+
+    def append(self, raw_frame: RawFrame, sample_name: str) -> None:
+        """
+        Appends the raw data frame to the collated raw data frame.
+
+        Args:
+            raw_frame: The raw data frame to append.
+            sample_name: The name of the sample to which the raw data applies.
+        """
+
+        subset_frame: pd.DataFrame = raw_frame.frame[self._columns].copy()
+        subset_frame.columns = pd.MultiIndex.from_tuples(  # type: ignore
+            [(sample_name, c) for c in subset_frame.columns]
+        )
+        self._frame = pd.concat([self._frame, subset_frame], axis=1)
+
+
+class SummaryCollation(Collation):
+    """
+    Base class of all summary collations.
+    """
+
+    def append(self, summary: Summary, sample_name: str) -> None:
+        """
+        Appends the summary to the collated summary.
+
+        Args:
+            summary: The summary to append.
+            sample_name: The name of the sample to which the summary applies.
+        """
+
+        if summary.collate_vertical:
+            self._append_vertical(summary, sample_name)
+        else:
+            self._append_horizontal(summary, sample_name)
+
+    def _append_horizontal(self, summary: Summary, sample_name: str) -> None:
+        """
+        Appends the summary to the collated summary by horizontally
+        concatenating the summary.
+
+        Args:
+            summary: The summary to append.
+            sample_name: The name of the sample to which the summary applies.
+        """
+
+        subset_frame: pd.DataFrame = summary.frame.copy()
+        subset_frame.columns = pd.MultiIndex.from_tuples(  # type: ignore
+            [(sample_name, c) for c in subset_frame.columns]
+        )
+        self._frame = pd.concat([self._frame, subset_frame], axis=1)
+
+    def _append_vertical(self, summary: Summary, sample_name: str) -> None:
+        """
+        Appends the summary to the collated summary by vertically concatenating
+        the summary.
+
+        Args:
+            summary: The summary to append.
+            sample_name: The name of the sample to which the summary applies.
+        """
+
+        subset_frame: pd.DataFrame = summary.frame.copy()
+        subset_frame.insert(0, "Sample", sample_name)  # type: ignore
+        self._frame = pd.concat([self._frame, subset_frame], ignore_index=True)
+
+
+class Collator:
+    """
+    Base class for all collators.
+
+    Args:
+        output_xlsx: The path to the Excel file which will contain the collation
+            of all raw data and summaries.
+        raw_collation: The raw data frame collation.
+        summary_collations: The list of all summary collations.
+    """
+
+    def __init__(
+        self,
+        output_xlsx: Path,
+        raw_collation: RawCollation,
+        summary_collations: list[SummaryCollation],
+    ) -> None:
+
+        self._output_xlsx: Path = output_xlsx
+        self._raw_collation: RawCollation = raw_collation
+        self._summary_collations: list[SummaryCollation] = summary_collations
+
+    @property
+    def output_xlsx(self) -> Path:
+        return self._output_xlsx
+
+    @property
+    def raw_collation(self) -> RawCollation:
+        return self._raw_collation
+
+    @property
+    def summary_collations(self) -> list[SummaryCollation]:
+        return self._summary_collations
+
+    def save(self) -> None:
+        """
+        Saves the collation to an Excel file.  This includes the raw data and
+        all summaries.
+        """
+
+        with pd.ExcelWriter(self._output_xlsx, engine="xlsxwriter") as writer:
+            self._raw_collation.write_to_excel(writer)
+            for s in self._summary_collations:
+                s.write_to_excel(writer)
 
 
 # === Analysers ============================================================== #

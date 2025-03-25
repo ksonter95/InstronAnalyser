@@ -22,7 +22,7 @@
      <string>Files</string>
     </attribute>
     <layout class="QGridLayout" name="gl_Files">
-     <item row="0" column="0" colspan="6">
+     <item row="0" column="0" colspan="5">
       <widget class="QTableWidget" name="tbl_Files">
        <property name="editTriggers">
         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
@@ -77,16 +77,6 @@
       </widget>
      </item>
      <item row="1" column="2">
-      <widget class="QPushButton" name="pb_SaveDirectory">
-       <property name="toolTip">
-        <string>Choose the directory to which the processed Excel spreadsheets will be written</string>
-       </property>
-       <property name="text">
-        <string>Save to...</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
       <spacer name="s_FilesHorizontal">
        <property name="orientation">
         <enum>Qt::Orientation::Horizontal</enum>
@@ -99,20 +89,56 @@
        </property>
       </spacer>
      </item>
-     <item row="1" column="4">
+     <item row="1" column="3">
       <widget class="QPushButton" name="pb_Clear">
        <property name="text">
         <string>Clear...</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="5">
+     <item row="1" column="4">
       <widget class="QPushButton" name="pb_Configuration">
        <property name="toolTip">
         <string>Configure the experiment analysis</string>
        </property>
        <property name="text">
         <string>Configure...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QPushButton" name="pb_SaveDirectory">
+       <property name="toolTip">
+        <string>Choose the directory to which the processed Excel spreadsheets will be written</string>
+       </property>
+       <property name="text">
+        <string>Save to...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QCheckBox" name="cb_All">
+       <property name="toolTip">
+        <string>If checked, all output Excel file will be saved to this directory</string>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::LayoutDirection::LeftToRight</enum>
+       </property>
+       <property name="text">
+        <string>All CSVs</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2" colspan="3">
+      <widget class="QTextBrowser" name="tb_SaveDirectory">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="toolTip">
+        <string/>
        </property>
       </widget>
      </item>
@@ -212,26 +238,6 @@
      <string>Output</string>
     </attribute>
     <layout class="QGridLayout" name="gl_Output">
-     <item row="1" column="1">
-      <widget class="QPushButton" name="pb_Continue">
-       <property name="text">
-        <string>Continue...</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <spacer name="s_OutputHorizontal">
-       <property name="orientation">
-        <enum>Qt::Orientation::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
      <item row="0" column="0" colspan="2">
       <widget class="QTableWidget" name="tbl_Output">
        <property name="editTriggers">
@@ -255,6 +261,145 @@
        <column/>
       </widget>
      </item>
+     <item row="1" column="0">
+      <spacer name="s_OutputHorizontal">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="1">
+      <widget class="QPushButton" name="pb_Continue">
+       <property name="text">
+        <string>Continue...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="t_Collation">
+    <attribute name="title">
+     <string>Collation</string>
+    </attribute>
+    <layout class="QGridLayout" name="gl_Collation">
+     <item row="0" column="0" colspan="4">
+      <widget class="QLabel" name="l_CollationFilename">
+       <property name="toolTip">
+        <string>Name of the file to which the collated raw data and summaries are to be written</string>
+       </property>
+       <property name="text">
+        <string>Filename</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="4">
+      <widget class="QLineEdit" name="le_CollationFilename">
+       <property name="toolTip">
+        <string>Name of the file to which the collated raw data and summaries are to be written</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="4">
+      <widget class="QLabel" name="l_RawData">
+       <property name="toolTip">
+        <string>Select all columns within the raw dataset that will be included in the collated raw dataset</string>
+       </property>
+       <property name="text">
+        <string>Raw data</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="4">
+      <widget class="QListWidget" name="lst_RawData">
+       <property name="selectionMode">
+        <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="4">
+      <widget class="QLabel" name="l_Summaries">
+       <property name="toolTip">
+        <string>Configure the collated summaries</string>
+       </property>
+       <property name="text">
+        <string>Summaries</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="4">
+      <widget class="QTableWidget" name="tbl_Summaries">
+       <property name="editTriggers">
+        <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+       </property>
+       <attribute name="horizontalHeaderStretchLastSection">
+        <bool>true</bool>
+       </attribute>
+       <column>
+        <property name="text">
+         <string>Filename</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Sheet Name</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Sample Name</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QPushButton" name="pb_Collate">
+       <property name="text">
+        <string>Collate...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <spacer name="s_CollationHorizontal">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="6" column="2">
+      <widget class="QPushButton" name="pb_EditSheet">
+       <property name="toolTip">
+        <string>Change the sheet name of the selected samples</string>
+       </property>
+       <property name="text">
+        <string>Edit sheet...</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="3">
+      <widget class="QPushButton" name="pb_EditSample">
+       <property name="toolTip">
+        <string>Change the name of the selected sample</string>
+       </property>
+       <property name="text">
+        <string>Edit sample...</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
   </widget>
@@ -273,7 +418,6 @@
   <tabstop>tbl_Files</tabstop>
   <tabstop>pb_OpenDirectory</tabstop>
   <tabstop>pb_OpenCsv</tabstop>
-  <tabstop>pb_SaveDirectory</tabstop>
   <tabstop>pb_Configuration</tabstop>
   <tabstop>cb_Instrument</tabstop>
   <tabstop>cb_Experiment</tabstop>

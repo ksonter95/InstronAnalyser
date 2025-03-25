@@ -6,9 +6,13 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
+    QInputDialog,
+    QListWidgetItem,
     QMainWindow,
+    QMessageBox,
     QTableWidgetItem,
 )
+from PySide6.QtCore import Qt
 from pathlib import Path
 from typing import Optional
 from ui.window import Ui_MainWindow
@@ -25,6 +29,72 @@ _EXPERIMENTS = [
     if os.path.isdir(os.path.join(_EXPERIMENTS_DIR, d1, d2))
     and os.path.exists(os.path.join(_EXPERIMENTS_DIR, d1, d2, "experiment.py"))
 ]
+
+
+class Sample(object):
+    """
+    Data storage object for all properties of an experiment sample.
+
+    Args:
+
+    """
+
+    def __init__(self, input_csv: Path, output_xlsx: Path) -> None:
+
+        self._input_csv: Path = input_csv
+        self._output_xlsx: Path = output_xlsx
+        self._analyser: Optional[experiment.Analyser] = None
+        self._name: str
+        self._sheet: str
+
+        self.set_to_default()
+
+    @property
+    def analyser(self) -> experiment.Analyser:
+        if self._analyser is None:
+            raise ValueError("Analyser not set")
+
+        return self._analyser
+
+    @analyser.setter
+    def analyser(self, value: experiment.Analyser) -> None:
+        self._analyser = value
+
+    @property
+    def input_csv(self) -> Path:
+        return self._input_csv
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self._name = value
+
+    @property
+    def output_xlsx(self) -> Path:
+        return self._output_xlsx
+
+    @output_xlsx.setter
+    def output_xlsx(self, value: Path) -> None:
+        self._output_xlsx = value
+
+    @property
+    def sheet(self) -> str:
+        return self._sheet
+
+    @sheet.setter
+    def sheet(self, value: str) -> None:
+        self._sheet = value
+
+    def set_to_default(self) -> None:
+        """
+        Resets all sample parameters to their default.
+        """
+
+        self._name = self.output_xlsx.stem
+        self._sheet = "Summary"
 
 
 class WidgetManager:
@@ -115,8 +185,10 @@ class Window(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
-        self._files: list[tuple[Path, Path]] = []
+        self._samples: list[Sample] = []
         self._output_directory: Optional[Path] = None
+        self._raw_collation: Optional[experiment.RawCollation] = None
+        self._summary_collation: Optional[experiment.SummaryCollation] = None
 
         # Create the main window
         self._window = Ui_MainWindow()
@@ -143,19 +215,23 @@ class Window(QMainWindow):
         )
 
         # Connect the button functionalities
-        self._window.pb_OpenDirectory.clicked.connect(
-            self._handle_pb_OpenDirectory_clicked
-        )
-        self._window.pb_OpenCsv.clicked.connect(self._handle_pb_OpenCsv_clicked)
-        self._window.pb_SaveDirectory.clicked.connect(
-            self._handle_pb_SaveDirectory_clicked
-        )
+        self._window.cb_All.checkStateChanged.connect(self._handle_cb_All_changed)
         self._window.pb_Clear.clicked.connect(self._handle_pb_Clear_clicked)
+        self._window.pb_Collate.clicked.connect(self._handle_pb_Collate_clicked)
         self._window.pb_Configuration.clicked.connect(
             self._handle_pb_Configuration_clicked
         )
-        self._window.pb_Run.clicked.connect(self._handle_pb_Run_clicked)
         self._window.pb_Continue.clicked.connect(self._handle_pb_Continue_clicked)
+        self._window.pb_EditSample.clicked.connect((self._handle_pb_EditSample_clicked))
+        self._window.pb_EditSheet.clicked.connect((self._handle_pb_EditSheet_clicked))
+        self._window.pb_OpenCsv.clicked.connect(self._handle_pb_OpenCsv_clicked)
+        self._window.pb_OpenDirectory.clicked.connect(
+            self._handle_pb_OpenDirectory_clicked
+        )
+        self._window.pb_Run.clicked.connect(self._handle_pb_Run_clicked)
+        self._window.pb_SaveDirectory.clicked.connect(
+            self._handle_pb_SaveDirectory_clicked
+        )
 
         self._reset()
 
@@ -171,10 +247,20 @@ class Window(QMainWindow):
         """
 
         output_xlsx: Path = input_csv.with_suffix(".xlsx")
-        if self._output_directory is not None:
+        if self._window.cb_All.isChecked() and self._output_directory is not None:
             output_xlsx = self._output_directory / output_xlsx.name
 
         return output_xlsx
+
+    def _handle_cb_All_changed(self) -> None:
+        """
+        Updates the output directory path of the Excel files.
+        """
+
+        for sample in self._samples:
+            sample.output_xlsx = self._create_output_xlsx(sample.input_csv)
+
+        self._update_tbl_Files()
 
     def _handle_cb_Experiment_changed(self) -> None:
         """
@@ -208,20 +294,177 @@ class Window(QMainWindow):
 
         self._reset()
 
+    def _handle_pb_Collate_clicked(self) -> None:
+        """
+        Collates all of the experiment raw data and summaries into one Excel
+        file.
+        """
+
+        raw_collation = experiment.RawCollation(
+            [
+                self._window.lst_RawData.item(i).text()
+                for i in range(self._window.lst_RawData.count())
+                if self._window.lst_RawData.item(i).checkState()
+                == Qt.CheckState.Checked
+            ]
+        )
+        summary_collations = [
+            experiment.SummaryCollation(sheet)
+            for sheet in list({sample.sheet for sample in self._samples})
+        ]
+
+        for sample in self._samples:
+            raw_collation.append(sample.analyser.raw_frame, sample.name)
+            for summary_collation in summary_collations:
+                if sample.sheet == summary_collation.sheet_name:
+                    summary_collation.append(sample.analyser.summary, sample.name)
+                    break
+
+        collator = experiment.Collator(
+            self._output_directory / f"{self._window.le_CollationFilename.text()}.xlsx",  # type: ignore
+            raw_collation,
+            summary_collations,
+        )
+
+        collator.save()
+
+        self._reset()
+
     def _handle_pb_Configuration_clicked(self) -> None:
         """
         Enables the configuration tab and sets it as the current tab.
         """
+
+        if self._output_directory is None:
+            QMessageBox.warning(
+                self,
+                "Configuration",
+                "Please choose output directory",
+                QMessageBox.StandardButton.Ok,
+            )
+            return
 
         self._window.tw_Main.setTabEnabled(1, True)
         self._window.tw_Main.setCurrentIndex(1)
 
     def _handle_pb_Continue_clicked(self) -> None:
         """
-        Resets the window.
+        Enables the collation tab.
         """
 
-        self._reset()
+        self._window.tw_Main.setTabEnabled(2, False)
+        self._window.tw_Main.setTabEnabled(3, True)
+        self._window.tw_Main.setCurrentIndex(3)
+        self._update_lst_RawData()
+        self._update_tbl_Summaries()
+
+    def _handle_pb_EditSample_clicked(self) -> None:
+        """
+        Edits the sample name of the selected file.
+        """
+
+        rows: list[int] = sorted(
+            {i.row() for i in self._window.tbl_Summaries.selectedItems()}
+        )
+
+        # Handle invalid selection
+        if len(rows) == 0:
+            QMessageBox.warning(
+                self,
+                "Edit sample name",
+                "No sample has been selected",
+                QMessageBox.StandardButton.Ok,
+            )
+            return
+
+        # Edit the sample name
+        while True:
+            text, ok = QInputDialog.getText(
+                self,
+                "Edit sample name",
+                "",
+                text=self._samples[rows[0]].name,
+            )
+            if not ok:
+                return
+            elif not text:
+                QMessageBox.warning(
+                    self,
+                    "Edit sample name",
+                    "Please enter valid sample name",
+                    QMessageBox.StandardButton.Ok,
+                )
+            elif any(
+                self._samples[i].name == text
+                for i in range(len(self._samples))
+                if i not in rows
+            ):
+                QMessageBox.warning(
+                    self,
+                    "Edit sample name",
+                    "Sample name already exists",
+                    QMessageBox.StandardButton.Ok,
+                )
+            else:
+                break
+
+        # Update the sample names
+        if len(rows) == 1:
+            self._samples[rows[0]].name = text
+        else:
+            id: int = 1
+            for i in rows:
+                self._samples[i].name = f"{text}_{id}"
+                id += 1
+
+        self._sort_samples()
+        self._update_tbl_Summaries()
+
+    def _handle_pb_EditSheet_clicked(self) -> None:
+        """
+        Edits the sheet name of the selected file.
+        """
+
+        rows: list[int] = sorted(
+            {i.row() for i in self._window.tbl_Summaries.selectedItems()}
+        )
+
+        # Handle invalid selection
+        if len(rows) == 0:
+            QMessageBox.warning(
+                self,
+                "Edit sheet name",
+                "No sample has been selected",
+                QMessageBox.StandardButton.Ok,
+            )
+            return
+
+        # Edit the sheet name
+        while True:
+            text, ok = QInputDialog.getText(
+                self,
+                "Edit sheet name",
+                "",
+                text=self._samples[rows[0]].sheet,
+            )
+            if not ok:
+                return
+            elif not text:
+                QMessageBox.warning(
+                    self,
+                    "Edit sheet name",
+                    "Please enter valid sheet name",
+                    QMessageBox.StandardButton.Ok,
+                )
+            else:
+                break
+
+        # Update the sheet name
+        for i in rows:
+            self._samples[i].sheet = text
+
+        self._sort_samples()
+        self._update_tbl_Summaries()
 
     def _handle_pb_OpenCsv_clicked(self) -> None:
         """
@@ -234,8 +477,9 @@ class Window(QMainWindow):
         )
 
         for input_csv in [Path(f) for f in input_csvs]:
-            self._files.append((input_csv, self._create_output_xlsx(input_csv)))
+            self._samples.append(Sample(input_csv, self._create_output_xlsx(input_csv)))
 
+        self._sort_samples()
         self._update_tbl_Files()
 
     def _handle_pb_OpenDirectory_clicked(self) -> None:
@@ -252,8 +496,9 @@ class Window(QMainWindow):
             if not input_csv.is_file() or not input_csv.suffix == ".csv":
                 continue
 
-            self._files.append((input_csv, self._create_output_xlsx(input_csv)))
+            self._samples.append(Sample(input_csv, self._create_output_xlsx(input_csv)))
 
+        self._sort_samples()
         self._update_tbl_Files()
 
     def _handle_pb_Run_clicked(self) -> None:
@@ -271,10 +516,10 @@ class Window(QMainWindow):
         # Create all of the analysers
         widget: experiment.Widget = self._window.sw_Configuration.currentWidget()  # type: ignore
         widget.sync_parameters()
-        analysers: list[experiment.Analyser] = [
-            widget.create_analyser(input_csv, output_xlsx, widget.parameters)
-            for input_csv, output_xlsx in self._files
-        ]
+        for sample in self._samples:
+            sample.analyser = widget.create_analyser(
+                sample.input_csv, sample.output_xlsx, widget.parameters
+            )
 
         # Analyse all of the experiments
         for i in range(self._window.tbl_Files.rowCount()):
@@ -283,14 +528,14 @@ class Window(QMainWindow):
                 i,
                 0,
                 QTableWidgetItem(
-                    f"{i + 1}/{len(analysers)}: {analysers[i].output_xlsx.name}"
+                    f"{i + 1}/{len(self._samples)}: {self._samples[i].output_xlsx.name}"
                 ),
             )
             self._window.tbl_Output.scrollToBottom()
             QApplication.processEvents()
 
-            analysers[i].analyse()
-            analysers[i].save()
+            self._samples[i].analyser.analyse()
+            self._samples[i].analyser.save()
 
         self._window.pb_Continue.setEnabled(True)
 
@@ -305,10 +550,11 @@ class Window(QMainWindow):
             QFileDialog.getExistingDirectory(self, "Select Directory", "")
         )
 
-        for i, (_, output_xlsx) in enumerate(self._files):
-            self._files[i] = (_, self._output_directory / output_xlsx.name)
+        for sample in self._samples:
+            sample.output_xlsx = self._create_output_xlsx(sample.input_csv)
 
         self._update_tbl_Files()
+        self._window.tb_SaveDirectory.setText(str(self._output_directory))
 
     def _reset(self) -> None:
         """
@@ -319,11 +565,17 @@ class Window(QMainWindow):
         self._window.tw_Main.setTabEnabled(0, True)
         self._window.tw_Main.setTabEnabled(1, False)
         self._window.tw_Main.setTabEnabled(2, False)
+        self._window.tw_Main.setTabEnabled(3, False)
 
         # Reset the files
-        self._files.clear()
+        self._samples.clear()
         self._output_directory = None
         self._update_tbl_Files()
+
+        # Reset the collations
+        self._window.le_CollationFilename.setText("Summary")
+        self._raw_collation = None
+        self._summary_collation = None
 
         # Set the initial instrument and experiment drop down menus
         self._handle_cb_Instrument_changed()
@@ -332,26 +584,71 @@ class Window(QMainWindow):
         # Disable the continue button
         self._window.pb_Continue.setEnabled(False)
 
+    def _sort_samples(self) -> None:
+        """
+        Sorts the samples in the summaries table by sheet name and then sample
+        name.
+        """
+
+        self._samples.sort(key=lambda x: (x.sheet, x.name))
+
+    def _update_lst_RawData(self) -> None:
+        """
+        Updates the raw data list view.
+        """
+
+        for column in self._samples[0].analyser.raw_frame.columns:
+            item = QListWidgetItem(column)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked)
+            self._window.lst_RawData.addItem(item)
+
     def _update_tbl_Files(self) -> None:
         """
         Updates the files table.
         """
 
-        self._window.tbl_Files.setRowCount(len(self._files))
+        self._window.tbl_Files.setRowCount(len(self._samples))
 
         for r in range(self._window.tbl_Files.rowCount()):
             self._window.tbl_Files.setItem(
-                r, 0, QTableWidgetItem(self._files[r][0].stem)
+                r, 0, QTableWidgetItem(self._samples[r].input_csv.stem)
             )
-            for c in range(len(self._files[r])):
-                self._window.tbl_Files.setItem(
-                    r, c + 1, QTableWidgetItem(str(self._files[r][c]))
-                )
+            self._window.tbl_Files.setItem(
+                r, 1, QTableWidgetItem(str(self._samples[r].input_csv))
+            )
+            self._window.tbl_Files.setItem(
+                r, 2, QTableWidgetItem(str(self._samples[r].output_xlsx))
+            )
 
         self._window.tbl_Files.resizeColumnsToContents()
         self._window.tbl_Files.horizontalHeader().setVisible(
             self._window.tbl_Files.rowCount() != 0
         )
+
+    def _update_tbl_Summaries(self) -> None:
+        """
+        Updates the summaries table.
+        """
+
+        self._window.tbl_Summaries.setRowCount(len(self._samples))
+
+        for r in range(self._window.tbl_Summaries.rowCount()):
+            self._window.tbl_Summaries.setItem(
+                r, 0, QTableWidgetItem(self._samples[r].input_csv.name)
+            )
+            self._window.tbl_Summaries.setItem(
+                r, 1, QTableWidgetItem(self._samples[r].sheet)
+            )
+            self._window.tbl_Summaries.setItem(
+                r, 2, QTableWidgetItem(self._samples[r].name)
+            )
+
+        self._window.tbl_Summaries.resizeColumnsToContents()
+        self._window.tbl_Summaries.horizontalHeader().setVisible(
+            self._window.tbl_Summaries.rowCount() != 0
+        )
+        self._window.tbl_Summaries.clearSelection()
 
 
 class Application(QApplication):
