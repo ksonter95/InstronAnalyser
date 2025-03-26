@@ -276,5 +276,15 @@ class Widget(experiment.Widget):
     """
 
     @property
+    def columns(self) -> list[str]:
+        return [
+            "Time [s]",
+            "Displacement [mm]",
+            "Force [N]",
+            "Strain [%]",
+            "Compressive stress [MPa]",
+        ]
+
+    @property
     def instrument(self) -> str:
         return "Instron 68TM"

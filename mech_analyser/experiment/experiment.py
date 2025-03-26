@@ -795,6 +795,10 @@ class Widget(QWidget):
         self.view.setupUi(self)
 
     @property
+    def columns(self) -> list[str]:
+        raise NotImplementedError
+
+    @property
     def experiment(self) -> str:
         raise NotImplementedError
 

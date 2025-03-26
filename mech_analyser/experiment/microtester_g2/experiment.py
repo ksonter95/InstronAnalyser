@@ -284,5 +284,18 @@ class Widget(experiment.Widget):
     """
 
     @property
+    def columns(self) -> list[str]:
+        return [
+            "Set Name",
+            "Cycle",
+            "Time [ms]",
+            "Force [uN]",
+            "Tip Displacement [um]",
+            "Base Displacement [um]",
+            "Current Size [um]",
+            "Temperature [°C]",
+        ]
+
+    @property
     def instrument(self) -> str:
         return "MicroTester G2"
