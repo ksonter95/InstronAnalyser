@@ -82,14 +82,14 @@
      </item>
      <item row="2" column="0" colspan="5">
       <widget class="QTableWidget" name="tbl_Files">
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+       </property>
        <property name="editTriggers">
         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
        </property>
        <property name="selectionBehavior">
         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-       </property>
-       <property name="horizontalScrollBarPolicy">
-        <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
        </property>
        <property name="rowCount">
         <number>0</number>
@@ -364,7 +364,14 @@
     <addaction name="a_OpenDirectory"/>
     <addaction name="a_OpenCsvs"/>
    </widget>
+   <widget class="QMenu" name="m_Help">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="a_Documentation"/>
+   </widget>
    <addaction name="m_File"/>
+   <addaction name="m_Help"/>
   </widget>
   <action name="a_OpenDirectory">
    <property name="text">
@@ -374,6 +381,11 @@
   <action name="a_OpenCsvs">
    <property name="text">
     <string>Open CSVs...</string>
+   </property>
+  </action>
+  <action name="a_Documentation">
+   <property name="text">
+    <string>Documentation</string>
    </property>
   </action>
  </widget>

@@ -216,6 +216,9 @@ class Window(QMainWindow):
         )
 
         # Connect the menu functionality
+        self._window.a_Documentation.triggered.connect(
+            self._handle_a_Documentation_triggered
+        )
         self._window.a_OpenDirectory.triggered.connect(
             self._handle_a_OpenDirectory_triggered
         )
@@ -253,6 +256,18 @@ class Window(QMainWindow):
 
         return output_xlsx
 
+    def _handle_a_Documentation_triggered(self) -> None:
+        """
+        Opens the program documentation.
+        """
+
+        QMessageBox.information(
+            self,
+            "Help",
+            "Watch this space... not yet implemented",
+            QMessageBox.StandardButton.Ok,
+        )
+
     def _handle_a_OpenCsvs_triggered(self) -> None:
         """
         Opens a file dialog box to search for the CSV experiment outputs and
@@ -269,6 +284,7 @@ class Window(QMainWindow):
         # Update the GUI
         self._sort_samples()
         self._update_tbl_Files()
+        self._window.tw_Main.setCurrentIndex(0)
 
     def _handle_a_OpenDirectory_triggered(self) -> None:
         """
@@ -295,6 +311,7 @@ class Window(QMainWindow):
         # Update the GUI
         self._sort_samples()
         self._update_tbl_Files()
+        self._window.tw_Main.setCurrentIndex(0)
 
     def _handle_cb_Experiment_changed(self) -> None:
         """

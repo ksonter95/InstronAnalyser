@@ -31,6 +31,8 @@ class Ui_MainWindow(object):
         self.a_OpenDirectory.setObjectName(u"a_OpenDirectory")
         self.a_OpenCsvs = QAction(MainWindow)
         self.a_OpenCsvs.setObjectName(u"a_OpenCsvs")
+        self.a_Documentation = QAction(MainWindow)
+        self.a_Documentation.setObjectName(u"a_Documentation")
         self.tw_Main = QTabWidget(MainWindow)
         self.tw_Main.setObjectName(u"tw_Main")
         self.t_Files = QWidget()
@@ -86,9 +88,9 @@ class Ui_MainWindow(object):
         __qtablewidgetitem3 = QTableWidgetItem()
         self.tbl_Files.setHorizontalHeaderItem(3, __qtablewidgetitem3)
         self.tbl_Files.setObjectName(u"tbl_Files")
+        self.tbl_Files.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.tbl_Files.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tbl_Files.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.tbl_Files.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.tbl_Files.setRowCount(0)
         self.tbl_Files.setColumnCount(4)
         self.tbl_Files.horizontalHeader().setVisible(True)
@@ -221,13 +223,17 @@ class Ui_MainWindow(object):
         self.mb_Main.setGeometry(QRect(0, 0, 800, 24))
         self.m_File = QMenu(self.mb_Main)
         self.m_File.setObjectName(u"m_File")
+        self.m_Help = QMenu(self.mb_Main)
+        self.m_Help.setObjectName(u"m_Help")
         MainWindow.setMenuBar(self.mb_Main)
         QWidget.setTabOrder(self.tbl_Files, self.cb_Instrument)
         QWidget.setTabOrder(self.cb_Instrument, self.cb_Experiment)
 
         self.mb_Main.addAction(self.m_File.menuAction())
+        self.mb_Main.addAction(self.m_Help.menuAction())
         self.m_File.addAction(self.a_OpenDirectory)
         self.m_File.addAction(self.a_OpenCsvs)
+        self.m_Help.addAction(self.a_Documentation)
 
         self.retranslateUi(MainWindow)
 
@@ -242,6 +248,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MechAnalyser", None))
         self.a_OpenDirectory.setText(QCoreApplication.translate("MainWindow", u"Open directory...", None))
         self.a_OpenCsvs.setText(QCoreApplication.translate("MainWindow", u"Open CSVs...", None))
+        self.a_Documentation.setText(QCoreApplication.translate("MainWindow", u"Documentation", None))
 #if QT_CONFIG(tooltip)
         self.pb_SaveAnalysis.setToolTip(QCoreApplication.translate("MainWindow", u"Select the directory to which all analysis outputs will be saved.  By default, the analysis corresponding to the input CSVs will be saved in the same directory as the CSVs.", None))
 #endif // QT_CONFIG(tooltip)
@@ -294,5 +301,6 @@ class Ui_MainWindow(object):
         self.pb_Run.setText(QCoreApplication.translate("MainWindow", u"Run", None))
         self.tw_Main.setTabText(self.tw_Main.indexOf(self.t_Output), QCoreApplication.translate("MainWindow", u"Output", None))
         self.m_File.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
+        self.m_Help.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
     # retranslateUi
 
