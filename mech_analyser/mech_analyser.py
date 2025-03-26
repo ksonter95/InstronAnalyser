@@ -220,9 +220,9 @@ class Window(QMainWindow):
             self._handle_a_OpenDirectory_triggered
         )
         self._window.a_OpenCsvs.triggered.connect(self._handle_a_OpenCsvs_triggered)
-        self._window.a_Clear.triggered.connect(self._handle_a_Clear_triggered)
 
         # Connect the button functionalities
+        self._window.pb_Clear.clicked.connect(self._handle_pb_Clear_triggered)
         self._window.pb_EditOutput.clicked.connect(self._handle_pb_EditOutput_clicked)
         self._window.pb_EditGroup.clicked.connect(self._handle_pb_EditGroup_clicked)
         self._window.pb_EditSample.clicked.connect(self._handle_pb_EditSample_clicked)
@@ -252,13 +252,6 @@ class Window(QMainWindow):
             output_xlsx = self._output_directory / output_xlsx.name
 
         return output_xlsx
-
-    def _handle_a_Clear_triggered(self) -> None:
-        """
-        Resets the window.
-        """
-
-        self._reset()
 
     def _handle_a_OpenCsvs_triggered(self) -> None:
         """
@@ -328,6 +321,13 @@ class Window(QMainWindow):
                 self._window.cb_Instrument.currentText()
             )
         )
+
+    def _handle_pb_Clear_triggered(self) -> None:
+        """
+        Resets the window.
+        """
+
+        self._reset()
 
     def _handle_pb_EditGroup_clicked(self) -> None:
         """

@@ -125,7 +125,14 @@
        </column>
       </widget>
      </item>
-     <item row="3" column="0" colspan="2">
+     <item row="3" column="0">
+      <widget class="QPushButton" name="pb_Clear">
+       <property name="text">
+        <string>Clear</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
       <spacer name="s_FilesHorizontal">
        <property name="orientation">
         <enum>Qt::Orientation::Horizontal</enum>
@@ -356,8 +363,6 @@
     </property>
     <addaction name="a_OpenDirectory"/>
     <addaction name="a_OpenCsvs"/>
-    <addaction name="separator"/>
-    <addaction name="a_Clear"/>
    </widget>
    <addaction name="m_File"/>
   </widget>
@@ -369,11 +374,6 @@
   <action name="a_OpenCsvs">
    <property name="text">
     <string>Open CSVs...</string>
-   </property>
-  </action>
-  <action name="a_Clear">
-   <property name="text">
-    <string>Clear...</string>
    </property>
   </action>
  </widget>

@@ -31,8 +31,6 @@ class Ui_MainWindow(object):
         self.a_OpenDirectory.setObjectName(u"a_OpenDirectory")
         self.a_OpenCsvs = QAction(MainWindow)
         self.a_OpenCsvs.setObjectName(u"a_OpenCsvs")
-        self.a_Clear = QAction(MainWindow)
-        self.a_Clear.setObjectName(u"a_Clear")
         self.tw_Main = QTabWidget(MainWindow)
         self.tw_Main.setObjectName(u"tw_Main")
         self.t_Files = QWidget()
@@ -98,9 +96,14 @@ class Ui_MainWindow(object):
 
         self.gl_Files.addWidget(self.tbl_Files, 2, 0, 1, 5)
 
+        self.pb_Clear = QPushButton(self.t_Files)
+        self.pb_Clear.setObjectName(u"pb_Clear")
+
+        self.gl_Files.addWidget(self.pb_Clear, 3, 0, 1, 1)
+
         self.s_FilesHorizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gl_Files.addItem(self.s_FilesHorizontal, 3, 0, 1, 2)
+        self.gl_Files.addItem(self.s_FilesHorizontal, 3, 1, 1, 1)
 
         self.pb_EditOutput = QPushButton(self.t_Files)
         self.pb_EditOutput.setObjectName(u"pb_EditOutput")
@@ -225,8 +228,6 @@ class Ui_MainWindow(object):
         self.mb_Main.addAction(self.m_File.menuAction())
         self.m_File.addAction(self.a_OpenDirectory)
         self.m_File.addAction(self.a_OpenCsvs)
-        self.m_File.addSeparator()
-        self.m_File.addAction(self.a_Clear)
 
         self.retranslateUi(MainWindow)
 
@@ -241,7 +242,6 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MechAnalyser", None))
         self.a_OpenDirectory.setText(QCoreApplication.translate("MainWindow", u"Open directory...", None))
         self.a_OpenCsvs.setText(QCoreApplication.translate("MainWindow", u"Open CSVs...", None))
-        self.a_Clear.setText(QCoreApplication.translate("MainWindow", u"Clear...", None))
 #if QT_CONFIG(tooltip)
         self.pb_SaveAnalysis.setToolTip(QCoreApplication.translate("MainWindow", u"Select the directory to which all analysis outputs will be saved.  By default, the analysis corresponding to the input CSVs will be saved in the same directory as the CSVs.", None))
 #endif // QT_CONFIG(tooltip)
@@ -264,6 +264,7 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem2.setText(QCoreApplication.translate("MainWindow", u"Group name", None));
         ___qtablewidgetitem3 = self.tbl_Files.horizontalHeaderItem(3)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("MainWindow", u"Sample name", None));
+        self.pb_Clear.setText(QCoreApplication.translate("MainWindow", u"Clear", None))
 #if QT_CONFIG(tooltip)
         self.pb_EditOutput.setToolTip(QCoreApplication.translate("MainWindow", u"Edit the output filename of the Excel file to which the analysis will be written.", None))
 #endif // QT_CONFIG(tooltip)
