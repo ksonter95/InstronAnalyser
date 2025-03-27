@@ -205,16 +205,21 @@ class Ui_MainWindow(object):
         self.tbl_Output.horizontalHeader().setStretchLastSection(True)
         self.tbl_Output.verticalHeader().setVisible(False)
 
-        self.gl_Output.addWidget(self.tbl_Output, 0, 0, 1, 2)
+        self.gl_Output.addWidget(self.tbl_Output, 0, 0, 1, 3)
 
         self.s_OutputHorizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gl_Output.addItem(self.s_OutputHorizontal, 1, 0, 1, 1)
 
+        self.pb_Cancel = QPushButton(self.t_Output)
+        self.pb_Cancel.setObjectName(u"pb_Cancel")
+
+        self.gl_Output.addWidget(self.pb_Cancel, 1, 1, 1, 1)
+
         self.pb_Run = QPushButton(self.t_Output)
         self.pb_Run.setObjectName(u"pb_Run")
 
-        self.gl_Output.addWidget(self.pb_Run, 1, 1, 1, 1)
+        self.gl_Output.addWidget(self.pb_Run, 1, 2, 1, 1)
 
         self.tw_Main.addTab(self.t_Output, "")
         MainWindow.setCentralWidget(self.tw_Main)
@@ -295,6 +300,10 @@ class Ui_MainWindow(object):
         self.lst_CollatedRawDataColumns.setToolTip(QCoreApplication.translate("MainWindow", u"Select all columns within the raw dataset that will be included in the collated raw dataset", None))
 #endif // QT_CONFIG(tooltip)
         self.tw_Main.setTabText(self.tw_Main.indexOf(self.t_Configuration), QCoreApplication.translate("MainWindow", u"Configuration", None))
+#if QT_CONFIG(tooltip)
+        self.pb_Cancel.setToolTip(QCoreApplication.translate("MainWindow", u"Cancel the running analysis and collation.", None))
+#endif // QT_CONFIG(tooltip)
+        self.pb_Cancel.setText(QCoreApplication.translate("MainWindow", u"Cancel", None))
 #if QT_CONFIG(tooltip)
         self.pb_Run.setToolTip(QCoreApplication.translate("MainWindow", u"Run the analysis on all samples and collate the raw data and summaries of each.", None))
 #endif // QT_CONFIG(tooltip)

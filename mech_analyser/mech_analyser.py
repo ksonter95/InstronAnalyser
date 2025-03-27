@@ -2,6 +2,7 @@ import experiment.experiment as experiment
 import importlib
 import os
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -12,7 +13,6 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QTableWidgetItem,
 )
-from PySide6.QtCore import Qt
 from pathlib import Path
 from typing import Optional
 from ui.window import Ui_MainWindow
@@ -190,6 +190,7 @@ class Window(QMainWindow):
         self._collation_xlsx: Optional[Path] = None
         self._raw_collation: Optional[experiment.RawCollation] = None
         self._summary_collation: Optional[experiment.SummaryCollation] = None
+        self._cancel_flag: bool = False
 
         # Create the main window
         self._window = Ui_MainWindow()
@@ -235,6 +236,7 @@ class Window(QMainWindow):
         self._window.pb_SaveCollation.clicked.connect(
             self._handle_pb_SaveCollation_clicked
         )
+        self._window.pb_Cancel.clicked.connect(self._handle_pb_Cancel_clicked)
         self._window.pb_Run.clicked.connect(self._handle_pb_Run_clicked)
 
         self._reset()
@@ -338,6 +340,13 @@ class Window(QMainWindow):
                 self._window.cb_Instrument.currentText()
             )
         )
+
+    def _handle_pb_Cancel_clicked(self) -> None:
+        """
+        Cancels the running analysis and collation.
+        """
+
+        self._cancel_flag = True
 
     def _handle_pb_Clear_triggered(self) -> None:
         """
@@ -517,6 +526,10 @@ class Window(QMainWindow):
         Runs the analysis, collates the results, and updates the GUI.
         """
 
+        # Configure the buttons
+        self._window.pb_Cancel.setEnabled(True)
+        self._window.pb_Run.setEnabled(False)
+
         # Force the user to choose the file to which the collation will be saved
         if self._collation_xlsx is None:
             QMessageBox.warning(
@@ -582,8 +595,17 @@ class Window(QMainWindow):
             self._window.tbl_Output.scrollToBottom()
             QApplication.processEvents()
 
+            # Cancel the analysis and collation
+            if self._cancel_flag:
+                self._cancel_flag = False
+                break
+
         # Save the collation
         collator.save()
+
+        # Configure the buttons
+        self._window.pb_Cancel.setEnabled(False)
+        self._window.pb_Run.setEnabled(True)
 
     def _handle_pb_SaveAnalysis_clicked(self) -> None:
         """
@@ -650,6 +672,10 @@ class Window(QMainWindow):
         # Reset the collations
         self._raw_collation = None
         self._summary_collation = None
+
+        # Reset the cancel button
+        self._window.pb_Cancel.setEnabled(False)
+        self._cancel_flag = False
 
         # Set the initial instrument and experiment drop down menus
         self._handle_cb_Instrument_changed()
