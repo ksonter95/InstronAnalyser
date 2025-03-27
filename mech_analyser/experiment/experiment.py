@@ -319,7 +319,19 @@ class SummaryCollation(Collation):
             sample_name: The name of the sample to which the summary applies.
         """
 
-        subset_frame: pd.DataFrame = summary.frame.copy()
+        # First column is shared across all summaries
+        if self._frame.empty:
+            self._frame = (
+                summary.frame.iloc[:, [0]]
+                .copy()
+                .set_axis(  # type: ignore
+                    pd.MultiIndex.from_tuples([(summary.frame.columns[0], "")]),  # type: ignore
+                    axis=1,
+                )
+            )
+
+        # Append the summaries, skipping the first column
+        subset_frame: pd.DataFrame = summary.frame.iloc[:, 1:].copy()
         subset_frame.columns = pd.MultiIndex.from_tuples(  # type: ignore
             [(sample_name, c) for c in subset_frame.columns]
         )
