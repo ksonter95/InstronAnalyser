@@ -15,8 +15,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QDoubleSpinBox, QGridLayout, QLabel,
-    QSizePolicy, QSpacerItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QDoubleSpinBox, QGridLayout,
+    QLabel, QSizePolicy, QSpacerItem, QWidget)
 
 class Ui_w_Failure(object):
     def setupUi(self, w_Failure):
@@ -46,12 +46,15 @@ class Ui_w_Failure(object):
 
         self.gl_Failure.addItem(self.s_Horizontal, 0, 5, 5, 1)
 
-        self.l_Toughness = QLabel(w_Failure)
-        self.l_Toughness.setObjectName(u"l_Toughness")
-        sizePolicy.setHeightForWidth(self.l_Toughness.sizePolicy().hasHeightForWidth())
-        self.l_Toughness.setSizePolicy(sizePolicy)
+        self.cb_Toughness = QCheckBox(w_Failure)
+        self.cb_Toughness.setObjectName(u"cb_Toughness")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.cb_Toughness.sizePolicy().hasHeightForWidth())
+        self.cb_Toughness.setSizePolicy(sizePolicy1)
 
-        self.gl_Failure.addWidget(self.l_Toughness, 1, 0, 1, 1)
+        self.gl_Failure.addWidget(self.cb_Toughness, 1, 0, 1, 1)
 
         self.sb_Toughness = QDoubleSpinBox(w_Failure)
         self.sb_Toughness.setObjectName(u"sb_Toughness")
@@ -105,9 +108,9 @@ class Ui_w_Failure(object):
 #endif // QT_CONFIG(tooltip)
         self.sb_Abort.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
 #if QT_CONFIG(tooltip)
-        self.l_Toughness.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the toughness is calculated", None))
+        self.cb_Toughness.setToolTip(QCoreApplication.translate("w_Failure", u"If unchecked, the toughness will be calculated at the failure or abort strain.  Check the box if it is desirable to have the toughness calculated at a fixed strain", None))
 #endif // QT_CONFIG(tooltip)
-        self.l_Toughness.setText(QCoreApplication.translate("w_Failure", u"Toughness strain", None))
+        self.cb_Toughness.setText(QCoreApplication.translate("w_Failure", u"Toughness strain", None))
 #if QT_CONFIG(tooltip)
         self.sb_Toughness.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the toughness is calculated", None))
 #endif // QT_CONFIG(tooltip)

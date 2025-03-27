@@ -57,15 +57,15 @@
     </spacer>
    </item>
    <item row="1" column="0">
-    <widget class="QLabel" name="l_Toughness">
+    <widget class="QCheckBox" name="cb_Toughness">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>The strain at which the toughness is calculated</string>
+      <string>If unchecked, the toughness will be calculated at the failure or abort strain.  Check the box if it is desirable to have the toughness calculated at a fixed strain</string>
      </property>
      <property name="text">
       <string>Toughness strain</string>

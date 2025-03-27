@@ -10,6 +10,7 @@ import pandas as pd
 from pathlib import Path
 from scipy.integrate import cumulative_trapezoid  # type: ignore
 from scipy.optimize import curve_fit  # type: ignore
+from typing import Optional
 
 # === Data frames ============================================================ #
 
@@ -53,6 +54,7 @@ class DataParameters(experiment.DataParameters):
         abort_strain_pct: The strain at which the experiment aborts even if the
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
+            If set to None, the failure or abort strain will be used.
         e_modulus_strain1_pct: The strain value which defines the first
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)
@@ -62,7 +64,7 @@ class DataParameters(experiment.DataParameters):
     """
 
     abort_strain_pct: float = 95.0
-    toughness_strain_pct: float = 4.0
+    toughness_strain_pct: Optional[float] = None
     e_modulus_strain1_pct: float = 10.0
     e_modulus_strain2_pct: float = 15.0
 
@@ -77,6 +79,7 @@ class AnalyserParameters(experiment.AnalyserParameters):
         abort_strain_pct: The strain at which the experiment aborts even if the
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
+            If set to None, the failure or abort strain will be used.
         e_modulus_strain1_pct: The strain value which defines the first
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)
@@ -86,7 +89,7 @@ class AnalyserParameters(experiment.AnalyserParameters):
     """
 
     abort_strain_pct: float = 95.0
-    toughness_strain_pct: float = 4.0
+    toughness_strain_pct: Optional[float] = None
     e_modulus_strain1_pct: float = 10.0
     e_modulus_strain2_pct: float = 15.0
 
@@ -239,12 +242,14 @@ class Data(instron_68tm.Data):
 
         # Calculate the remaining summary parameters
         self._aborted = self.ultimate_strain_pct >= parameters.abort_strain_pct
+        self._ultimate_id = self.processed_frame.stress.idxmax()  # type: ignore
         self._toughness_id = (
-            (self.processed_frame.strain - parameters.toughness_strain_pct)
+            self._ultimate_id
+            if parameters.toughness_strain_pct is None
+            else (self.processed_frame.strain - parameters.toughness_strain_pct)
             .abs()
             .idxmin()  # type: ignore
         )
-        self._ultimate_id = self.processed_frame.stress.idxmax()  # type: ignore
         self._yield_id = 0  # TODO: implement
 
     @staticmethod
@@ -513,15 +518,24 @@ class Widget(instron_68tm.Widget):
 
         # Set the input fields to the defaults
         self.view.sb_Abort.setValue(self.parameters.abort_strain_pct)
-        self.view.sb_Toughness.setValue(self.parameters.toughness_strain_pct)
+        self.view.cb_Toughness.setChecked(
+            self.parameters.toughness_strain_pct is not None
+        )
+        self.view.sb_Toughness.setValue(
+            self.parameters.toughness_strain_pct
+            if self.parameters.toughness_strain_pct is not None
+            else 0.0
+        )
         self.view.sb_Strain1.setValue(self.parameters.e_modulus_strain1_pct)
         self.view.sb_Strain2.setValue(self.parameters.e_modulus_strain2_pct)
 
         # Connect signals with slots
-        # NOTE: none
+        self.view.cb_Toughness.checkStateChanged.connect(
+            self._handle_cb_Toughness_changed
+        )
 
         # Set initial views
-        # NOTE: not required
+        self.view.sb_Toughness.setEnabled(self.view.cb_Toughness.isChecked())
 
     def sync_parameters(self) -> None:
         """
@@ -530,6 +544,17 @@ class Widget(instron_68tm.Widget):
         """
 
         self.parameters.abort_strain_pct = self.view.sb_Abort.value()
-        self.parameters.toughness_strain_pct = self.view.sb_Toughness.value()
+        self.parameters.toughness_strain_pct = (
+            self.view.sb_Toughness.value()
+            if self.view.cb_Toughness.isChecked()
+            else None
+        )
         self.parameters.e_modulus_strain1_pct = self.view.sb_Strain1.value()
         self.parameters.e_modulus_strain2_pct = self.view.sb_Strain2.value()
+
+    def _handle_cb_Toughness_changed(self) -> None:
+        """
+        Enables/disables sb_Toughness.
+        """
+
+        self.view.sb_Toughness.setEnabled(self.view.cb_Toughness.isChecked())
