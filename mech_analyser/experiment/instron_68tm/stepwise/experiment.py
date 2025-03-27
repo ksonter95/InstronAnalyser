@@ -283,9 +283,9 @@ class Summary(instron_68tm.Summary):
                     "Max stress [MPa]",
                     "Min force [N]",
                     "Max force [N]",
-                    "a",
-                    "b",
-                    "tau",
+                    "a [MPa]",
+                    "b [MPa]",
+                    "tau [s]",
                 ]
             )
         )
