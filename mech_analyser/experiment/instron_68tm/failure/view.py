@@ -59,49 +59,35 @@ class Ui_w_Failure(object):
 
         self.gl_Failure.addWidget(self.sb_Toughness, 1, 1, 1, 1)
 
-        self.l_Stiffness = QLabel(w_Failure)
-        self.l_Stiffness.setObjectName(u"l_Stiffness")
-        sizePolicy.setHeightForWidth(self.l_Stiffness.sizePolicy().hasHeightForWidth())
-        self.l_Stiffness.setSizePolicy(sizePolicy)
-
-        self.gl_Failure.addWidget(self.l_Stiffness, 2, 0, 1, 1)
-
-        self.sb_Stiffness = QDoubleSpinBox(w_Failure)
-        self.sb_Stiffness.setObjectName(u"sb_Stiffness")
-        self.sb_Stiffness.setDecimals(1)
-        self.sb_Stiffness.setMinimum(0.000000000000000)
-
-        self.gl_Failure.addWidget(self.sb_Stiffness, 2, 1, 1, 1)
-
         self.l_Strain1 = QLabel(w_Failure)
         self.l_Strain1.setObjectName(u"l_Strain1")
         sizePolicy.setHeightForWidth(self.l_Strain1.sizePolicy().hasHeightForWidth())
         self.l_Strain1.setSizePolicy(sizePolicy)
 
-        self.gl_Failure.addWidget(self.l_Strain1, 3, 0, 1, 1)
+        self.gl_Failure.addWidget(self.l_Strain1, 2, 0, 1, 1)
 
         self.sb_Strain1 = QDoubleSpinBox(w_Failure)
         self.sb_Strain1.setObjectName(u"sb_Strain1")
         self.sb_Strain1.setDecimals(1)
 
-        self.gl_Failure.addWidget(self.sb_Strain1, 3, 1, 1, 1)
+        self.gl_Failure.addWidget(self.sb_Strain1, 2, 1, 1, 1)
 
         self.l_EModulus = QLabel(w_Failure)
         self.l_EModulus.setObjectName(u"l_EModulus")
         sizePolicy.setHeightForWidth(self.l_EModulus.sizePolicy().hasHeightForWidth())
         self.l_EModulus.setSizePolicy(sizePolicy)
 
-        self.gl_Failure.addWidget(self.l_EModulus, 3, 2, 1, 1)
+        self.gl_Failure.addWidget(self.l_EModulus, 2, 2, 1, 1)
 
         self.sb_Strain2 = QDoubleSpinBox(w_Failure)
         self.sb_Strain2.setObjectName(u"sb_Strain2")
         self.sb_Strain2.setDecimals(1)
 
-        self.gl_Failure.addWidget(self.sb_Strain2, 3, 3, 1, 1)
+        self.gl_Failure.addWidget(self.sb_Strain2, 2, 3, 1, 1)
 
         self.s_Vertical = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gl_Failure.addItem(self.s_Vertical, 4, 0, 1, 4)
+        self.gl_Failure.addItem(self.s_Vertical, 3, 0, 1, 4)
 
 
         self.retranslateUi(w_Failure)
@@ -126,14 +112,6 @@ class Ui_w_Failure(object):
         self.sb_Toughness.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the toughness is calculated", None))
 #endif // QT_CONFIG(tooltip)
         self.sb_Toughness.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
-#if QT_CONFIG(tooltip)
-        self.l_Stiffness.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the stiffness is calculated", None))
-#endif // QT_CONFIG(tooltip)
-        self.l_Stiffness.setText(QCoreApplication.translate("w_Failure", u"Stiffness strain", None))
-#if QT_CONFIG(tooltip)
-        self.sb_Stiffness.setToolTip(QCoreApplication.translate("w_Failure", u"The strain at which the stiffness is calculated", None))
-#endif // QT_CONFIG(tooltip)
-        self.sb_Stiffness.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
 #if QT_CONFIG(tooltip)
         self.l_Strain1.setToolTip(QCoreApplication.translate("w_Failure", u"The strain range on the stress-strain curve over which the Young's modulus is calculated.  They are the \u03b5 values in the equation E = (\u03c32 - \u03c31) / (\u03b52 - \u03b51)", None))
 #endif // QT_CONFIG(tooltip)

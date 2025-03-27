@@ -31,15 +31,6 @@ class Frame(instron_68tm.ProcessedFrame):
 
         # Initially populate the processed data columns with default values
         self.toughness = pd.Series([0.0] * self._frame.index.size)  # type: ignore
-        self.stiffness = pd.Series([0.0] * self._frame.index.size)  # type: ignore
-
-    @property
-    def stiffness(self) -> "pd.Series[float]":
-        return self._frame["Stiffness [N/mm]"]  # type: ignore
-
-    @stiffness.setter
-    def stiffness(self, value: "pd.Series[float]") -> None:
-        self._frame["Stiffness [N/mm]"] = value
 
     @property
     def toughness(self) -> "pd.Series[float]":
@@ -62,7 +53,6 @@ class DataParameters(experiment.DataParameters):
         abort_strain_pct: The strain at which the experiment aborts even if the
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
-        stiffness_strain_pct: The strain at which the stiffness is calculated.
         e_modulus_strain1_pct: The strain value which defines the first
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)
@@ -73,7 +63,6 @@ class DataParameters(experiment.DataParameters):
 
     abort_strain_pct: float = 95.0
     toughness_strain_pct: float = 4.0
-    stiffness_strain_pct: float = 4.0
     e_modulus_strain1_pct: float = 10.0
     e_modulus_strain2_pct: float = 15.0
 
@@ -88,7 +77,6 @@ class AnalyserParameters(experiment.AnalyserParameters):
         abort_strain_pct: The strain at which the experiment aborts even if the
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
-        stiffness_strain_pct: The strain at which the stiffness is calculated.
         e_modulus_strain1_pct: The strain value which defines the first
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)
@@ -99,7 +87,6 @@ class AnalyserParameters(experiment.AnalyserParameters):
 
     abort_strain_pct: float = 95.0
     toughness_strain_pct: float = 4.0
-    stiffness_strain_pct: float = 4.0
     e_modulus_strain1_pct: float = 10.0
     e_modulus_strain2_pct: float = 15.0
 
@@ -122,13 +109,12 @@ class Data(instron_68tm.Data):
             raw_frame,
             Frame(
                 pd.DataFrame(columns=raw_frame.frame.columns),
-                "Toughness and Stiffness",
+                "Toughness",
             ),
         )
 
         self._aborted: bool = False
         self._e_modulus_MPa: float = 0.0
-        self._stiffness_id: int = 0
         self._toughness_id: int = 0
         self._ultimate_id: int = 0
         self._yield_id: int = 0
@@ -148,14 +134,6 @@ class Data(instron_68tm.Data):
     @processed_frame.setter
     def processed_frame(self, value: Frame) -> None:  # type: ignore
         super(Data, Data).processed_frame.__set__(self, value)  # type: ignore
-
-    @property
-    def stiffness_N_mm(self) -> float:
-        return self.processed_frame.stiffness.loc[self._stiffness_id]
-
-    @property
-    def stiffness_strain_pct(self) -> float:
-        return self.processed_frame.strain.loc[self._stiffness_id]
 
     @property
     def toughness_MPa(self) -> float:
@@ -203,8 +181,6 @@ class Data(instron_68tm.Data):
         Columns that are populated:
             - Toughness: The area under the stress-strain curve up until each
                 data point.
-            - Stiffness: The extent to which an object resists deformation in
-                response to an applied force.
 
         Summary parameters that are calculated:
             - E-modulus: The slope of the stress-strain curve between the
@@ -213,10 +189,6 @@ class Data(instron_68tm.Data):
                 which the toughness is to be calculated.
             - Toughness: The area under the stress-strain curve up until the
                 toughness strain.
-            - Stiffness strain: The measured strain closest to the strain at
-                which the stiffness is to be calculated.
-            - Stiffness: The extent to which an object resists deformation in
-                response to an applied force at the stiffness strain.
             - Yield force: The force at which the material begins to deform.
             - Yield strain: The strain at which the material begins to deform.
             - Yield strength: The stress at which the material begins to deform.
@@ -231,10 +203,7 @@ class Data(instron_68tm.Data):
                 compression-to-failure Instron 68TM experiment data.
         """
 
-        self.processed_frame = Frame(
-            self.raw_frame.frame,
-            "Toughness and Stiffness",
-        )
+        self.processed_frame = Frame(self.raw_frame.frame, "Toughness")
 
         # Add the toughness column
         # NOTE: np.insert is required because the output of
@@ -250,16 +219,6 @@ class Data(instron_68tm.Data):
                 0,
                 0,
             )
-        )
-
-        # Add the stiffness column
-        # NOTE: k = F / δ
-        #       Where:
-        #           - k: stiffness
-        #           - F: force
-        #           - δ: displacement
-        self.processed_frame.stiffness = self.processed_frame.force / (
-            self.processed_frame.displacement
         )
 
         # Calculate the parameters of the linear equation that best fits the
@@ -280,11 +239,6 @@ class Data(instron_68tm.Data):
 
         # Calculate the remaining summary parameters
         self._aborted = self.ultimate_strain_pct >= parameters.abort_strain_pct
-        self._stiffness_id = (
-            (self.processed_frame.strain - parameters.stiffness_strain_pct)
-            .abs()
-            .idxmin()  # type: ignore
-        )
         self._toughness_id = (
             (self.processed_frame.strain - parameters.toughness_strain_pct)
             .abs()
@@ -333,8 +287,6 @@ class Summary(instron_68tm.Summary):
                     "E-modulus [MPa]",
                     "Toughness strain [%]",
                     "Toughness [MPa]",
-                    "Stiffness strain [%]",
-                    "Stiffness [N/mm]",
                 ]
             )
         )
@@ -360,8 +312,6 @@ class Summary(instron_68tm.Summary):
             data.e_modulus_MPa,
             data.toughness_strain_pct,
             data.toughness_MPa,
-            data.stiffness_strain_pct,
-            data.stiffness_N_mm,
         ]
 
 
@@ -416,7 +366,6 @@ class Analyser(instron_68tm.Analyser):
             parameters = DataParameters(
                 self.parameters.abort_strain_pct,
                 self.parameters.toughness_strain_pct,
-                self.parameters.stiffness_strain_pct,
                 self.parameters.e_modulus_strain1_pct,
                 self.parameters.e_modulus_strain2_pct,
             )
@@ -442,7 +391,6 @@ class Parser(instron_68tm.Parser):
         self._parameters = AnalyserParameters(
             parsed_arguments.abort_strain,
             parsed_arguments.toughness_strain,
-            parsed_arguments.stiffness_strain,
             parsed_arguments.e_modulus_strain1,
             parsed_arguments.e_modulus_strain2,
         )
@@ -492,13 +440,6 @@ class Parser(instron_68tm.Parser):
             "-t",
             "--toughness-strain",
             help="The strain at which the toughness is calculated",
-            type=experiment.ArgparseTypes.percentage_float,
-            default=4.0,
-        )
-        parser.add_argument(  # type: ignore
-            "-s",
-            "--stiffness-strain",
-            help="The strain at which the stiffness is calculated",
             type=experiment.ArgparseTypes.percentage_float,
             default=4.0,
         )
@@ -573,7 +514,6 @@ class Widget(instron_68tm.Widget):
         # Set the input fields to the defaults
         self.view.sb_Abort.setValue(self.parameters.abort_strain_pct)
         self.view.sb_Toughness.setValue(self.parameters.toughness_strain_pct)
-        self.view.sb_Stiffness.setValue(self.parameters.stiffness_strain_pct)
         self.view.sb_Strain1.setValue(self.parameters.e_modulus_strain1_pct)
         self.view.sb_Strain2.setValue(self.parameters.e_modulus_strain2_pct)
 
@@ -591,6 +531,5 @@ class Widget(instron_68tm.Widget):
 
         self.parameters.abort_strain_pct = self.view.sb_Abort.value()
         self.parameters.toughness_strain_pct = self.view.sb_Toughness.value()
-        self.parameters.stiffness_strain_pct = self.view.sb_Stiffness.value()
         self.parameters.e_modulus_strain1_pct = self.view.sb_Strain1.value()
         self.parameters.e_modulus_strain2_pct = self.view.sb_Strain2.value()
