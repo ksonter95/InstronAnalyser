@@ -3,6 +3,7 @@ import dataclasses
 import experiment.experiment as experiment
 import experiment.instron_68tm.experiment as instron_68tm
 import experiment.instron_68tm.failure.view as view
+import util.utils as utils
 
 import numpy as np
 import pandas as pd
@@ -55,18 +56,34 @@ class DataParameters(experiment.DataParameters):
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
             If set to None, the failure or abort strain will be used.
-        e_modulus_strain1_pct: The strain value which defines the first
+        e_modulus_use_fixed_range: Use the fixed strain range to calculate the
+            Young's modulus.
+        e_modulus_fixed_strain1_pct: The strain value which defines the first
             datapoint on the stress-strain curve used to calculate the Young's
-            modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)
-        e_modulus_strain2_pct: The strain value which defines the second
+            modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1).
+        e_modulus_fixed_strain2_pct: The strain value which defines the second
             datapoint on the stress-strain curve used to calculate the Young's
-            modulus.  It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)
+            modulus.  It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1).
+        e_modulus_find_strain_min_pct: The strain value which defines the
+            minimum strain that can be used to find the best approximation of
+            the linear region of the stress-strain curve.
+        e_modulus_find_strain_max_pct: The strain value which defines the
+            maximum strain that can be used to find the best approximation of
+            the linear region of the stress-strain curve.
+        e_modulus_find_strain_width_pct: The width of the strain window which
+            will be used to find the best approximation of the linear region of
+            the stress-strain curve for all possible regions between the minimum
+            and maximum strains.
     """
 
     abort_strain_pct: float = 95.0
     toughness_strain_pct: Optional[float] = None
-    e_modulus_strain1_pct: float = 10.0
-    e_modulus_strain2_pct: float = 15.0
+    e_modulus_use_fixed_range: bool = True
+    e_modulus_fixed_strain1_pct: float = 10.0
+    e_modulus_fixed_strain2_pct: float = 15.0
+    e_modulus_find_strain_min_pct: float = 10.0
+    e_modulus_find_strain_max_pct: float = 90.0
+    e_modulus_find_strain_width_pct: float = 5.0
 
 
 @dataclasses.dataclass
@@ -80,18 +97,34 @@ class AnalyserParameters(experiment.AnalyserParameters):
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
             If set to None, the failure or abort strain will be used.
-        e_modulus_strain1_pct: The strain value which defines the first
+        e_modulus_use_fixed_range: Use the fixed strain range to calculate the
+            Young's modulus.
+        e_modulus_fixed_strain1_pct: The strain value which defines the first
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)
-        e_modulus_strain2_pct: The strain value which defines the second
+        e_modulus_fixed_strain2_pct: The strain value which defines the second
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)
+        e_modulus_find_strain_min_pct: The strain value which defines the
+            minimum strain that can be used to find the best approximation of
+            the linear region of the stress-strain curve.
+        e_modulus_find_strain_max_pct: The strain value which defines the
+            maximum strain that can be used to find the best approximation of
+            the linear region of the stress-strain curve.
+        e_modulus_find_strain_width_pct: The width of the strain window which
+            will be used to find the best approximation of the linear region of
+            the stress-strain curve for all possible regions between the minimum
+            and maximum strains.
     """
 
     abort_strain_pct: float = 95.0
     toughness_strain_pct: Optional[float] = None
-    e_modulus_strain1_pct: float = 10.0
-    e_modulus_strain2_pct: float = 15.0
+    e_modulus_use_fixed_range: bool = True
+    e_modulus_fixed_strain1_pct: float = 10.0
+    e_modulus_fixed_strain2_pct: float = 15.0
+    e_modulus_find_strain_min_pct: float = 10.0
+    e_modulus_find_strain_max_pct: float = 90.0
+    e_modulus_find_strain_width_pct: float = 5.0
 
 
 # === Data =================================================================== #
@@ -118,6 +151,9 @@ class Data(instron_68tm.Data):
 
         self._aborted: bool = False
         self._e_modulus_MPa: float = 0.0
+        self._e_modulus_r2: float = 0.0
+        self._e_modulus_strain1_pct: float = 0.0
+        self._e_modulus_strain2_pct: float = 0.0
         self._toughness_id: int = 0
         self._ultimate_id: int = 0
         self._yield_id: int = 0
@@ -129,6 +165,18 @@ class Data(instron_68tm.Data):
     @property
     def e_modulus_MPa(self) -> float:
         return self._e_modulus_MPa
+
+    @property
+    def e_modulus_r2(self) -> float:
+        return self._e_modulus_r2
+
+    @property
+    def e_modulus_strain1_pct(self) -> float:
+        return self._e_modulus_strain1_pct
+
+    @property
+    def e_modulus_strain2_pct(self) -> float:
+        return self._e_modulus_strain2_pct
 
     @property
     def processed_frame(self) -> Frame:
@@ -188,6 +236,10 @@ class Data(instron_68tm.Data):
         Summary parameters that are calculated:
             - E-modulus: The slope of the stress-strain curve between the
                 specified strains as determined by linear regression.
+            - E-modulus coefficient of determination: The R-squared value of
+                the linear regression used to determine the E-modulus.
+            - E-modulus strains: The strains over which the E-modulus was
+                calculated.
             - Toughness strain: The measured strain closest to the strain at
                 which the toughness is to be calculated.
             - Toughness: The area under the stress-strain curve up until the
@@ -226,19 +278,40 @@ class Data(instron_68tm.Data):
 
         # Calculate the parameters of the linear equation that best fits the
         # data points
-        [self._e_modulus_MPa, _], _ = curve_fit(  # type: ignore
-            self.y,
-            self.processed_frame.strain[
-                (self.processed_frame.strain > (parameters.e_modulus_strain1_pct))
-                & (self.processed_frame.strain < (parameters.e_modulus_strain2_pct))
+        if parameters.e_modulus_use_fixed_range:
+            self._e_modulus_MPa, self._e_modulus_r2 = self._execute_regression(
+                parameters.e_modulus_fixed_strain1_pct,
+                parameters.e_modulus_fixed_strain2_pct,
+            )
+            self._e_modulus_strain1_pct = parameters.e_modulus_fixed_strain1_pct
+            self._e_modulus_strain2_pct = parameters.e_modulus_fixed_strain2_pct
+        # Calculate the E-modulus for all possible windows and save the one with
+        # the highest R^2 value
+        else:
+            results: list[tuple[float, float, int, int]] = [
+                (
+                    *self._execute_regression(
+                        strain_pct,
+                        strain_pct + parameters.e_modulus_find_strain_width_pct,
+                    ),
+                    strain_pct,
+                    int(strain_pct + parameters.e_modulus_find_strain_width_pct),
+                )
+                for strain_pct in range(
+                    int(parameters.e_modulus_find_strain_min_pct),
+                    int(
+                        parameters.e_modulus_find_strain_max_pct
+                        - parameters.e_modulus_find_strain_width_pct
+                        + 1
+                    ),
+                )
             ]
-            # NOTE: convert from percentage to decimal
-            / 100.0,
-            self.processed_frame.stress[
-                (self.processed_frame.strain > (parameters.e_modulus_strain1_pct))
-                & (self.processed_frame.strain < (parameters.e_modulus_strain2_pct))
-            ],
-        )
+            (
+                self._e_modulus_MPa,
+                self._e_modulus_r2,
+                self._e_modulus_strain1_pct,
+                self._e_modulus_strain2_pct,
+            ) = max(results, key=lambda x: x[1])
 
         # Calculate the remaining summary parameters
         self._aborted = self.ultimate_strain_pct >= parameters.abort_strain_pct
@@ -251,6 +324,56 @@ class Data(instron_68tm.Data):
             .idxmin()  # type: ignore
         )
         self._yield_id = 0  # TODO: implement
+
+    def _execute_regression(
+        self, strain1_pct: float, strain2_pct: float
+    ) -> tuple[float, float]:
+        """
+        Executes the regression to determine the E-modulus and its corresponding
+        coefficient of determination.
+
+        Args:
+            strain1_pct: The lower bound of the strain range over which to
+                regress.
+            strain2_pct: The upper bound of the strain range over which to
+                regress.
+
+        Returns:
+            Tuple of the E-modulus and its corresponding coefficient of
+            determination.
+        """
+
+        x: "pd.Series[float]" = (
+            self.processed_frame.strain[
+                (self.processed_frame.strain > strain1_pct)
+                & (self.processed_frame.strain < strain2_pct)
+            ]
+            # NOTE: convert from percentage to decimal
+            / 100.0
+        )
+        y: "pd.Series[float]" = self.processed_frame.stress[
+            (self.processed_frame.strain > strain1_pct)
+            & (self.processed_frame.strain < strain2_pct)
+        ]
+
+        # Ensure that the regression more data points than the polynomial degree
+        if len(x) < 3:
+            return 0.0, 0.0
+
+        [e_modulus_MPa, c], _ = curve_fit(self.y, x, y)  # type: ignore
+
+        e_modulus_r2 = utils.calculate_r2(
+            list(y),
+            [
+                self.y(strain_pct / 100, e_modulus_MPa, c)  # type: ignore
+                for strain_pct in self.processed_frame.strain[
+                    (self.processed_frame.strain > strain1_pct)
+                    & (self.processed_frame.strain < strain2_pct)
+                ]
+            ],
+        )
+
+        return e_modulus_MPa, e_modulus_r2  # type: ignore
 
     @staticmethod
     def y(x: float, E: float, c: float) -> float:
@@ -289,7 +412,10 @@ class Summary(instron_68tm.Summary):
                     "Ultimate force [N]",
                     "Ultimate strain [%]",
                     "Ultimate strength [MPa]",
+                    "E-modulus strain 1 [%]",
+                    "E-modulus strain 2 [%]",
                     "E-modulus [MPa]",
+                    "E-modulus R^2 [MPa^2/MPa^2]",
                     "Toughness strain [%]",
                     "Toughness [MPa]",
                 ]
@@ -314,7 +440,10 @@ class Summary(instron_68tm.Summary):
             data.ultimate_force_N,
             data.ultimate_strain_pct,
             data.ultimate_strength_MPa,
+            data.e_modulus_strain1_pct,
+            data.e_modulus_strain2_pct,
             data.e_modulus_MPa,
+            data.e_modulus_r2,
             data.toughness_strain_pct,
             data.toughness_MPa,
         ]
@@ -371,8 +500,12 @@ class Analyser(instron_68tm.Analyser):
             parameters = DataParameters(
                 self.parameters.abort_strain_pct,
                 self.parameters.toughness_strain_pct,
-                self.parameters.e_modulus_strain1_pct,
-                self.parameters.e_modulus_strain2_pct,
+                self.parameters.e_modulus_use_fixed_range,
+                self.parameters.e_modulus_fixed_strain1_pct,
+                self.parameters.e_modulus_fixed_strain2_pct,
+                self.parameters.e_modulus_find_strain_min_pct,
+                self.parameters.e_modulus_find_strain_max_pct,
+                self.parameters.e_modulus_find_strain_width_pct,
             )
             self.data[i].process(parameters)
             self.summary.append_row(self.data[i], parameters)
@@ -526,16 +659,33 @@ class Widget(instron_68tm.Widget):
             if self.parameters.toughness_strain_pct is not None
             else 0.0
         )
-        self.view.sb_Strain1.setValue(self.parameters.e_modulus_strain1_pct)
-        self.view.sb_Strain2.setValue(self.parameters.e_modulus_strain2_pct)
+        self.view.sb_Strain1.setValue(self.parameters.e_modulus_fixed_strain1_pct)
+        self.view.sb_Strain2.setValue(self.parameters.e_modulus_fixed_strain2_pct)
+        self.view.rb_FindRange.setChecked(not self.parameters.e_modulus_use_fixed_range)
+        self.view.sb_StrainMin.setValue(self.parameters.e_modulus_find_strain_min_pct)
+        self.view.sb_StrainMax.setValue(self.parameters.e_modulus_find_strain_max_pct)
+        self.view.sb_StrainWindowWidth.setValue(
+            self.parameters.e_modulus_find_strain_width_pct
+        )
 
         # Connect signals with slots
         self.view.cb_Toughness.checkStateChanged.connect(
             self._handle_cb_Toughness_changed
         )
+        self.view.rb_FixedRange.toggled.connect(self._handle_rb_FixedRange_toggled)
+        self.view.rb_FindRange.toggled.connect(self._handle_rb_FindRange_toggled)
 
         # Set initial views
+        self.view.rb_FixedRange.setChecked(self.parameters.e_modulus_use_fixed_range)
         self.view.sb_Toughness.setEnabled(self.view.cb_Toughness.isChecked())
+        self.view.sb_Strain1.setEnabled(self.view.rb_FixedRange.isChecked())
+        self.view.l_To1.setEnabled(self.view.rb_FixedRange.isChecked())
+        self.view.sb_Strain2.setEnabled(self.view.rb_FixedRange.isChecked())
+        self.view.sb_StrainMin.setEnabled(self.view.rb_FindRange.isChecked())
+        self.view.l_To2.setEnabled(self.view.rb_FindRange.isChecked())
+        self.view.sb_StrainMax.setEnabled(self.view.rb_FindRange.isChecked())
+        self.view.l_With.setEnabled(self.view.rb_FindRange.isChecked())
+        self.view.sb_StrainWindowWidth.setEnabled(self.view.rb_FindRange.isChecked())
 
     def sync_parameters(self) -> None:
         """
@@ -549,8 +699,14 @@ class Widget(instron_68tm.Widget):
             if self.view.cb_Toughness.isChecked()
             else None
         )
-        self.parameters.e_modulus_strain1_pct = self.view.sb_Strain1.value()
-        self.parameters.e_modulus_strain2_pct = self.view.sb_Strain2.value()
+        self.parameters.e_modulus_use_fixed_range = self.view.rb_FixedRange.isChecked()
+        self.parameters.e_modulus_fixed_strain1_pct = self.view.sb_Strain1.value()
+        self.parameters.e_modulus_fixed_strain2_pct = self.view.sb_Strain2.value()
+        self.parameters.e_modulus_find_strain_min_pct = self.view.sb_StrainMin.value()
+        self.parameters.e_modulus_find_strain_max_pct = self.view.sb_StrainMax.value()
+        self.parameters.e_modulus_find_strain_width_pct = (
+            self.view.sb_StrainWindowWidth.value()
+        )
 
     def _handle_cb_Toughness_changed(self) -> None:
         """
@@ -558,3 +714,24 @@ class Widget(instron_68tm.Widget):
         """
 
         self.view.sb_Toughness.setEnabled(self.view.cb_Toughness.isChecked())
+
+    def _handle_rb_FindRange_toggled(self) -> None:
+        """
+        Enables/disables sb_StrainMin, l_To2, sb_StrainMax, l_Width, and
+        sb_StrainWindowWidth.
+        """
+
+        self.view.sb_StrainMin.setEnabled(self.view.rb_FindRange.isChecked())
+        self.view.l_To2.setEnabled(self.view.rb_FindRange.isChecked())
+        self.view.sb_StrainMax.setEnabled(self.view.rb_FindRange.isChecked())
+        self.view.l_With.setEnabled(self.view.rb_FindRange.isChecked())
+        self.view.sb_StrainWindowWidth.setEnabled(self.view.rb_FindRange.isChecked())
+
+    def _handle_rb_FixedRange_toggled(self) -> None:
+        """
+        Enables/disables sb_Strain1, l_To1, and sb_Strain2.
+        """
+
+        self.view.sb_Strain1.setEnabled(self.view.rb_FixedRange.isChecked())
+        self.view.l_To1.setEnabled(self.view.rb_FixedRange.isChecked())
+        self.view.sb_Strain2.setEnabled(self.view.rb_FixedRange.isChecked())
