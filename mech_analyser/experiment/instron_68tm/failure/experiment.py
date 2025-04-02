@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+import enum
 import experiment.experiment as experiment
 import experiment.instron_68tm.experiment as instron_68tm
 import experiment.instron_68tm.failure.view as view
@@ -8,6 +9,7 @@ import util.utils as utils
 import numpy as np
 import pandas as pd
 
+from PySide6.QtCore import Qt
 from pathlib import Path
 from scipy.integrate import cumulative_trapezoid  # type: ignore
 from scipy.optimize import curve_fit  # type: ignore
@@ -56,14 +58,23 @@ class DataParameters(experiment.DataParameters):
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
             If set to None, the failure or abort strain will be used.
-        e_modulus_use_fixed_range: Use the fixed strain range to calculate the
-            Young's modulus.
+        e_modulus_method: Method used to calculate the Young's modulus.
         e_modulus_fixed_strain1_pct: The strain value which defines the first
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1).
         e_modulus_fixed_strain2_pct: The strain value which defines the second
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1).
+        e_modulus_anchor_point: The point used to anchor the strain range over
+            which the Young's modulus is to be calculated.
+        e_modulus_anchor_offset_pct: The strain offset from the specific point
+            on the stress-strain curve from/to which the Young's modulus will be
+            calculated.  It, in combination with the anchor point, specifies ε1
+            in the equation E = (σ2 - σ1) / (ε2 - ε1).
+        e_modulus_anchor_strain_width_pct: The width of the range on the
+            stress-strain curve over which the Young's modulus will be
+            calculated.  It, in combination with the strain offset and anchor
+            point, specifies ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1).
         e_modulus_find_strain_min_pct: The strain value which defines the
             minimum strain that can be used to find the best approximation of
             the linear region of the stress-strain curve.
@@ -76,11 +87,34 @@ class DataParameters(experiment.DataParameters):
             and maximum strains.
     """
 
+    class AnchorPoint(enum.Enum):
+        """
+        The point used to anchor the strain range over which the Young's modulus
+        is to be calculated.
+        """
+
+        START = 0
+        TOE = 1
+        YIELD = 2
+        ULTIMATE = 3
+        FAILURE = 4
+        END = 5
+
+    class Method(enum.Enum):
+        """The method used to calculate the Young's modulus."""
+
+        FIXED_RANGE = 0
+        ANCHOR_POINT = 1
+        FIND_RANGE = 2
+
     abort_strain_pct: float = 95.0
     toughness_strain_pct: Optional[float] = None
-    e_modulus_use_fixed_range: bool = True
+    e_modulus_method: Method = Method.FIXED_RANGE
     e_modulus_fixed_strain1_pct: float = 10.0
     e_modulus_fixed_strain2_pct: float = 15.0
+    e_modulus_anchor_point: AnchorPoint = AnchorPoint.ULTIMATE
+    e_modulus_anchor_offset_pct: float = 5.0
+    e_modulus_anchor_strain_width_pct: float = 5.0
     e_modulus_find_strain_min_pct: float = 10.0
     e_modulus_find_strain_max_pct: float = 90.0
     e_modulus_find_strain_width_pct: float = 5.0
@@ -97,14 +131,23 @@ class AnalyserParameters(experiment.AnalyserParameters):
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
             If set to None, the failure or abort strain will be used.
-        e_modulus_use_fixed_range: Use the fixed strain range to calculate the
-            Young's modulus.
+        e_modulus_method: Method used to calculate the Young's modulus.
         e_modulus_fixed_strain1_pct: The strain value which defines the first
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)
         e_modulus_fixed_strain2_pct: The strain value which defines the second
             datapoint on the stress-strain curve used to calculate the Young's
             modulus.  It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)
+        e_modulus_anchor_point: The point used to anchor the strain range over
+            which the Young's modulus is to be calculated.
+        e_modulus_anchor_offset_pct: The strain offset from the specific point
+            on the stress-strain curve from/to which the Young's modulus will be
+            calculated.  It, in combination with the anchor point, specifies ε1
+            in the equation E = (σ2 - σ1) / (ε2 - ε1).
+        e_modulus_anchor_strain_width_pct: The width of the range on the
+            stress-strain curve over which the Young's modulus will be
+            calculated.  It, in combination with the strain offset and anchor
+            point, specifies ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1).
         e_modulus_find_strain_min_pct: The strain value which defines the
             minimum strain that can be used to find the best approximation of
             the linear region of the stress-strain curve.
@@ -119,9 +162,14 @@ class AnalyserParameters(experiment.AnalyserParameters):
 
     abort_strain_pct: float = 95.0
     toughness_strain_pct: Optional[float] = None
-    e_modulus_use_fixed_range: bool = True
+    e_modulus_method: DataParameters.Method = DataParameters.Method.FIXED_RANGE
     e_modulus_fixed_strain1_pct: float = 10.0
     e_modulus_fixed_strain2_pct: float = 15.0
+    e_modulus_anchor_point: DataParameters.AnchorPoint = (
+        DataParameters.AnchorPoint.ULTIMATE
+    )
+    e_modulus_anchor_offset_pct: float = 5.0
+    e_modulus_anchor_strain_width_pct: float = 5.0
     e_modulus_find_strain_min_pct: float = 10.0
     e_modulus_find_strain_max_pct: float = 90.0
     e_modulus_find_strain_width_pct: float = 5.0
@@ -276,44 +324,7 @@ class Data(instron_68tm.Data):
             )
         )
 
-        # Calculate the parameters of the linear equation that best fits the
-        # data points
-        if parameters.e_modulus_use_fixed_range:
-            self._e_modulus_MPa, self._e_modulus_r2 = self._execute_regression(
-                parameters.e_modulus_fixed_strain1_pct,
-                parameters.e_modulus_fixed_strain2_pct,
-            )
-            self._e_modulus_strain1_pct = parameters.e_modulus_fixed_strain1_pct
-            self._e_modulus_strain2_pct = parameters.e_modulus_fixed_strain2_pct
-        # Calculate the E-modulus for all possible windows and save the one with
-        # the highest R^2 value
-        else:
-            results: list[tuple[float, float, int, int]] = [
-                (
-                    *self._execute_regression(
-                        strain_pct,
-                        strain_pct + parameters.e_modulus_find_strain_width_pct,
-                    ),
-                    strain_pct,
-                    int(strain_pct + parameters.e_modulus_find_strain_width_pct),
-                )
-                for strain_pct in range(
-                    int(parameters.e_modulus_find_strain_min_pct),
-                    int(
-                        parameters.e_modulus_find_strain_max_pct
-                        - parameters.e_modulus_find_strain_width_pct
-                        + 1
-                    ),
-                )
-            ]
-            (
-                self._e_modulus_MPa,
-                self._e_modulus_r2,
-                self._e_modulus_strain1_pct,
-                self._e_modulus_strain2_pct,
-            ) = max(results, key=lambda x: x[1])
-
-        # Calculate the remaining summary parameters
+        # Calculate the summary parameters
         self._aborted = self.ultimate_strain_pct >= parameters.abort_strain_pct
         self._ultimate_id = self.processed_frame.stress.idxmax()  # type: ignore
         self._toughness_id = (
@@ -324,6 +335,113 @@ class Data(instron_68tm.Data):
             .idxmin()  # type: ignore
         )
         self._yield_id = 0  # TODO: implement
+
+        # Calculate the parameters of the linear equation that best fits the
+        # data points
+        match parameters.e_modulus_method:
+            # Calculate the E-modulus for the fixed range
+            case DataParameters.Method.FIXED_RANGE:
+                self._e_modulus_strain1_pct = parameters.e_modulus_fixed_strain1_pct
+                self._e_modulus_strain2_pct = parameters.e_modulus_fixed_strain2_pct
+                self._e_modulus_MPa, self._e_modulus_r2 = self._execute_regression(
+                    self._e_modulus_strain1_pct,
+                    self._e_modulus_strain2_pct,
+                )
+
+            # Calculate the E-modulus for the range that is anchored to a point
+            case DataParameters.Method.ANCHOR_POINT:
+                if (
+                    parameters.e_modulus_anchor_point
+                    == DataParameters.AnchorPoint.START
+                ):
+                    self._e_modulus_strain1_pct = parameters.e_modulus_anchor_offset_pct
+                    self._e_modulus_strain2_pct = (
+                        self._e_modulus_strain1_pct
+                        + parameters.e_modulus_anchor_strain_width_pct
+                    )
+                elif (
+                    parameters.e_modulus_anchor_point
+                    == DataParameters.AnchorPoint.YIELD
+                ):
+                    self._e_modulus_strain2_pct = (
+                        self.yield_strain_pct - parameters.e_modulus_anchor_offset_pct
+                    )
+                    self._e_modulus_strain1_pct = (
+                        self._e_modulus_strain2_pct
+                        - parameters.e_modulus_anchor_strain_width_pct
+                    )
+                elif (
+                    parameters.e_modulus_anchor_point
+                    == DataParameters.AnchorPoint.ULTIMATE
+                ):
+                    self._e_modulus_strain2_pct = (
+                        self.ultimate_strain_pct
+                        - parameters.e_modulus_anchor_offset_pct
+                    )
+                    self._e_modulus_strain1_pct = (
+                        self._e_modulus_strain2_pct
+                        - parameters.e_modulus_anchor_strain_width_pct
+                    )
+                elif (
+                    parameters.e_modulus_anchor_point == DataParameters.AnchorPoint.END
+                ):
+                    self._e_modulus_strain2_pct = (
+                        100 - parameters.e_modulus_anchor_offset_pct
+                    )
+                    self._e_modulus_strain1_pct = (
+                        self._e_modulus_strain2_pct
+                        - parameters.e_modulus_anchor_strain_width_pct
+                    )
+
+                # Ensure that the strains are bounded between 0% and 100%
+                self._e_modulus_strain1_pct = max(
+                    0, min(100, self._e_modulus_strain1_pct)
+                )
+                self._e_modulus_strain2_pct = max(
+                    0, min(100, self._e_modulus_strain2_pct)
+                )
+
+                # Execute the regression
+                self._e_modulus_MPa, self._e_modulus_r2 = self._execute_regression(
+                    self._e_modulus_strain1_pct,
+                    self._e_modulus_strain2_pct,
+                )
+
+            # Calculate the E-modulus for all possible windows and save the one
+            # with the highest R^2 value
+            case DataParameters.Method.FIND_RANGE:
+                results: list[tuple[int, int, float, float]] = [
+                    (
+                        strain_pct,
+                        int(strain_pct + parameters.e_modulus_find_strain_width_pct),
+                        *self._execute_regression(
+                            strain_pct,
+                            strain_pct + parameters.e_modulus_find_strain_width_pct,
+                        ),
+                    )
+                    for strain_pct in range(
+                        int(parameters.e_modulus_find_strain_min_pct),
+                        int(
+                            parameters.e_modulus_find_strain_max_pct
+                            - parameters.e_modulus_find_strain_width_pct
+                            + 1
+                        ),
+                    )
+                    if strain_pct + parameters.e_modulus_find_strain_width_pct
+                    < self.ultimate_strain_pct
+                ]
+                (
+                    self._e_modulus_strain1_pct,
+                    self._e_modulus_strain2_pct,
+                    self._e_modulus_MPa,
+                    self._e_modulus_r2,
+                ) = max(results, key=lambda x: x[1])
+
+            case _:
+                self._e_modulus_strain1_pct = float("NaN")
+                self._e_modulus_strain2_pct = float("NaN")
+                self._e_modulus_MPa = float("NaN")
+                self._e_modulus_r2 = float("NaN")
 
     def _execute_regression(
         self, strain1_pct: float, strain2_pct: float
@@ -500,9 +618,12 @@ class Analyser(instron_68tm.Analyser):
             parameters = DataParameters(
                 self.parameters.abort_strain_pct,
                 self.parameters.toughness_strain_pct,
-                self.parameters.e_modulus_use_fixed_range,
+                self.parameters.e_modulus_method,
                 self.parameters.e_modulus_fixed_strain1_pct,
                 self.parameters.e_modulus_fixed_strain2_pct,
+                self.parameters.e_modulus_anchor_point,
+                self.parameters.e_modulus_anchor_offset_pct,
+                self.parameters.e_modulus_anchor_strain_width_pct,
                 self.parameters.e_modulus_find_strain_min_pct,
                 self.parameters.e_modulus_find_strain_max_pct,
                 self.parameters.e_modulus_find_strain_width_pct,
@@ -659,9 +780,24 @@ class Widget(instron_68tm.Widget):
             if self.parameters.toughness_strain_pct is not None
             else 0.0
         )
+        self.view.rb_FixedRange.setChecked(
+            self.parameters.e_modulus_method == DataParameters.Method.FIXED_RANGE
+        )
         self.view.sb_Strain1.setValue(self.parameters.e_modulus_fixed_strain1_pct)
         self.view.sb_Strain2.setValue(self.parameters.e_modulus_fixed_strain2_pct)
-        self.view.rb_FindRange.setChecked(not self.parameters.e_modulus_use_fixed_range)
+        self.view.rb_AnchorPoint.setChecked(
+            self.parameters.e_modulus_method == DataParameters.Method.ANCHOR_POINT
+        )
+        self.view.sb_StrainOffset.setValue(self.parameters.e_modulus_anchor_offset_pct)
+        self.view.cbx_AnchorPoint.setCurrentIndex(
+            self.parameters.e_modulus_anchor_point.value
+        )
+        self.view.sb_StrainRangeWidth.setValue(
+            self.parameters.e_modulus_anchor_strain_width_pct
+        )
+        self.view.rb_FindRange.setChecked(
+            self.parameters.e_modulus_method == DataParameters.Method.FIND_RANGE
+        )
         self.view.sb_StrainMin.setValue(self.parameters.e_modulus_find_strain_min_pct)
         self.view.sb_StrainMax.setValue(self.parameters.e_modulus_find_strain_max_pct)
         self.view.sb_StrainWindowWidth.setValue(
@@ -673,19 +809,14 @@ class Widget(instron_68tm.Widget):
             self._handle_cb_Toughness_changed
         )
         self.view.rb_FixedRange.toggled.connect(self._handle_rb_FixedRange_toggled)
+        self.view.rb_AnchorPoint.toggled.connect(self._handle_rb_AnchorPoint_toggled)
         self.view.rb_FindRange.toggled.connect(self._handle_rb_FindRange_toggled)
 
         # Set initial views
-        self.view.rb_FixedRange.setChecked(self.parameters.e_modulus_use_fixed_range)
-        self.view.sb_Toughness.setEnabled(self.view.cb_Toughness.isChecked())
-        self.view.sb_Strain1.setEnabled(self.view.rb_FixedRange.isChecked())
-        self.view.l_To1.setEnabled(self.view.rb_FixedRange.isChecked())
-        self.view.sb_Strain2.setEnabled(self.view.rb_FixedRange.isChecked())
-        self.view.sb_StrainMin.setEnabled(self.view.rb_FindRange.isChecked())
-        self.view.l_To2.setEnabled(self.view.rb_FindRange.isChecked())
-        self.view.sb_StrainMax.setEnabled(self.view.rb_FindRange.isChecked())
-        self.view.l_With.setEnabled(self.view.rb_FindRange.isChecked())
-        self.view.sb_StrainWindowWidth.setEnabled(self.view.rb_FindRange.isChecked())
+        self._handle_cb_Toughness_changed()
+        self._handle_rb_FixedRange_toggled()
+        self._handle_rb_AnchorPoint_toggled()
+        self._handle_rb_FindRange_toggled()
 
     def sync_parameters(self) -> None:
         """
@@ -699,9 +830,24 @@ class Widget(instron_68tm.Widget):
             if self.view.cb_Toughness.isChecked()
             else None
         )
-        self.parameters.e_modulus_use_fixed_range = self.view.rb_FixedRange.isChecked()
+        self.parameters.e_modulus_method = (
+            DataParameters.Method.FIXED_RANGE
+            if self.view.rb_FixedRange.isChecked()
+            else (
+                DataParameters.Method.ANCHOR_POINT
+                if self.view.rb_AnchorPoint.isChecked()
+                else DataParameters.Method.FIND_RANGE
+            )
+        )
         self.parameters.e_modulus_fixed_strain1_pct = self.view.sb_Strain1.value()
         self.parameters.e_modulus_fixed_strain2_pct = self.view.sb_Strain2.value()
+        self.parameters.e_modulus_anchor_offset_pct = self.view.sb_StrainOffset.value()
+        self.parameters.e_modulus_anchor_point = DataParameters.AnchorPoint(
+            self.view.cbx_AnchorPoint.currentIndex()
+        )
+        self.parameters.e_modulus_anchor_strain_width_pct = (
+            self.view.sb_StrainRangeWidth.value()
+        )
         self.parameters.e_modulus_find_strain_min_pct = self.view.sb_StrainMin.value()
         self.parameters.e_modulus_find_strain_max_pct = self.view.sb_StrainMax.value()
         self.parameters.e_modulus_find_strain_width_pct = (
@@ -715,6 +861,35 @@ class Widget(instron_68tm.Widget):
 
         self.view.sb_Toughness.setEnabled(self.view.cb_Toughness.isChecked())
 
+    def _handle_rb_AnchorPoint_toggled(self) -> None:
+        """
+        Enables/disables sb_StrainOffset, l_From, cbx_AnchorPoint, l_With1, and
+        sb_StrainRangeWidth.
+        """
+
+        self.view.sb_StrainOffset.setEnabled(self.view.rb_AnchorPoint.isChecked())
+        self.view.l_From.setEnabled(self.view.rb_AnchorPoint.isChecked())
+        self.view.cbx_AnchorPoint.setEnabled(self.view.rb_AnchorPoint.isChecked())
+        self.view.l_With1.setEnabled(self.view.rb_AnchorPoint.isChecked())
+        self.view.sb_StrainRangeWidth.setEnabled(self.view.rb_AnchorPoint.isChecked())
+
+        # TODO: these can be deleted once the corresponding points are added
+        self.view.cbx_AnchorPoint.setItemData(
+            DataParameters.AnchorPoint.TOE.value,
+            Qt.ItemFlag.NoItemFlags,
+            Qt.ItemDataRole.UserRole - 1,
+        )
+        self.view.cbx_AnchorPoint.setItemData(
+            DataParameters.AnchorPoint.YIELD.value,
+            Qt.ItemFlag.NoItemFlags,
+            Qt.ItemDataRole.UserRole - 1,
+        )
+        self.view.cbx_AnchorPoint.setItemData(
+            DataParameters.AnchorPoint.FAILURE.value,
+            Qt.ItemFlag.NoItemFlags,
+            Qt.ItemDataRole.UserRole - 1,
+        )
+
     def _handle_rb_FindRange_toggled(self) -> None:
         """
         Enables/disables sb_StrainMin, l_To2, sb_StrainMax, l_Width, and
@@ -724,7 +899,7 @@ class Widget(instron_68tm.Widget):
         self.view.sb_StrainMin.setEnabled(self.view.rb_FindRange.isChecked())
         self.view.l_To2.setEnabled(self.view.rb_FindRange.isChecked())
         self.view.sb_StrainMax.setEnabled(self.view.rb_FindRange.isChecked())
-        self.view.l_With.setEnabled(self.view.rb_FindRange.isChecked())
+        self.view.l_With2.setEnabled(self.view.rb_FindRange.isChecked())
         self.view.sb_StrainWindowWidth.setEnabled(self.view.rb_FindRange.isChecked())
 
     def _handle_rb_FixedRange_toggled(self) -> None:

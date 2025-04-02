@@ -15,9 +15,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QDoubleSpinBox, QGridLayout,
-    QLabel, QRadioButton, QSizePolicy, QSpacerItem,
-    QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDoubleSpinBox,
+    QGridLayout, QLabel, QRadioButton, QSizePolicy,
+    QSpacerItem, QWidget)
 
 class Ui_w_Failure(object):
     def setupUi(self, w_Failure):
@@ -45,7 +45,7 @@ class Ui_w_Failure(object):
 
         self.s_Horizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gl_Failure.addItem(self.s_Horizontal, 0, 6, 6, 1)
+        self.gl_Failure.addItem(self.s_Horizontal, 0, 6, 7, 1)
 
         self.cb_Toughness = QCheckBox(w_Failure)
         self.cb_Toughness.setObjectName(u"cb_Toughness")
@@ -94,46 +94,88 @@ class Ui_w_Failure(object):
 
         self.gl_Failure.addWidget(self.sb_Strain2, 3, 3, 1, 1)
 
+        self.rb_AnchorPoint = QRadioButton(w_Failure)
+        self.rb_AnchorPoint.setObjectName(u"rb_AnchorPoint")
+
+        self.gl_Failure.addWidget(self.rb_AnchorPoint, 4, 0, 1, 1)
+
+        self.sb_StrainOffset = QDoubleSpinBox(w_Failure)
+        self.sb_StrainOffset.setObjectName(u"sb_StrainOffset")
+        self.sb_StrainOffset.setDecimals(1)
+
+        self.gl_Failure.addWidget(self.sb_StrainOffset, 4, 1, 1, 1)
+
+        self.l_From = QLabel(w_Failure)
+        self.l_From.setObjectName(u"l_From")
+        sizePolicy.setHeightForWidth(self.l_From.sizePolicy().hasHeightForWidth())
+        self.l_From.setSizePolicy(sizePolicy)
+
+        self.gl_Failure.addWidget(self.l_From, 4, 2, 1, 1)
+
+        self.cbx_AnchorPoint = QComboBox(w_Failure)
+        self.cbx_AnchorPoint.addItem("")
+        self.cbx_AnchorPoint.addItem("")
+        self.cbx_AnchorPoint.addItem("")
+        self.cbx_AnchorPoint.addItem("")
+        self.cbx_AnchorPoint.addItem("")
+        self.cbx_AnchorPoint.addItem("")
+        self.cbx_AnchorPoint.setObjectName(u"cbx_AnchorPoint")
+
+        self.gl_Failure.addWidget(self.cbx_AnchorPoint, 4, 3, 1, 1)
+
+        self.l_With1 = QLabel(w_Failure)
+        self.l_With1.setObjectName(u"l_With1")
+        sizePolicy.setHeightForWidth(self.l_With1.sizePolicy().hasHeightForWidth())
+        self.l_With1.setSizePolicy(sizePolicy)
+
+        self.gl_Failure.addWidget(self.l_With1, 4, 4, 1, 1)
+
+        self.sb_StrainRangeWidth = QDoubleSpinBox(w_Failure)
+        self.sb_StrainRangeWidth.setObjectName(u"sb_StrainRangeWidth")
+        self.sb_StrainRangeWidth.setDecimals(1)
+
+        self.gl_Failure.addWidget(self.sb_StrainRangeWidth, 4, 5, 1, 1)
+
         self.rb_FindRange = QRadioButton(w_Failure)
         self.rb_FindRange.setObjectName(u"rb_FindRange")
 
-        self.gl_Failure.addWidget(self.rb_FindRange, 4, 0, 1, 1)
+        self.gl_Failure.addWidget(self.rb_FindRange, 5, 0, 1, 1)
 
         self.sb_StrainMin = QDoubleSpinBox(w_Failure)
         self.sb_StrainMin.setObjectName(u"sb_StrainMin")
         self.sb_StrainMin.setDecimals(1)
 
-        self.gl_Failure.addWidget(self.sb_StrainMin, 4, 1, 1, 1)
+        self.gl_Failure.addWidget(self.sb_StrainMin, 5, 1, 1, 1)
 
         self.l_To2 = QLabel(w_Failure)
         self.l_To2.setObjectName(u"l_To2")
         sizePolicy.setHeightForWidth(self.l_To2.sizePolicy().hasHeightForWidth())
         self.l_To2.setSizePolicy(sizePolicy)
 
-        self.gl_Failure.addWidget(self.l_To2, 4, 2, 1, 1)
+        self.gl_Failure.addWidget(self.l_To2, 5, 2, 1, 1)
 
         self.sb_StrainMax = QDoubleSpinBox(w_Failure)
         self.sb_StrainMax.setObjectName(u"sb_StrainMax")
         self.sb_StrainMax.setDecimals(1)
 
-        self.gl_Failure.addWidget(self.sb_StrainMax, 4, 3, 1, 1)
+        self.gl_Failure.addWidget(self.sb_StrainMax, 5, 3, 1, 1)
 
-        self.l_With = QLabel(w_Failure)
-        self.l_With.setObjectName(u"l_With")
-        sizePolicy.setHeightForWidth(self.l_With.sizePolicy().hasHeightForWidth())
-        self.l_With.setSizePolicy(sizePolicy)
+        self.l_With2 = QLabel(w_Failure)
+        self.l_With2.setObjectName(u"l_With2")
+        sizePolicy.setHeightForWidth(self.l_With2.sizePolicy().hasHeightForWidth())
+        self.l_With2.setSizePolicy(sizePolicy)
 
-        self.gl_Failure.addWidget(self.l_With, 4, 4, 1, 1)
+        self.gl_Failure.addWidget(self.l_With2, 5, 4, 1, 1)
 
         self.sb_StrainWindowWidth = QDoubleSpinBox(w_Failure)
         self.sb_StrainWindowWidth.setObjectName(u"sb_StrainWindowWidth")
         self.sb_StrainWindowWidth.setDecimals(1)
 
-        self.gl_Failure.addWidget(self.sb_StrainWindowWidth, 4, 5, 1, 1)
+        self.gl_Failure.addWidget(self.sb_StrainWindowWidth, 5, 5, 1, 1)
 
         self.s_Vertical = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gl_Failure.addItem(self.s_Vertical, 5, 0, 1, 6)
+        self.gl_Failure.addItem(self.s_Vertical, 6, 0, 1, 6)
 
 
         self.retranslateUi(w_Failure)
@@ -176,6 +218,30 @@ class Ui_w_Failure(object):
 #endif // QT_CONFIG(tooltip)
         self.sb_Strain2.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
 #if QT_CONFIG(tooltip)
+        self.rb_AnchorPoint.setToolTip(QCoreApplication.translate("w_Failure", u"Anchor a point on the stress-strain curve over which the Young's modulus is calculated to a specific point on the curve.", None))
+#endif // QT_CONFIG(tooltip)
+        self.rb_AnchorPoint.setText(QCoreApplication.translate("w_Failure", u"Anchor point", None))
+#if QT_CONFIG(tooltip)
+        self.sb_StrainOffset.setToolTip(QCoreApplication.translate("w_Failure", u"The strain offset from the specific point on the stress-strain curve from/to which the Young's modulus will be calculated.  It, in combination with the anchor point, specifies \u03b51 in the equation E = (\u03c32 - \u03c31) / (\u03b52 - \u03b51).", None))
+#endif // QT_CONFIG(tooltip)
+        self.sb_StrainOffset.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
+        self.l_From.setText(QCoreApplication.translate("w_Failure", u"from", None))
+        self.cbx_AnchorPoint.setItemText(0, QCoreApplication.translate("w_Failure", u"Start Strain", None))
+        self.cbx_AnchorPoint.setItemText(1, QCoreApplication.translate("w_Failure", u"Toe Strain", None))
+        self.cbx_AnchorPoint.setItemText(2, QCoreApplication.translate("w_Failure", u"Yield Strain", None))
+        self.cbx_AnchorPoint.setItemText(3, QCoreApplication.translate("w_Failure", u"Ultimate Strain", None))
+        self.cbx_AnchorPoint.setItemText(4, QCoreApplication.translate("w_Failure", u"Failure Strain", None))
+        self.cbx_AnchorPoint.setItemText(5, QCoreApplication.translate("w_Failure", u"End Strain", None))
+
+#if QT_CONFIG(tooltip)
+        self.cbx_AnchorPoint.setToolTip(QCoreApplication.translate("w_Failure", u"The point used to anchor the strain range over which the Young's modulus is to be calculated", None))
+#endif // QT_CONFIG(tooltip)
+        self.l_With1.setText(QCoreApplication.translate("w_Failure", u"with width", None))
+#if QT_CONFIG(tooltip)
+        self.sb_StrainRangeWidth.setToolTip(QCoreApplication.translate("w_Failure", u"The width of the range on the stress-strain curve over which the Young's modulus will be calculated.  It, in combination with the strain offset and anchor point, specifies \u03b52 in the equation E = (\u03c32 - \u03c31) / (\u03b52 - \u03b51).", None))
+#endif // QT_CONFIG(tooltip)
+        self.sb_StrainRangeWidth.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
+#if QT_CONFIG(tooltip)
         self.rb_FindRange.setToolTip(QCoreApplication.translate("w_Failure", u"Automatically find the strain range over which the stress-strain curve is most linear and use this range to calculate the Young's modulus.", None))
 #endif // QT_CONFIG(tooltip)
         self.rb_FindRange.setText(QCoreApplication.translate("w_Failure", u"Find linear range", None))
@@ -188,7 +254,7 @@ class Ui_w_Failure(object):
         self.sb_StrainMax.setToolTip(QCoreApplication.translate("w_Failure", u"The strain value which defines the maximum strain that can be used to find the best approximation of the linear region of the stress-strain curve.", None))
 #endif // QT_CONFIG(tooltip)
         self.sb_StrainMax.setSuffix(QCoreApplication.translate("w_Failure", u"%", None))
-        self.l_With.setText(QCoreApplication.translate("w_Failure", u"with width", None))
+        self.l_With2.setText(QCoreApplication.translate("w_Failure", u"with width", None))
 #if QT_CONFIG(tooltip)
         self.sb_StrainWindowWidth.setToolTip(QCoreApplication.translate("w_Failure", u"The width of the strain window which will be used to find the best approximation of the linear region of the stress-strain curve for all possible regions between the minimum and maximum strains.", None))
 #endif // QT_CONFIG(tooltip)
