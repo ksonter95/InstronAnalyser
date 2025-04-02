@@ -56,7 +56,7 @@ class RawFrame(experiment.RawFrame, Frame):
     """
 
     @classmethod
-    def load(cls, csv: Path) -> "RawFrame":
+    def load(cls, csv: Path) -> "RawFrame":  # type: ignore
         """
         Loads the CSV file into a frame and validates its contents.
 

@@ -85,7 +85,7 @@ class DataParameters(experiment.DataParameters):
 
 
 @dataclasses.dataclass
-class AnalyserParameters(instron_68tm.experiment.AnalyserParameters):
+class AnalyserParameters(instron_68tm.AnalyserParameters):
     """
     Parameters of an analyser of a stepwise compression experiment using an
     Instron 68TM.

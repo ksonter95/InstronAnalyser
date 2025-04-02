@@ -121,7 +121,7 @@ class DataParameters(experiment.DataParameters):
 
 
 @dataclasses.dataclass
-class AnalyserParameters(experiment.AnalyserParameters):
+class AnalyserParameters(instron_68tm.AnalyserParameters):
     """
     Parameters of an analyser of a compression-to-failure experiment using an
     Instron 68TM.
@@ -325,8 +325,10 @@ class Data(instron_68tm.Data):
         )
 
         # Calculate the summary parameters
-        self._aborted = self.ultimate_strain_pct >= parameters.abort_strain_pct
         self._ultimate_id = self.processed_frame.stress.idxmax()  # type: ignore
+        self._aborted = (
+            self.ultimate_strain_pct + self.raw_frame.tare_strain_pct
+        ) >= parameters.abort_strain_pct
         self._toughness_id = (
             self._ultimate_id
             if parameters.toughness_strain_pct is None
@@ -771,6 +773,7 @@ class Widget(instron_68tm.Widget):
         """
 
         # Set the input fields to the defaults
+        self.view.sb_Tare.setValue(self.parameters.tare_force_N)
         self.view.sb_Abort.setValue(self.parameters.abort_strain_pct)
         self.view.cb_Toughness.setChecked(
             self.parameters.toughness_strain_pct is not None
@@ -824,6 +827,7 @@ class Widget(instron_68tm.Widget):
         widget input fields.
         """
 
+        self.parameters.tare_force_N = self.view.sb_Tare.value()
         self.parameters.abort_strain_pct = self.view.sb_Abort.value()
         self.parameters.toughness_strain_pct = (
             self.view.sb_Toughness.value()

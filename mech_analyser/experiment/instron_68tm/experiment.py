@@ -1,4 +1,5 @@
 import argparse
+import dataclasses
 import experiment.experiment as experiment
 import pandas as pd
 
@@ -40,15 +41,78 @@ class RawFrame(experiment.RawFrame, Frame):
 
     Args:
         frame: Underlying pd.DataFrame representation of the data.
+        tare_force_N: The force which will be used to tare the experiment.  All
+            raw data points with force less than the tare force will be
+            discarded, and all data points with force greater than the tare
+            force will be offset accordingly.
     """
 
+    def __init__(self, frame: pd.DataFrame, tare_force_N: float) -> None:
+        self._tare_displacement_mm: float = 0.0
+        self._tare_force_N: float = 0.0
+        self._tare_strain_pct: float = 0.0
+        self._tare_stress_MPa: float = 0.0
+        self._tare_time_s: float = 0.0
+
+        if tare_force_N == 0.0:
+            return super().__init__(frame)
+
+        # Tare the raw data
+        tare_id: int = frame.loc[frame["Force [N]"] >= tare_force_N].index.min()  # type: ignore
+        filtered_frame: pd.DataFrame = frame.iloc[tare_id:]
+        filtered_frame.reset_index(drop=True, inplace=True)
+
+        self._tare_displacement_mm = filtered_frame["Displacement [mm]"][0]
+        self._tare_force_N = filtered_frame["Force [N]"][0]
+        self._tare_strain_pct = filtered_frame["Strain [%]"][0]
+        self._tare_stress_MPa = filtered_frame["Compressive stress [MPa]"][0]
+        self._tare_time_s = filtered_frame["Time [s]"][0]
+
+        tared_frame: pd.DataFrame = pd.concat(
+            [
+                filtered_frame["Time [s]"] - self._tare_time_s,  # type: ignore
+                filtered_frame["Displacement [mm]"] - self._tare_displacement_mm,  # type: ignore
+                filtered_frame["Force [N]"] - self._tare_force_N,  # type: ignore
+                filtered_frame["Strain [%]"] - self._tare_strain_pct,  # type: ignore
+                filtered_frame["Compressive stress [MPa]"] - self._tare_stress_MPa,  # type: ignore
+            ],
+            axis=1,
+        )
+        tared_frame.columns = filtered_frame.columns
+
+        super().__init__(tared_frame)
+
+    @property
+    def tare_displacement_mm(self) -> float:
+        return self._tare_displacement_mm
+
+    @property
+    def tare_force_N(self) -> float:
+        return self._tare_force_N
+
+    @property
+    def tare_strain_pct(self) -> float:
+        return self._tare_strain_pct
+
+    @property
+    def tare_stress_MPa(self) -> float:
+        return self._tare_stress_MPa
+
+    @property
+    def tare_time_s(self) -> float:
+        return self._tare_time_s
+
     @classmethod
-    def load(cls, csv: Path) -> "RawFrame":
+    def load(cls, csv: Path, tare_force_N: float = 0.0) -> "RawFrame":  # type: ignore
         """
         Loads the CSV file into a frame and validates its contents.
 
         Args:
             csv: The path to the CSV file containing the Instron 68TM output.
+            tare_force_N: The force which will be used to tare the experiment.
+                All raw data points with force less than the tare force will be
+                discarded, and all data points with force greater than the tare
+                force will be offset accordingly.
         """
 
         try:
@@ -95,7 +159,7 @@ class RawFrame(experiment.RawFrame, Frame):
         except:
             raise ValueError(f"Invalid CSV file: {csv}")
 
-        return RawFrame(frame)
+        return RawFrame(frame, tare_force_N)
 
 
 class ProcessedFrame(experiment.ProcessedFrame, Frame):
@@ -112,6 +176,21 @@ class ProcessedFrame(experiment.ProcessedFrame, Frame):
 
 
 # === Parameters ============================================================= #
+
+
+@dataclasses.dataclass
+class AnalyserParameters(experiment.AnalyserParameters):
+    """
+    Parameters of an Instron 68TM experiment.
+
+    Args:
+        tare_force_N: The force which will be used to tare the experiment.  All
+            raw data points with force less than the tare force will be
+            discarded, and all data points with force greater than the tare
+            force will be offset accordingly.
+    """
+
+    tare_force_N: float = 0.0
 
 
 # === Data =================================================================== #
@@ -179,13 +258,13 @@ class Analyser(experiment.Analyser):
         self,
         input_csv: Path,
         output_xlsx: Path,
-        parameters: experiment.AnalyserParameters,
+        parameters: AnalyserParameters,
         summary: Summary,
     ) -> None:
 
         super().__init__(
             output_xlsx,
-            RawFrame.load(input_csv),
+            RawFrame.load(input_csv, parameters.tare_force_N),
             parameters,
             summary,
         )

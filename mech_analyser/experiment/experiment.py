@@ -4,7 +4,7 @@ import pandas as pd
 
 from PySide6.QtWidgets import QStackedWidget, QWidget
 from pathlib import Path
-from typing import Optional, Protocol
+from typing import Any, Optional, Protocol
 
 # === Data frames ============================================================ #
 
@@ -61,7 +61,7 @@ class RawFrame(Frame):
         super().__init__(frame, "Raw Data")
 
     @classmethod
-    def load(cls, csv: Path) -> "Frame":
+    def load(cls, csv: Path, **kwargs: dict[str, Any]) -> "Frame":
         """
         Loads the CSV file into a frame and validates its contents.
 
