@@ -116,10 +116,6 @@ class DataParameters(experiment.DataParameters):
             design and fabrication of multiphasic soft network composites for
             tissue engineering articular cartilage: A numerical model-based
             approach." Chemical Engineering Journal 340 (2018): 15-23.
-        vi: Poisson's ratio of the indenter.  If None, the indenter is assumed
-            to be rigid and will not mechanically deform.
-        e_modulus_i_MPa: Young's modulus of the indenter.  If None, the indenter
-            is assumed to be rigid and will not mechanically deform.
         h_R_threshold: Threshold for the ratio of the indentation depth to the
             radius of the indenter.  If the ratio is greater than this value,
             then the Hertz model is not a valid approximation of the
@@ -139,8 +135,6 @@ class DataParameters(experiment.DataParameters):
     samples_to_skip: int = 0
     R_um: float = 500.0
     v: float = 0.484
-    vi: Optional[float] = None
-    e_modulus_i_MPa: Optional[float] = None
     h_R_threshold: float = 0.1
     use_regression_offsets: bool = False
     a_max_um: Optional[float] = None
@@ -162,10 +156,6 @@ class AnalyserParameters(microtester_g2.experiment.AnalyserParameters):
             design and fabrication of multiphasic soft network composites for
             tissue engineering articular cartilage: A numerical model-based
             approach." Chemical Engineering Journal 340 (2018): 15-23.
-        vi: Poisson's ratio of the indenter.  If None, the indenter is assumed
-            to be rigid and will not mechanically deform.
-        e_modulus_i_MPa: Young's modulus of the indenter.  If None, the indenter
-            is assumed to be rigid and will not mechanically deform.
         h_R_threshold: Threshold for the ratio of the indentation depth to the
             radius of the indenter.  If the ratio is greater than this value,
             then the Hertz model is not a valid approximation of the
@@ -185,8 +175,6 @@ class AnalyserParameters(microtester_g2.experiment.AnalyserParameters):
     samples_to_skip: int = 0
     R_um: float = 500.0
     v: float = 0.484
-    vi: Optional[float] = None
-    e_modulus_i_MPa: Optional[float] = None
     h_R_threshold: float = 0.1
     use_regression_offsets: bool = False
     a_max_um: Optional[float] = None
@@ -215,7 +203,6 @@ class Data(microtester_g2.Data):
         self._a: float = 0.0
         self._b: float = 0.0
         self._e_modulus_MPa: float = 0.0
-        self._e_modulus_reduced_MPa: float = 0.0
 
     @property
     def a(self) -> float:
@@ -228,10 +215,6 @@ class Data(microtester_g2.Data):
     @property
     def e_modulus_MPa(self) -> float:
         return self._e_modulus_MPa
-
-    @property
-    def e_modulus_reduced_MPa(self) -> float:
-        return self._e_modulus_reduced_MPa
 
     @property
     def processed_frame(self) -> Frame:
@@ -258,14 +241,9 @@ class Data(microtester_g2.Data):
                 indenter.
 
         Summary parameters that are calculated:
-            - Hertz model regression equation parameters (E*, a, and b in
-                F = 4/3 * (E*) R^0.5 * (h - a)^1.5 + b, where E* is the reduced
-                modulus)
-            - Young's modulus of the sample.  It is related to the reduced
-                modulus according to the equation
-                1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei, where vi and Ei are
-                the poisson's ratio and Young's modulus of the indenter,
-                respectively.
+            - Hertz model regression equation parameters (E, a, and b in
+                F = 4/3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b, where E is
+                the Young's modulus of the sample)
 
         Args:
             parameters: The parameters to use when processing the
@@ -294,8 +272,15 @@ class Data(microtester_g2.Data):
                 b_max_uN: float = (
                     parameters.b_max_uN if parameters.b_max_uN is not None else np.inf
                 )
-                [self._e_modulus_reduced_MPa, self._a, self._b], _ = curve_fit(  # type: ignore
-                    lambda x, e, a, b: self.y(x, parameters.R_um, e, a, b),  # type: ignore
+                [self._e_modulus_MPa, self._a, self._b], _ = curve_fit(  # type: ignore
+                    lambda x, e, a, b: self.y(  # type: ignore
+                        x,  # type: ignore
+                        parameters.R_um,
+                        e,  # type: ignore
+                        parameters.v,
+                        a,  # type: ignore
+                        b,  # type: ignore
+                    ),
                     self.processed_frame.tip_displacement,
                     self.processed_frame.force,
                     p0=[
@@ -317,15 +302,22 @@ class Data(microtester_g2.Data):
                 self._b = self.processed_frame.force.iloc[
                     self.processed_frame.tip_displacement.idxmin()  # type: ignore
                 ]
-                [self._e_modulus_reduced_MPa], _ = curve_fit(  # type: ignore
-                    lambda x, e: self.y(x, parameters.R_um, e, self._a, self._b),  # type: ignore
+                [self._e_modulus_MPa], _ = curve_fit(  # type: ignore
+                    lambda x, e: self.y(  # type: ignore
+                        x,  # type: ignore
+                        parameters.R_um,
+                        e,  # type: ignore
+                        parameters.v,
+                        self._a,
+                        self._b,
+                    ),
                     self.processed_frame.tip_displacement,
                     self.processed_frame.force,
                 )
         except:
             # Solution could not converge
             print("Solution could not converge")
-            self._e_modulus_reduced_MPa = float("nan")
+            self._e_modulus_MPa = float("nan")
             self._a = float("nan")
             self._b = float("nan")
 
@@ -339,7 +331,8 @@ class Data(microtester_g2.Data):
                 self.y(
                     x,
                     parameters.R_um,
-                    self.e_modulus_reduced_MPa,
+                    self.e_modulus_MPa,
+                    parameters.v,
                     self.a,
                     self.b,
                 ).real  # NOTE: ignore imaginary part
@@ -358,27 +351,17 @@ class Data(microtester_g2.Data):
             self.processed_frame.indentation_depth / parameters.R_um  # type: ignore
         )
 
-        # Calculate the remaining summary parameters
-        vi: float = parameters.vi if parameters.vi is not None else 1.0
-        e_modulus_i_MPa: float = (
-            parameters.e_modulus_i_MPa
-            if parameters.e_modulus_i_MPa is not None
-            else 1.0
-        )
-        self._e_modulus_MPa = (1 - parameters.v**2) / (
-            1 / self.e_modulus_reduced_MPa - (1 - vi**2) / e_modulus_i_MPa  # type: ignore
-        )
-
     @staticmethod
-    def y(x: float, R: float, e: float, a: float, b: float) -> float:
+    def y(x: float, R: float, e: float, v: float, a: float, b: float) -> float:
         """
         Calculates the force according to the following equation:
-        y = 4/3 * e * R^0.5 * x^1.5
+        y = 4/3 * e / (1 - v^2) * R^0.5 * x^1.5
 
         Args:
             x: The tip displacement.
             R: The radius of the indenter.
-            e: The reduced modulus.
+            e: The Young's modulus of the sample.
+            v: The Poisson's ratio of the sample.
             a: The tip displacement to indentation depth offset.
             b: The measured force to indentation force offset.
 
@@ -386,7 +369,7 @@ class Data(microtester_g2.Data):
             The force at tip displacement x.
         """
 
-        return 4 / 3 * e * (R**0.5) * ((x - a) ** 1.5) + b
+        return 4 / 3 * e / (1 - v**2) * (R**0.5) * ((x - a) ** 1.5) + b
 
 
 # === Results ================================================================ #
@@ -403,7 +386,6 @@ class Summary(microtester_g2.Summary):
             pd.DataFrame(
                 columns=[
                     "Cycle",
-                    "Reduced Modulus [MPa]",
                     "E-modulus [MPa]",
                     "a [um]",
                     "b [uN]",
@@ -425,7 +407,6 @@ class Summary(microtester_g2.Summary):
 
         self._frame.loc[len(self._frame)] = [
             parameters.cycle,
-            data.e_modulus_reduced_MPa,
             data.e_modulus_MPa,
             data.a,
             data.b,
@@ -496,8 +477,6 @@ class Analyser(microtester_g2.Analyser):
                 self.parameters.samples_to_skip,
                 self.parameters.R_um,
                 self.parameters.v,
-                self.parameters.vi,
-                self.parameters.e_modulus_i_MPa,
                 self.parameters.h_R_threshold,
                 self.parameters.use_regression_offsets,
                 self.parameters.a_max_um,
@@ -560,14 +539,6 @@ class Widget(microtester_g2.Widget):
         self.view.sb_IndenterRadius.setValue(self.parameters.R_um)
         self.view.sb_PoissonsRatio.setValue(self.parameters.v)
         self.view.sb_HRThreshold.setValue(self.parameters.h_R_threshold)
-        self.view.cb_IndenterProperties.setChecked(
-            self.parameters.vi is not None
-            and self.parameters.e_modulus_i_MPa is not None
-        )
-        self.view.sb_IndenterPoissonsRatio.setValue(self.parameters.vi or 0.0)
-        self.view.sb_IndenterYoungsModulus.setValue(
-            self.parameters.e_modulus_i_MPa or 0.0
-        )
         self.view.cb_RegressionOffsets.setChecked(
             self.parameters.use_regression_offsets
         )
@@ -580,9 +551,6 @@ class Widget(microtester_g2.Widget):
         self.view.sb_OffsetForce.setValue(self.parameters.b_max_uN or 0.0)
 
         # Connect signals with slots
-        self.view.cb_IndenterProperties.checkStateChanged.connect(
-            self._handle_cb_IndenterProperties_changed
-        )
         self.view.cb_RegressionOffsets.checkStateChanged.connect(
             self._handle_cb_RegressionOffsets_changed
         )
@@ -591,7 +559,6 @@ class Widget(microtester_g2.Widget):
         )
 
         # Set initial views
-        self._handle_cb_IndenterProperties_changed()
         self._handle_cb_RegressionOffsets_changed()
         self._handle_cb_OffsetBounds_changed()
 
@@ -606,16 +573,6 @@ class Widget(microtester_g2.Widget):
         self.parameters.R_um = self.view.sb_IndenterRadius.value()
         self.parameters.v = self.view.sb_PoissonsRatio.value()
         self.parameters.h_R_threshold = self.view.sb_HRThreshold.value()
-        self.parameters.vi = (
-            self.view.sb_IndenterPoissonsRatio.value()
-            if self.view.cb_IndenterProperties.isChecked()
-            else None
-        )
-        self.parameters.e_modulus_i_MPa = (
-            self.view.sb_IndenterYoungsModulus.value()
-            if self.view.cb_IndenterProperties.isChecked()
-            else None
-        )
         self.parameters.use_regression_offsets = (
             self.view.cb_RegressionOffsets.isChecked()
         )
@@ -630,25 +587,6 @@ class Widget(microtester_g2.Widget):
             if self.view.cb_RegressionOffsets.isChecked()
             and self.view.cb_OffsetBounds.isChecked()
             else None
-        )
-
-    def _handle_cb_IndenterProperties_changed(self) -> None:
-        """
-        Sets the visibility of sb_IndenterPoissonsRatio and
-        sb_IndenterYoungsModulus to the state of cb_IndenterProperties.
-        """
-
-        self.view.l_IndenterPoissonsRatio.setDisabled(
-            not self.view.cb_IndenterProperties.isChecked()
-        )
-        self.view.l_IndenterYoungsModulus.setDisabled(
-            not self.view.cb_IndenterProperties.isChecked()
-        )
-        self.view.sb_IndenterPoissonsRatio.setDisabled(
-            not self.view.cb_IndenterProperties.isChecked()
-        )
-        self.view.sb_IndenterYoungsModulus.setDisabled(
-            not self.view.cb_IndenterProperties.isChecked()
         )
 
     def _handle_cb_OffsetBounds_changed(self) -> None:

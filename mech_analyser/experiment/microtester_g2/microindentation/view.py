@@ -49,7 +49,7 @@ class Ui_w_Microindentation(object):
 
         self.s_Horizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gl_Microindentation.addItem(self.s_Horizontal, 0, 3, 11, 1)
+        self.gl_Microindentation.addItem(self.s_Horizontal, 0, 3, 9, 1)
 
         self.l_SamplesToSkip = QLabel(w_Microindentation)
         self.l_SamplesToSkip.setObjectName(u"l_SamplesToSkip")
@@ -77,7 +77,7 @@ class Ui_w_Microindentation(object):
         self.sb_IndenterRadius.setObjectName(u"sb_IndenterRadius")
         sizePolicy1.setHeightForWidth(self.sb_IndenterRadius.sizePolicy().hasHeightForWidth())
         self.sb_IndenterRadius.setSizePolicy(sizePolicy1)
-        self.sb_IndenterRadius.setMaximum(9999.989999999999782)
+        self.sb_IndenterRadius.setMaximum(10000.000000000000000)
 
         self.gl_Microindentation.addWidget(self.sb_IndenterRadius, 2, 1, 1, 1)
 
@@ -114,88 +114,49 @@ class Ui_w_Microindentation(object):
 
         self.gl_Microindentation.addWidget(self.sb_HRThreshold, 4, 1, 1, 1)
 
-        self.cb_IndenterProperties = QCheckBox(w_Microindentation)
-        self.cb_IndenterProperties.setObjectName(u"cb_IndenterProperties")
-        sizePolicy.setHeightForWidth(self.cb_IndenterProperties.sizePolicy().hasHeightForWidth())
-        self.cb_IndenterProperties.setSizePolicy(sizePolicy)
-
-        self.gl_Microindentation.addWidget(self.cb_IndenterProperties, 5, 0, 1, 1)
-
-        self.l_IndenterPoissonsRatio = QLabel(w_Microindentation)
-        self.l_IndenterPoissonsRatio.setObjectName(u"l_IndenterPoissonsRatio")
-        sizePolicy.setHeightForWidth(self.l_IndenterPoissonsRatio.sizePolicy().hasHeightForWidth())
-        self.l_IndenterPoissonsRatio.setSizePolicy(sizePolicy)
-
-        self.gl_Microindentation.addWidget(self.l_IndenterPoissonsRatio, 5, 1, 1, 1)
-
-        self.l_IndenterYoungsModulus = QLabel(w_Microindentation)
-        self.l_IndenterYoungsModulus.setObjectName(u"l_IndenterYoungsModulus")
-        sizePolicy.setHeightForWidth(self.l_IndenterYoungsModulus.sizePolicy().hasHeightForWidth())
-        self.l_IndenterYoungsModulus.setSizePolicy(sizePolicy)
-
-        self.gl_Microindentation.addWidget(self.l_IndenterYoungsModulus, 5, 2, 1, 1)
-
-        self.sb_IndenterPoissonsRatio = QDoubleSpinBox(w_Microindentation)
-        self.sb_IndenterPoissonsRatio.setObjectName(u"sb_IndenterPoissonsRatio")
-        sizePolicy1.setHeightForWidth(self.sb_IndenterPoissonsRatio.sizePolicy().hasHeightForWidth())
-        self.sb_IndenterPoissonsRatio.setSizePolicy(sizePolicy1)
-        self.sb_IndenterPoissonsRatio.setDecimals(4)
-        self.sb_IndenterPoissonsRatio.setMaximum(0.500000000000000)
-        self.sb_IndenterPoissonsRatio.setSingleStep(0.001000000000000)
-
-        self.gl_Microindentation.addWidget(self.sb_IndenterPoissonsRatio, 6, 1, 1, 1)
-
-        self.sb_IndenterYoungsModulus = QDoubleSpinBox(w_Microindentation)
-        self.sb_IndenterYoungsModulus.setObjectName(u"sb_IndenterYoungsModulus")
-        sizePolicy1.setHeightForWidth(self.sb_IndenterYoungsModulus.sizePolicy().hasHeightForWidth())
-        self.sb_IndenterYoungsModulus.setSizePolicy(sizePolicy1)
-        self.sb_IndenterYoungsModulus.setMaximum(9999999.990000000223517)
-
-        self.gl_Microindentation.addWidget(self.sb_IndenterYoungsModulus, 6, 2, 1, 1)
-
         self.cb_RegressionOffsets = QCheckBox(w_Microindentation)
         self.cb_RegressionOffsets.setObjectName(u"cb_RegressionOffsets")
         sizePolicy.setHeightForWidth(self.cb_RegressionOffsets.sizePolicy().hasHeightForWidth())
         self.cb_RegressionOffsets.setSizePolicy(sizePolicy)
 
-        self.gl_Microindentation.addWidget(self.cb_RegressionOffsets, 7, 0, 1, 1)
+        self.gl_Microindentation.addWidget(self.cb_RegressionOffsets, 5, 0, 1, 1)
 
         self.cb_OffsetBounds = QCheckBox(w_Microindentation)
         self.cb_OffsetBounds.setObjectName(u"cb_OffsetBounds")
         sizePolicy.setHeightForWidth(self.cb_OffsetBounds.sizePolicy().hasHeightForWidth())
         self.cb_OffsetBounds.setSizePolicy(sizePolicy)
 
-        self.gl_Microindentation.addWidget(self.cb_OffsetBounds, 8, 0, 1, 1)
+        self.gl_Microindentation.addWidget(self.cb_OffsetBounds, 6, 0, 1, 1)
 
         self.l_OffsetTipDisplacement = QLabel(w_Microindentation)
         self.l_OffsetTipDisplacement.setObjectName(u"l_OffsetTipDisplacement")
         sizePolicy.setHeightForWidth(self.l_OffsetTipDisplacement.sizePolicy().hasHeightForWidth())
         self.l_OffsetTipDisplacement.setSizePolicy(sizePolicy)
 
-        self.gl_Microindentation.addWidget(self.l_OffsetTipDisplacement, 8, 1, 1, 1)
+        self.gl_Microindentation.addWidget(self.l_OffsetTipDisplacement, 6, 1, 1, 1)
 
         self.l_OffsetForce = QLabel(w_Microindentation)
         self.l_OffsetForce.setObjectName(u"l_OffsetForce")
         sizePolicy.setHeightForWidth(self.l_OffsetForce.sizePolicy().hasHeightForWidth())
         self.l_OffsetForce.setSizePolicy(sizePolicy)
 
-        self.gl_Microindentation.addWidget(self.l_OffsetForce, 8, 2, 1, 1)
+        self.gl_Microindentation.addWidget(self.l_OffsetForce, 6, 2, 1, 1)
 
         self.sb_OffsetTipDisplacement = QDoubleSpinBox(w_Microindentation)
         self.sb_OffsetTipDisplacement.setObjectName(u"sb_OffsetTipDisplacement")
         self.sb_OffsetTipDisplacement.setMaximum(1000.000000000000000)
 
-        self.gl_Microindentation.addWidget(self.sb_OffsetTipDisplacement, 9, 1, 1, 1)
+        self.gl_Microindentation.addWidget(self.sb_OffsetTipDisplacement, 7, 1, 1, 1)
 
         self.sb_OffsetForce = QDoubleSpinBox(w_Microindentation)
         self.sb_OffsetForce.setObjectName(u"sb_OffsetForce")
         self.sb_OffsetForce.setMaximum(1000000.000000000000000)
 
-        self.gl_Microindentation.addWidget(self.sb_OffsetForce, 9, 2, 1, 1)
+        self.gl_Microindentation.addWidget(self.sb_OffsetForce, 7, 2, 1, 1)
 
         self.s_Vertical = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gl_Microindentation.addItem(self.s_Vertical, 10, 0, 1, 3)
+        self.gl_Microindentation.addItem(self.s_Vertical, 8, 0, 1, 3)
 
 
         self.retranslateUi(w_Microindentation)
@@ -216,19 +177,19 @@ class Ui_w_Microindentation(object):
 #endif // QT_CONFIG(tooltip)
         self.l_SamplesToSkip.setText(QCoreApplication.translate("w_Microindentation", u"Samples to skip", None))
 #if QT_CONFIG(tooltip)
-        self.l_IndenterRadius.setToolTip(QCoreApplication.translate("w_Microindentation", u"Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * (E*) * R^0.5 * (h - a)^1.5 + b", None))
+        self.l_IndenterRadius.setToolTip(QCoreApplication.translate("w_Microindentation", u"Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b", None))
 #endif // QT_CONFIG(tooltip)
         self.l_IndenterRadius.setText(QCoreApplication.translate("w_Microindentation", u"Indenter radius (R)", None))
 #if QT_CONFIG(tooltip)
-        self.sb_IndenterRadius.setToolTip(QCoreApplication.translate("w_Microindentation", u"Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * (E*) * R^0.5 * h^1.5", None))
+        self.sb_IndenterRadius.setToolTip(QCoreApplication.translate("w_Microindentation", u"Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5", None))
 #endif // QT_CONFIG(tooltip)
         self.sb_IndenterRadius.setSuffix(QCoreApplication.translate("w_Microindentation", u"\u00b5m", None))
 #if QT_CONFIG(tooltip)
-        self.l_PoissonsRatio.setToolTip(QCoreApplication.translate("w_Microindentation", u"Poisson's ratio of the sample.  This is the value of v in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  See Bas, Onur, et al. \"Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.\" Chemical Engineering Journal 340 (2018): 15-23", None))
+        self.l_PoissonsRatio.setToolTip(QCoreApplication.translate("w_Microindentation", u"Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5.  See Bas, Onur, et al. \"Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.\" Chemical Engineering Journal 340 (2018): 15-23", None))
 #endif // QT_CONFIG(tooltip)
         self.l_PoissonsRatio.setText(QCoreApplication.translate("w_Microindentation", u"Poisson's ratio (v)", None))
 #if QT_CONFIG(tooltip)
-        self.sb_PoissonsRatio.setToolTip(QCoreApplication.translate("w_Microindentation", u"Poisson's ratio of the sample.  This is the value of v in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  See Bas, Onur, et al. \"Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.\" Chemical Engineering Journal 340 (2018): 15-23", None))
+        self.sb_PoissonsRatio.setToolTip(QCoreApplication.translate("w_Microindentation", u"Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5.  See Bas, Onur, et al. \"Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.\" Chemical Engineering Journal 340 (2018): 15-23", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
         self.l_HRThreshold.setToolTip(QCoreApplication.translate("w_Microindentation", u"Threshold for the ratio of the indentation depth to the radius of the indenter.  If the ratio is greater than this value, then the Hertz model is not a valid approximation of the indentation response", None))
@@ -238,25 +199,6 @@ class Ui_w_Microindentation(object):
         self.sb_HRThreshold.setToolTip(QCoreApplication.translate("w_Microindentation", u"Threshold for the ratio of the indentation depth to the radius of the indenter.  If the ratio is greater than this value, then the Hertz model is not a valid approximation of the indentation response", None))
 #endif // QT_CONFIG(tooltip)
 #if QT_CONFIG(tooltip)
-        self.cb_IndenterProperties.setToolTip(QCoreApplication.translate("w_Microindentation", u"If unchecked, the indenter is assumed to be rigid and will not mechanically deform, and therefore the indenter properties will be ignored in the calculation of the Young's modulus of the sample", None))
-#endif // QT_CONFIG(tooltip)
-        self.cb_IndenterProperties.setText(QCoreApplication.translate("w_Microindentation", u"Indenter properties", None))
-#if QT_CONFIG(tooltip)
-        self.l_IndenterPoissonsRatio.setToolTip(QCoreApplication.translate("w_Microindentation", u"Poisson's ratio of the indenter.  This is the value of vi in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  If the indenter properties are ignored, then (1 - vi^2) / Ei will be set to 0.", None))
-#endif // QT_CONFIG(tooltip)
-        self.l_IndenterPoissonsRatio.setText(QCoreApplication.translate("w_Microindentation", u"Poisson's ratio (vi)", None))
-#if QT_CONFIG(tooltip)
-        self.l_IndenterYoungsModulus.setToolTip(QCoreApplication.translate("w_Microindentation", u"Young's modulus of the indenter.  This is the value of Ei in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  If the indenter properties are ignored, then (1 - vi^2) / Ei will be set to 0.", None))
-#endif // QT_CONFIG(tooltip)
-        self.l_IndenterYoungsModulus.setText(QCoreApplication.translate("w_Microindentation", u"Young's modulus (Ei)", None))
-#if QT_CONFIG(tooltip)
-        self.sb_IndenterPoissonsRatio.setToolTip(QCoreApplication.translate("w_Microindentation", u"Poisson's ratio of the indenter.  This is the value of vi in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  If the indenter properties are ignored, then (1 - vi^2) / Ei will be set to 0.", None))
-#endif // QT_CONFIG(tooltip)
-#if QT_CONFIG(tooltip)
-        self.sb_IndenterYoungsModulus.setToolTip(QCoreApplication.translate("w_Microindentation", u"Young's modulus of the indenter.  This is the value of Ei in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  If the indenter properties are ignored, then (1 - vi^2) / Ei will be set to 0.", None))
-#endif // QT_CONFIG(tooltip)
-        self.sb_IndenterYoungsModulus.setSuffix(QCoreApplication.translate("w_Microindentation", u"MPa", None))
-#if QT_CONFIG(tooltip)
         self.cb_RegressionOffsets.setToolTip(QCoreApplication.translate("w_Microindentation", u"If unchecked, the experiment is assumed to have been perfectly prepared, calibrated, and configured, and therefore the offsets between the experiment outputs and the values can be ignored in the equation relating indentation depth to indentation force", None))
 #endif // QT_CONFIG(tooltip)
         self.cb_RegressionOffsets.setText(QCoreApplication.translate("w_Microindentation", u"Regression offsets", None))
@@ -265,19 +207,19 @@ class Ui_w_Microindentation(object):
 #endif // QT_CONFIG(tooltip)
         self.cb_OffsetBounds.setText(QCoreApplication.translate("w_Microindentation", u"Offset bounds", None))
 #if QT_CONFIG(tooltip)
-        self.l_OffsetTipDisplacement.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * (E*) * R^0.5 * (h - a)^1.5 + b", None))
+        self.l_OffsetTipDisplacement.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b", None))
 #endif // QT_CONFIG(tooltip)
         self.l_OffsetTipDisplacement.setText(QCoreApplication.translate("w_Microindentation", u"Tip Displacement (a)", None))
 #if QT_CONFIG(tooltip)
-        self.l_OffsetForce.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * (E*) * R^0.5 * (h - a)^1.5 + b", None))
+        self.l_OffsetForce.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b", None))
 #endif // QT_CONFIG(tooltip)
         self.l_OffsetForce.setText(QCoreApplication.translate("w_Microindentation", u"Force (b)", None))
 #if QT_CONFIG(tooltip)
-        self.sb_OffsetTipDisplacement.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * (E*) * R^0.5 * (h - a)^1.5 + b", None))
+        self.sb_OffsetTipDisplacement.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b", None))
 #endif // QT_CONFIG(tooltip)
         self.sb_OffsetTipDisplacement.setSuffix(QCoreApplication.translate("w_Microindentation", u"\u00b5m", None))
 #if QT_CONFIG(tooltip)
-        self.sb_OffsetForce.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * (E*) * R^0.5 * (h - a)^1.5 + b", None))
+        self.sb_OffsetForce.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b", None))
 #endif // QT_CONFIG(tooltip)
         self.sb_OffsetForce.setSuffix(QCoreApplication.translate("w_Microindentation", u"\u00b5N", None))
         pass

@@ -43,7 +43,7 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="3" rowspan="11">
+   <item row="0" column="3" rowspan="9">
     <spacer name="s_Horizontal">
      <property name="orientation">
       <enum>Qt::Orientation::Horizontal</enum>
@@ -94,7 +94,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * (E*) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
      </property>
      <property name="text">
       <string>Indenter radius (R)</string>
@@ -110,13 +110,13 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * (E*) * R^0.5 * h^1.5</string>
+      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5</string>
      </property>
      <property name="suffix">
       <string>µm</string>
      </property>
      <property name="maximum">
-      <double>9999.989999999999782</double>
+      <double>10000.0</double>
      </property>
     </widget>
    </item>
@@ -129,7 +129,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Poisson's ratio of the sample.  This is the value of v in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
+      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5.  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
      </property>
      <property name="text">
       <string>Poisson's ratio (v)</string>
@@ -145,7 +145,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Poisson's ratio of the sample.  This is the value of v in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
+      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5.  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
      </property>
      <property name="decimals">
       <number>4</number>
@@ -194,95 +194,6 @@
     </widget>
    </item>
    <item row="5" column="0">
-    <widget class="QCheckBox" name="cb_IndenterProperties">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>If unchecked, the indenter is assumed to be rigid and will not mechanically deform, and therefore the indenter properties will be ignored in the calculation of the Young's modulus of the sample</string>
-     </property>
-     <property name="text">
-      <string>Indenter properties</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="1">
-    <widget class="QLabel" name="l_IndenterPoissonsRatio">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Poisson's ratio of the indenter.  This is the value of vi in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  If the indenter properties are ignored, then (1 - vi^2) / Ei will be set to 0.</string>
-     </property>
-     <property name="text">
-      <string>Poisson's ratio (vi)</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="2">
-    <widget class="QLabel" name="l_IndenterYoungsModulus">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Young's modulus of the indenter.  This is the value of Ei in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  If the indenter properties are ignored, then (1 - vi^2) / Ei will be set to 0.</string>
-     </property>
-     <property name="text">
-      <string>Young's modulus (Ei)</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="1">
-    <widget class="QDoubleSpinBox" name="sb_IndenterPoissonsRatio">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Poisson's ratio of the indenter.  This is the value of vi in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  If the indenter properties are ignored, then (1 - vi^2) / Ei will be set to 0.</string>
-     </property>
-     <property name="decimals">
-      <number>4</number>
-     </property>
-     <property name="maximum">
-      <double>0.500000000000000</double>
-     </property>
-     <property name="singleStep">
-      <double>0.001000000000000</double>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="2">
-    <widget class="QDoubleSpinBox" name="sb_IndenterYoungsModulus">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="toolTip">
-      <string>Young's modulus of the indenter.  This is the value of Ei in the equation 1 / (E*) = (1 - v^2) / E + (1 - vi^2) / Ei.  If the indenter properties are ignored, then (1 - vi^2) / Ei will be set to 0.</string>
-     </property>
-     <property name="suffix">
-      <string>MPa</string>
-     </property>
-     <property name="maximum">
-      <double>9999999.990000000223517</double>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0">
     <widget class="QCheckBox" name="cb_RegressionOffsets">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -298,7 +209,7 @@
      </property>
     </widget>
    </item>
-   <item row="8" column="0">
+   <item row="6" column="0">
     <widget class="QCheckBox" name="cb_OffsetBounds">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -314,7 +225,7 @@
      </property>
     </widget>
    </item>
-   <item row="8" column="1">
+   <item row="6" column="1">
     <widget class="QLabel" name="l_OffsetTipDisplacement">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -323,14 +234,14 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * (E*) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
      </property>
      <property name="text">
       <string>Tip Displacement (a)</string>
      </property>
     </widget>
    </item>
-   <item row="8" column="2">
+   <item row="6" column="2">
     <widget class="QLabel" name="l_OffsetForce">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -339,17 +250,17 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * (E*) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
      </property>
      <property name="text">
       <string>Force (b)</string>
      </property>
     </widget>
    </item>
-   <item row="9" column="1">
+   <item row="7" column="1">
     <widget class="QDoubleSpinBox" name="sb_OffsetTipDisplacement">
      <property name="toolTip">
-      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * (E*) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
      </property>
      <property name="suffix">
       <string>µm</string>
@@ -359,10 +270,10 @@
      </property>
     </widget>
    </item>
-   <item row="9" column="2">
+   <item row="7" column="2">
     <widget class="QDoubleSpinBox" name="sb_OffsetForce">
      <property name="toolTip">
-      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * (E*) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
      </property>
      <property name="suffix">
       <string>µN</string>
@@ -372,7 +283,7 @@
      </property>
     </widget>
    </item>
-   <item row="10" column="0" colspan="3">
+   <item row="8" column="0" colspan="3">
     <spacer name="s_Vertical">
      <property name="orientation">
       <enum>Qt::Orientation::Vertical</enum>
