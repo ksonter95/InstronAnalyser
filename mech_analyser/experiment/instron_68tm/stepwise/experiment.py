@@ -2,7 +2,7 @@ import dataclasses
 import experiment.experiment as experiment
 import experiment.instron_68tm.experiment as instron_68tm
 import experiment.instron_68tm.stepwise.view as view
-
+import util.utils as utils
 
 import numpy as np
 import pandas as pd
@@ -136,6 +136,7 @@ class Data(instron_68tm.Data):
         self._max_id: int = 0
         self._min_id: int = 0
         self._tau: float = 1.0
+        self._tau_r2: float = 0.0
 
     @property
     def a(self) -> float:
@@ -172,6 +173,10 @@ class Data(instron_68tm.Data):
     @property
     def tau(self) -> float:
         return self._tau
+
+    @property
+    def tau_r2(self) -> float:
+        return self._tau_r2
 
     def process(self, parameters: DataParameters) -> None:  # type: ignore
         """
@@ -221,16 +226,8 @@ class Data(instron_68tm.Data):
 
         # Calculate the parameters of the exponential decay equation that best
         # fits the data points
-        [self._a, self._b, self._tau], _ = curve_fit(  # type: ignore
-            self.y,
-            self.processed_frame.relative_time.head(  # type: ignore
-                parameters.regression_data_points
-                or self.processed_frame.frame.index.size  # type: ignore
-            ),
-            self.processed_frame.stress.head(  # type: ignore
-                parameters.regression_data_points
-                or self.processed_frame.frame.index.size  # type: ignore
-            ),
+        self._a, self._b, self._tau, self._tau_r2 = self._execute_regression(
+            parameters.regression_data_points
         )
 
         # Add the regression stress column directly after the stress column
@@ -244,6 +241,43 @@ class Data(instron_68tm.Data):
         # Calculate the remaining summary parameters
         self._max_id = self.processed_frame.force.idxmax()  # type: ignore
         self._min_id = self.processed_frame.force.idxmin()  # type: ignore
+
+    def _execute_regression(
+        self, regression_data_points: Optional[int]
+    ) -> tuple[float, float, float, float]:
+        """
+        Executes the regression to determine the exponential decay regression
+        equation parameters and the corresponding coefficient of determination.
+
+        Args:
+            regression_data_points: Maximum number of data points to be included
+                in the regression.  If None is specified, the entire data set is
+                included in the regression.
+
+        Returns:
+            Tuple of a, b, and tau (the exponential decay regression equation
+            parameters) and their corresponding coefficient of determination.
+        """
+
+        x: "pd.Series[float]" = self.processed_frame.relative_time.head(
+            regression_data_points or self.processed_frame.frame.index.size
+        )
+        y: "pd.Series[float]" = self.processed_frame.stress.head(
+            regression_data_points or self.processed_frame.frame.index.size
+        )
+
+        # Ensure that the regression has more data points that the number of
+        # parameters to be regressed
+        if len(x) < 4:
+            return 0.0, 0.0, 1.0, 0.0
+
+        [a, b, tau], _ = curve_fit(self.y, x, y)  # type: ignore
+
+        tau_r2: float = utils.calculate_r2(
+            list(y), [self.y(time_s, a, b, tau) for time_s in x]  # type: ignore
+        )
+
+        return a, b, tau, tau_r2  # type: ignore
 
     @staticmethod
     def y(t: float, a: float, b: float, tau: float) -> float:
@@ -285,6 +319,7 @@ class Summary(instron_68tm.Summary):
                     "a [MPa]",
                     "b [MPa]",
                     "tau [s]",
+                    "tau R^2 [MPa^2/MPa^2]",
                 ]
             )
         )
@@ -310,6 +345,7 @@ class Summary(instron_68tm.Summary):
             data.a,
             data.b,
             data.tau,
+            data.tau_r2,
         ]
 
 

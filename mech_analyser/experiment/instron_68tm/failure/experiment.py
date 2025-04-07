@@ -475,21 +475,16 @@ class Data(instron_68tm.Data):
             & (self.processed_frame.strain < strain2_pct)
         ]
 
-        # Ensure that the regression more data points than the polynomial degree
+        # Ensure that the regression has more data points than the polynomial
+        # degree
         if len(x) < 3:
             return 0.0, 0.0
 
         [e_modulus_MPa, c], _ = curve_fit(self.y, x, y)  # type: ignore
 
-        e_modulus_r2 = utils.calculate_r2(
+        e_modulus_r2: float = utils.calculate_r2(
             list(y),
-            [
-                self.y(strain_pct / 100, e_modulus_MPa, c)  # type: ignore
-                for strain_pct in self.processed_frame.strain[
-                    (self.processed_frame.strain > strain1_pct)
-                    & (self.processed_frame.strain < strain2_pct)
-                ]
-            ],
+            [self.y(strain_pct, e_modulus_MPa, c) for strain_pct in x],  # type: ignore
         )
 
         return e_modulus_MPa, e_modulus_r2  # type: ignore
