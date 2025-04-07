@@ -29,12 +29,12 @@ jobs:
             if [[ "$EXISTING_PREFIX_NUMBER" != "$ISSUE_NUMBER" ]]; then
               echo "Incorrect prefix. Updating to correct number."
               NEW_TITLE="${CORRECT_PREFIX}: ${TITLE_BODY}"
-              gh issue edit "$ISSUE_NUMBER" --title "$NEW_TITLE"
+              gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --title "$NEW_TITLE"
             else
               echo "Prefix is correct. No action needed."
             fi
           else
             echo "No prefix found. Adding one."
             NEW_TITLE="${CORRECT_PREFIX}: ${ORIGINAL_TITLE}"
-            gh issue edit "$ISSUE_NUMBER" --title "$NEW_TITLE"
+            gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --title "$NEW_TITLE"
           fi
