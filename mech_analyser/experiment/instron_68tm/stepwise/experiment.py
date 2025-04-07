@@ -131,20 +131,20 @@ class Data(instron_68tm.Data):
             Frame(pd.DataFrame(columns=raw_frame.frame.columns), "Strain = ?%"),
         )
 
-        self._a: float = 0.0
-        self._b: float = 0.0
+        self._a_MPa: float = 0.0
+        self._b_MPa: float = 0.0
         self._max_id: int = 0
         self._min_id: int = 0
-        self._tau: float = 1.0
+        self._tau_s: float = 1.0
         self._tau_r2: float = 0.0
 
     @property
-    def a(self) -> float:
-        return self._a
+    def a_MPa(self) -> float:
+        return self._a_MPa
 
     @property
-    def b(self) -> float:
-        return self._b
+    def b_MPa(self) -> float:
+        return self._b_MPa
 
     @property
     def max_force_N(self) -> float:
@@ -171,8 +171,8 @@ class Data(instron_68tm.Data):
         super(Data, Data).processed_frame.__set__(self, value)  # type: ignore
 
     @property
-    def tau(self) -> float:
-        return self._tau
+    def tau_s(self) -> float:
+        return self._tau_s
 
     @property
     def tau_r2(self) -> float:
@@ -226,14 +226,14 @@ class Data(instron_68tm.Data):
 
         # Calculate the parameters of the exponential decay equation that best
         # fits the data points
-        self._a, self._b, self._tau, self._tau_r2 = self._execute_regression(
+        self._a_MPa, self._b_MPa, self._tau_s, self._tau_r2 = self._execute_regression(
             parameters.regression_data_points
         )
 
         # Add the regression stress column directly after the stress column
         self.processed_frame.regression_stress = pd.Series(
             [
-                self.y(t, self.a, self.b, self.tau)  # type: ignore
+                self.y(t, self.a_MPa, self.b_MPa, self.tau_s)  # type: ignore
                 for t in self.processed_frame.relative_time  # type: ignore
             ]
         )
@@ -271,31 +271,31 @@ class Data(instron_68tm.Data):
         if len(x) < 4:
             return 0.0, 0.0, 1.0, 0.0
 
-        [a, b, tau], _ = curve_fit(self.y, x, y)  # type: ignore
+        [a_MPa, b_MPa, tau_s], _ = curve_fit(self.y, x, y)  # type: ignore
 
         tau_r2: float = utils.calculate_r2(
-            list(y), [self.y(time_s, a, b, tau) for time_s in x]  # type: ignore
+            list(y), [self.y(time_s, a_MPa, b_MPa, tau_s) for time_s in x]  # type: ignore
         )
 
-        return a, b, tau, tau_r2  # type: ignore
+        return a_MPa, b_MPa, tau_s, tau_r2  # type: ignore
 
     @staticmethod
-    def y(t: float, a: float, b: float, tau: float) -> float:
+    def y(t: float, a_MPa: float, b_MPa: float, tau_s: float) -> float:
         """
         Calculates the stress according to the following equation:
         y = a * e^(-t / tau) + b
 
         Args:
             t: Time at which the stress is to be calculated.
-            a: Amplitude of the exponential decay.
-            b: Baseline value of the function.
-            tau: Time constant of the exponential decay.
+            a_MPa: Amplitude of the exponential decay.
+            b_MPa: Baseline value of the function.
+            tau_s: Time constant of the exponential decay.
 
         Returns:
             Stress at time t.
         """
 
-        return a * np.exp(-t / tau) + b
+        return a_MPa * np.exp(-t / tau_s) + b_MPa
 
 
 # === Results ================================================================ #
@@ -342,9 +342,9 @@ class Summary(instron_68tm.Summary):
             data.max_stress_MPa,
             data.min_force_N,
             data.max_force_N,
-            data.a,
-            data.b,
-            data.tau,
+            data.a_MPa,
+            data.b_MPa,
+            data.tau_s,
             data.tau_r2,
         ]
 

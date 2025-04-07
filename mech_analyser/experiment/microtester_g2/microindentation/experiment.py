@@ -4,10 +4,12 @@ import experiment.microtester_g2.experiment as microtester_g2
 import experiment.microtester_g2.microindentation.view as view
 import numpy as np
 import pandas as pd
+import util.utils as utils
 
 from pathlib import Path
 from scipy.optimize import curve_fit  # type: ignore
 from typing import Optional
+
 
 # === Data frames ============================================================ #
 
@@ -200,21 +202,26 @@ class Data(microtester_g2.Data):
             Frame(pd.DataFrame(columns=raw_frame.frame.columns), "Microindentation"),
         )
 
-        self._a: float = 0.0
-        self._b: float = 0.0
+        self._a_um: float = 0.0
+        self._b_uN: float = 0.0
         self._e_modulus_MPa: float = 0.0
+        self._e_modulus_r2: float = 0.0
 
     @property
-    def a(self) -> float:
-        return self._a
+    def a_um(self) -> float:
+        return self._a_um
 
     @property
-    def b(self) -> float:
-        return self._b
+    def b_uN(self) -> float:
+        return self._b_uN
 
     @property
     def e_modulus_MPa(self) -> float:
         return self._e_modulus_MPa
+
+    @property
+    def e_modulus_r2(self) -> float:
+        return self._e_modulus_r2
 
     @property
     def processed_frame(self) -> Frame:
@@ -264,66 +271,19 @@ class Data(microtester_g2.Data):
 
         # Calculate the parameters of the Hertz equation that best fits the data
         # points
-        try:
-            if parameters.use_regression_offsets:
-                a_max_um: float = (
-                    parameters.a_max_um if parameters.a_max_um is not None else np.inf
-                )
-                b_max_uN: float = (
-                    parameters.b_max_uN if parameters.b_max_uN is not None else np.inf
-                )
-                [self._e_modulus_MPa, self._a, self._b], _ = curve_fit(  # type: ignore
-                    lambda x, e, a, b: self.y(  # type: ignore
-                        x,  # type: ignore
-                        parameters.R_um,
-                        e,  # type: ignore
-                        parameters.v,
-                        a,  # type: ignore
-                        b,  # type: ignore
-                    ),
-                    self.processed_frame.tip_displacement,
-                    self.processed_frame.force,
-                    p0=[
-                        1,
-                        self.processed_frame.tip_displacement.min(),  # type: ignore
-                        self.processed_frame.force.min(),  # type: ignore
-                    ],
-                    bounds=(
-                        (0, -a_max_um, -b_max_uN),
-                        (
-                            np.inf,
-                            self.processed_frame.tip_displacement.min(),  # type: ignore
-                            self.processed_frame.force.min(),  # type: ignore
-                        ),
-                    ),
-                )
-            else:
-                self._a = self.processed_frame.tip_displacement.min()  # type: ignore
-                self._b = self.processed_frame.force.iloc[
-                    self.processed_frame.tip_displacement.idxmin()  # type: ignore
-                ]
-                [self._e_modulus_MPa], _ = curve_fit(  # type: ignore
-                    lambda x, e: self.y(  # type: ignore
-                        x,  # type: ignore
-                        parameters.R_um,
-                        e,  # type: ignore
-                        parameters.v,
-                        self._a,
-                        self._b,
-                    ),
-                    self.processed_frame.tip_displacement,
-                    self.processed_frame.force,
-                )
-        except:
-            # Solution could not converge
-            print("Solution could not converge")
-            self._e_modulus_MPa = float("nan")
-            self._a = float("nan")
-            self._b = float("nan")
+        self._a_um, self._b_uN, self._e_modulus_MPa, self._e_modulus_r2 = (
+            self._execute_regression(
+                parameters.R_um,
+                parameters.v,
+                parameters.use_regression_offsets,
+                parameters.a_max_um,
+                parameters.b_max_uN,
+            )
+        )
 
         # Add the indentation force column
         # NOTE: indentation force = force - b
-        self.processed_frame.indentation_force = self.processed_frame.force - self.b
+        self.processed_frame.indentation_force = self.processed_frame.force - self.b_uN
 
         # Add the regression force column
         self.processed_frame.regression_force = pd.Series(
@@ -331,10 +291,10 @@ class Data(microtester_g2.Data):
                 self.y(
                     x,
                     parameters.R_um,
-                    self.e_modulus_MPa,
                     parameters.v,
-                    self.a,
-                    self.b,
+                    self.e_modulus_MPa,
+                    self.a_um,
+                    self.b_uN,
                 ).real  # NOTE: ignore imaginary part
                 for x in self.processed_frame.tip_displacement
             ]
@@ -343,7 +303,7 @@ class Data(microtester_g2.Data):
         # Add the indentation depth column
         # NOTE: indentation depth = tip displacement - a
         self.processed_frame.indentation_depth = (
-            self.processed_frame.tip_displacement - self.a
+            self.processed_frame.tip_displacement - self.a_um
         )
 
         # Add the h/R column
@@ -351,8 +311,92 @@ class Data(microtester_g2.Data):
             self.processed_frame.indentation_depth / parameters.R_um  # type: ignore
         )
 
+    def _execute_regression(
+        self,
+        R_um: float,
+        v: float,
+        use_regression_offsets: bool,
+        a_max_um: Optional[float],
+        b_max_uN: Optional[float],
+    ) -> tuple[float, float, float, float]:
+        """
+        Executes the regression to determine the Hertz model equation parameters
+        and the corresponding coefficient of determination.
+
+        Args:
+            R_um: The radius of the indenter.
+            v: The Poisson's ratio of the sample.
+            use_regression_offsets: Include the indentation depth and force
+                offsets  as regression parameters.  They allow the model to fit
+                the data more accurately for cases where the tip displacement
+                does not equal the indentation depth and the measured force does
+                not equal the indentation force.
+            a_max_um: Upper bound for the tip displacement to indentation depth
+                offset regression parameter.  If None, `a` can take any value.
+            b_max_um: Upper bound for the measured force to indentation force
+                offset regression parameter.  If None, `b` can take any value.
+
+        Returns:
+            Tuple of a, b, and E-modulus (the Hertz model regression equation
+            parameters) and their corresponding coefficient of determination.
+        """
+
+        x: "pd.Series[float]" = self.processed_frame.tip_displacement
+        y: "pd.Series[float]" = self.processed_frame.force
+
+        a_um: float
+        b_uN: float
+        e_modulus_MPa: float
+        e_modulus_r2: float
+
+        try:
+            # Include offsets in the regression analysis
+            if use_regression_offsets:
+                a_max_um = a_max_um if a_max_um is not None else np.inf
+                b_max_uN = b_max_uN if b_max_uN is not None else np.inf
+
+                [e_modulus_MPa, a_um, b_uN], _ = curve_fit(  # type: ignore
+                    lambda _x, e, a, b: self.y(_x, R_um, v, e, a, b),  # type: ignore
+                    x,
+                    y,
+                    p0=[1.0, x.min(), y.min()],  # type: ignore
+                    bounds=(
+                        (0.0, -a_max_um, -b_max_uN),
+                        (np.inf, x.min(), y.min()),
+                    ),
+                    maxfev=20000,
+                )
+            # Fix offsets at the minimum tip displacement
+            else:
+                a_um = x.min()
+                b_uN = y.iloc[x.idxmin()]  # type: ignore
+
+                [e_modulus_MPa], _ = curve_fit(  # type: ignore
+                    lambda _x, e: self.y(_x, R_um, v, e, a_um, b_uN),  # type: ignore
+                    x,
+                    y,
+                    p0=[1.0],
+                    bounds=[
+                        (0.0,),
+                        (np.inf,),
+                    ],
+                    maxfev=20000,
+                )
+
+        except:
+            # Solution could not converge
+            print("Solution could not converge")
+            return float("nan"), float("nan"), float("nan"), float("nan")
+
+        e_modulus_r2 = utils.calculate_r2(
+            list(y),
+            [self.y(i, R_um, v, e_modulus_MPa, a_um, b_uN).real for i in x],  # type: ignore
+        )
+
+        return [a_um, b_uN, e_modulus_MPa, e_modulus_r2]  # type: ignore
+
     @staticmethod
-    def y(x: float, R: float, e: float, v: float, a: float, b: float) -> float:
+    def y(x: float, R: float, v: float, e: float, a: float, b: float) -> float:
         """
         Calculates the force according to the following equation:
         y = 4/3 * e / (1 - v^2) * R^0.5 * x^1.5
@@ -360,8 +404,8 @@ class Data(microtester_g2.Data):
         Args:
             x: The tip displacement.
             R: The radius of the indenter.
-            e: The Young's modulus of the sample.
             v: The Poisson's ratio of the sample.
+            e: The Young's modulus of the sample.
             a: The tip displacement to indentation depth offset.
             b: The measured force to indentation force offset.
 
@@ -386,9 +430,10 @@ class Summary(microtester_g2.Summary):
             pd.DataFrame(
                 columns=[
                     "Cycle",
-                    "E-modulus [MPa]",
                     "a [um]",
                     "b [uN]",
+                    "E-modulus [MPa]",
+                    "E-modulus R^2 [MPa^2/MPa^2]",
                 ]
             )
         )
@@ -407,9 +452,10 @@ class Summary(microtester_g2.Summary):
 
         self._frame.loc[len(self._frame)] = [
             parameters.cycle,
+            data.a_um,
+            data.b_uN,
             data.e_modulus_MPa,
-            data.a,
-            data.b,
+            data.e_modulus_r2,
         ]
 
 
