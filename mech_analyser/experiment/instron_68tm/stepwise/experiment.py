@@ -1,4 +1,3 @@
-import argparse
 import dataclasses
 import experiment.experiment as experiment
 import experiment.instron_68tm.experiment as instron_68tm
@@ -382,101 +381,6 @@ class Analyser(instron_68tm.Analyser):
             )
             self.data[i].process(parameters)
             self.summary.append_row(self.data[i], parameters)
-
-
-# === Command-line parsers =================================================== #
-
-
-class Parser(instron_68tm.Parser):
-    """
-    Parser for the stepwise compression Instron 68TM experiment.
-
-    Args:
-        parsed_arguments: The parsed command-line arguments.
-    """
-
-    def __init__(self, parsed_arguments: argparse.Namespace) -> None:
-
-        super().__init__(parsed_arguments)
-
-        self._parameters = AnalyserParameters(
-            parsed_arguments.relaxation_strain_intervals,
-            parsed_arguments.relaxation_strain_start,
-            parsed_arguments.epsilon,
-            parsed_arguments.regression_data_points,
-        )
-
-    def create_analysers(self) -> list[Analyser]:  # type: ignore
-        """
-        Creates the stepwise compression Instron 68TM experiment analysers from
-        the parsed command-line arguments.
-
-        Returns:
-            list[Analyser]: List of all stepwise compression Instron 68TM
-                experiment analysers.
-        """
-
-        return [
-            Analyser(input_csv, output_xlsx, self._parameters)
-            for input_csv, output_xlsx in self._files
-        ]
-
-    @staticmethod
-    def add_parser(subparser: argparse._SubParsersAction) -> None:  # type: ignore
-        """
-        Adds the stepwise compression Instron 68TM experiment parser to the
-        Instron 68TM experiment subparser.
-
-        Args:
-            subparser: Instron 68TM experiment subparser to which to add the
-                stepwise compression Instron 68TM experiment parser.
-        """
-
-        parser: argparse.ArgumentParser = subparser.add_parser(  # type: ignore
-            Path(__file__).parent.name,
-            description="Analyses the data from a stepwise compression Instron "
-            "68TM experiment",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        )
-
-        parser.add_argument(  # type: ignore
-            "-i",
-            "--relaxation-strain-intervals",
-            help="The number of intervals at which the sample has been "
-            "configured to relax.  This in combination with "
-            "--relaxation-strain-start gives the relaxation strains.  For "
-            "instance, if --relaxation-strain-start is 5.0 and "
-            "--relaxation-strain-intervals is 6, then the experiment will "
-            "relax the sample at 5, 10, 15, 20, 25, 30",
-            type=experiment.ArgparseTypes.positive_non_zero_integer,
-            default=6,
-        )
-        parser.add_argument(  # type: ignore
-            "-s",
-            "--relaxation-strain-start",
-            help="The first strain at which the sample has been configured to "
-            "relax.  This in combination with --relaxation-strain-intervals "
-            "gives the relaxation strains.  For instance, if "
-            "--relaxation-strain-start is 5.0, and "
-            "--relaxation-strain-intervals is 6, then the experiment will "
-            "relax the sample at 5, 10, 15, 20, 25, 30",
-            type=experiment.ArgparseTypes.percentage_float,
-            default=5.0,
-        )
-        parser.add_argument(  # type: ignore
-            "-e",
-            "--epsilon",
-            help="Allowable percentage tolerance on the specified strain for "
-            "creating the dataset at the required strain",
-            type=experiment.ArgparseTypes.percentage_float,
-            default=0.01,
-        )
-        parser.add_argument(  # type: ignore
-            "-n",
-            "--regression-data-points",
-            help="Number of data points to include in the regression analysis",
-            type=experiment.ArgparseTypes.positive_non_zero_integer,
-        )
 
 
 # === User Interface Widgets ================================================= #

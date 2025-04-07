@@ -1,4 +1,3 @@
-import argparse
 import dataclasses
 import enum
 import experiment.experiment as experiment
@@ -632,96 +631,6 @@ class Analyser(instron_68tm.Analyser):
             )
             self.data[i].process(parameters)
             self.summary.append_row(self.data[i], parameters)
-
-
-# === Command-line parsers =================================================== #
-
-
-class Parser(instron_68tm.Parser):
-    """
-    Parser for the compression-to-failure Instron 68TM experiment.
-
-    Args:
-        parsed_arguments: The parsed command-line arguments.
-    """
-
-    def __init__(self, parsed_arguments: argparse.Namespace) -> None:
-
-        super().__init__(parsed_arguments)
-
-        self._parameters = AnalyserParameters(
-            parsed_arguments.abort_strain,
-            parsed_arguments.toughness_strain,
-            parsed_arguments.e_modulus_strain1,
-            parsed_arguments.e_modulus_strain2,
-        )
-
-    def create_analysers(self) -> list[Analyser]:  # type: ignore
-        """
-        Creates the compression-to-failure Instron 68TM experiment analysers
-        from the parsed command-line arguments.
-
-        Returns:
-            list[Analyser]: List of all compression-to-failure Instron 68TM
-                experiment analysers.
-        """
-
-        return [
-            Analyser(input_csv, output_xlsx, self._parameters)
-            for input_csv, output_xlsx in self._files
-        ]
-
-    @staticmethod
-    def add_parser(subparser: argparse._SubParsersAction) -> None:  # type: ignore
-        """
-        Adds the compression-to-failure Instron 68TM experiment subparser to
-        to the Instron 68TM experiment subparser.
-
-        Args:
-            subparser: Instron 68TM experiment subparser to which to add the
-                compression-to-failure Instron 68TM experiment parser.
-        """
-
-        parser: argparse.ArgumentParser = subparser.add_parser(  # type: ignore
-            Path(__file__).parent.name,
-            description="Analyses the data from a compression-to-failure "
-            "Instron 68TM experiment",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        )
-
-        parser.add_argument(  # type: ignore
-            "-a",
-            "--abort-strain",
-            help="The strain at which the experiment aborts even if the sample "
-            "has not yet failed",
-            type=experiment.ArgparseTypes.percentage_float,
-            default=95.0,
-        )
-        parser.add_argument(  # type: ignore
-            "-t",
-            "--toughness-strain",
-            help="The strain at which the toughness is calculated",
-            type=experiment.ArgparseTypes.percentage_float,
-            default=4.0,
-        )
-        parser.add_argument(  # type: ignore
-            "-e",
-            "--e-modulus_strain1",
-            help="The strain value which defines the first datapoint on the "
-            "stress-strain curve used to calculate the Young's modulus.  "
-            "It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)",
-            type=experiment.ArgparseTypes.percentage_float,
-            default=10,
-        )
-        parser.add_argument(  # type: ignore
-            "-f",
-            "--e-modulus_strain2",
-            help="The strain value which defines the second datapoint on the "
-            "stress-strain curve used to calculate the Young's modulus.  "
-            "It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)",
-            type=experiment.ArgparseTypes.percentage_float,
-            default=15,
-        )
 
 
 # === User Interface Widgets ================================================= #

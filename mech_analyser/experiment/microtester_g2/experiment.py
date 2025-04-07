@@ -1,4 +1,3 @@
-import argparse
 import experiment.experiment as experiment
 import pandas as pd
 import re
@@ -209,66 +208,6 @@ class Analyser(experiment.Analyser):
     @property
     def summary(self) -> Summary:
         return super().summary  # type: ignore
-
-
-# === Command-line parsers =================================================== #
-
-
-class Parser(experiment.Parser):
-    """
-    Base class for all MicroTester G2 command-line parsers.
-
-    Args:
-        parsed_arguments: The parsed command-line arguments.
-    """
-
-    def __init__(self, parsed_arguments: argparse.Namespace) -> None:
-
-        super().__init__(parsed_arguments)
-
-    @staticmethod
-    def add_parser(  # type: ignore
-        subparser: argparse._SubParsersAction,  # type: ignore
-    ) -> argparse.ArgumentParser:
-        """
-        Adds the MicroTester G2 command-line parser to the instrument subparser.
-
-        Args:
-            subparser: The instrument subparser to which to add the MicroTester
-                G2 parser.
-
-        Returns:
-            argparse.ArgumentParser: Created MicroTester G2 command-line parser.
-        """
-
-        parser: argparse.ArgumentParser = subparser.add_parser(  # type: ignore
-            Path(__file__).parent.name,
-            description="Analyses the data from a MicroTester G2",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        )
-
-        return parser  # type: ignore
-
-    @staticmethod
-    def create_subparser(  # type: ignore
-        parser: argparse.ArgumentParser,
-    ) -> argparse._SubParsersAction:  # type: ignore
-        """
-        Creates the MicroTester G2 experiment subparser.
-
-        Args:
-            parser: MicroTester G2 parser to which the experiment subparser is
-                to be added.
-
-        Returns:
-            argparse._SubParsersAction: Created experiment subparser.
-        """
-
-        return parser.add_subparsers(
-            dest="experiment",
-            required=True,
-            help="MicroTester G2 experiment for which the data is to be analysed",
-        )
 
 
 # === User Interface Widgets ================================================= #

@@ -1,4 +1,3 @@
-import argparse
 import dataclasses
 import experiment.experiment as experiment
 import pandas as pd
@@ -280,66 +279,6 @@ class Analyser(experiment.Analyser):
     @property
     def summary(self) -> Summary:
         return super().summary  # type: ignore
-
-
-# === Command-line parsers =================================================== #
-
-
-class Parser(experiment.Parser):
-    """
-    Base class for all Instron 68TM command-line parsers.
-
-    Args:
-        parsed_arguments: The parsed command-line arguments.
-    """
-
-    def __init__(self, parsed_arguments: argparse.Namespace) -> None:
-
-        super().__init__(parsed_arguments)
-
-    @staticmethod
-    def add_parser(  # type: ignore
-        subparser: argparse._SubParsersAction,  # type: ignore
-    ) -> argparse.ArgumentParser:
-        """
-        Adds the Instron 68TM command-line parser to the instrument subparser.
-
-        Args:
-            subparser: The instrument subparser to which to add the Instron 68TM
-                parser.
-
-        Returns:
-            argparse.ArgumentParser: Created Instron 68TM command-line parser.
-        """
-
-        parser: argparse.ArgumentParser = subparser.add_parser(  # type: ignore
-            Path(__file__).parent.name,
-            description="Analyses the data from an Instron 68TM",
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        )
-
-        return parser  # type: ignore
-
-    @staticmethod
-    def create_subparser(  # type: ignore
-        parser: argparse.ArgumentParser,
-    ) -> argparse._SubParsersAction:  # type: ignore
-        """
-        Creates the Instron 68TM experiment subparser.
-
-        Args:
-            parser: Instron 68TM parser to which the experiment subparser is to
-                be added.
-
-        Returns:
-            argparse._SubParsersAction: Created experiment subparser.
-        """
-
-        return parser.add_subparsers(
-            dest="experiment",
-            required=True,
-            help="Instron 68TM experiment for which the data is to be analysed",
-        )
 
 
 # === User Interface Widgets ================================================= #
