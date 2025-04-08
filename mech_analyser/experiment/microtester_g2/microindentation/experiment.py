@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import util.utils as utils
 
+from numpy.typing import NDArray
 from pathlib import Path
 from scipy.optimize import curve_fit  # type: ignore
 from typing import Optional
@@ -206,6 +207,7 @@ class Data(microtester_g2.Data):
         self._b_uN: float = 0.0
         self._e_modulus_MPa: float = 0.0
         self._e_modulus_r2: float = 0.0
+        self._energy_dissipated_uJ: float = 0.0
 
     @property
     def a_um(self) -> float:
@@ -214,6 +216,10 @@ class Data(microtester_g2.Data):
     @property
     def b_uN(self) -> float:
         return self._b_uN
+
+    @property
+    def energy_dissipated_uJ(self) -> float:
+        return self._energy_dissipated_uJ
 
     @property
     def e_modulus_MPa(self) -> float:
@@ -251,6 +257,8 @@ class Data(microtester_g2.Data):
             - Hertz model regression equation parameters (E, a, and b in
                 F = 4/3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b, where E is
                 the Young's modulus of the sample)
+            - Energy dissipated by the sample between the compression and
+                relaxation cycles.
 
         Args:
             parameters: The parameters to use when processing the
@@ -281,6 +289,12 @@ class Data(microtester_g2.Data):
             )
         )
 
+        # Calculate the energy dissipated by the sample during the compression
+        # and relaxation cycles
+        self._energy_dissipated_uJ = self._calculate_energy_dissipated_uJ(
+            parameters.cycle, parameters.samples_to_skip
+        )
+
         # Add the indentation force column
         # NOTE: indentation force = force - b
         self.processed_frame.indentation_force = self.processed_frame.force - self.b_uN
@@ -309,6 +323,60 @@ class Data(microtester_g2.Data):
         # Add the h/R column
         self.processed_frame.h_R = (
             self.processed_frame.indentation_depth / parameters.R_um  # type: ignore
+        )
+
+    def _calculate_energy_dissipated_uJ(
+        self, cycle: int, samples_to_skip: int
+    ) -> float:
+        """
+        Calculates the energy dissipated by the sample between the compression
+        and relaxation cycles, which is the area between the force-tip
+        displacement curve.  It is calculated using the shoelace formula (Gauss'
+        area formula), which is as follows:
+
+        A = 0.5 * abs(
+            x0*y1 + x1*y2 + ... + x_{n-1}*y0
+            - y0*x1 - y1*x2 - ... - y_{n-1}*x0
+        )
+
+        Args:
+            cycle: The cycle number for which the dissipated energy is to be
+                calculated.
+            samples_to_skip: Number of samples at the beginning of the sample
+                data to skip.
+
+        Returns:
+            The energy dissipated by the sample between the compression and
+            relaxation cycles (in uJ).
+        """
+
+        x: NDArray[np.float64] = (
+            self.raw_frame.tip_displacement[
+                (self.raw_frame.cycle == f"{cycle}-Compress")
+                | (self.raw_frame.cycle == f"{cycle}-Recover")
+            ]
+            .iloc[samples_to_skip:]
+            .to_numpy(dtype=np.float64)  # type: ignore
+        )
+        y: NDArray[np.float64] = (
+            self.raw_frame.force[
+                (self.raw_frame.cycle == f"{cycle}-Compress")
+                | (self.raw_frame.cycle == f"{cycle}-Recover")
+            ]
+            .iloc[samples_to_skip:]
+            .to_numpy(dtype=np.float64)  # type: ignore
+        )
+
+        # Close the curve
+        if (x[0] != x[-1]) or (y[0] != y[-1]):
+            x = np.append(x, x[0])
+            y = np.append(y, y[0])
+
+        # Calculate the area between the curves using the shoelace formula
+        return (
+            0.5
+            * np.abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
+            / 1000000  # NOTE: convert from pJ to uJ
         )
 
     def _execute_regression(
@@ -434,6 +502,7 @@ class Summary(microtester_g2.Summary):
                     "b [uN]",
                     "E-modulus [MPa]",
                     "E-modulus R^2 [MPa^2/MPa^2]",
+                    "Energy dissipated [uJ]",
                 ]
             )
         )
@@ -456,6 +525,7 @@ class Summary(microtester_g2.Summary):
             data.b_uN,
             data.e_modulus_MPa,
             data.e_modulus_r2,
+            data.energy_dissipated_uJ,
         ]
 
 
