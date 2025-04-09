@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QTableWidgetItem,
+    QTreeWidgetItem,
 )
 from pathlib import Path
 from typing import Optional
@@ -230,8 +231,11 @@ class Window(QMainWindow):
 
         # Connect the list clicked functionality
         self._window.lst_CollatedRawDataColumns.itemClicked.connect(
-            self._handle_lst_collatedRawDataColumns_clicked
+            self._handle_lst_CollatedRawDataColumns_clicked
         )
+
+        # Connect the output tree functionality
+        self._window.tree_Output.itemClicked.connect(self._handle_treeOutput_clicked)
 
         # Connect the button functionalities
         self._window.pb_Clear.clicked.connect(self._handle_pb_Clear_triggered)
@@ -294,6 +298,7 @@ class Window(QMainWindow):
         # Update the GUI
         self._sort_samples()
         self._update_tbl_Files()
+        self._update_pgb_Output()
         self._window.tw_Main.setCurrentIndex(0)
 
     def _handle_a_OpenDirectory_triggered(self) -> None:
@@ -321,6 +326,7 @@ class Window(QMainWindow):
         # Update the GUI
         self._sort_samples()
         self._update_tbl_Files()
+        self._update_pgb_Output()
         self._window.tw_Main.setCurrentIndex(0)
 
     def _handle_cb_Experiment_changed(self) -> None:
@@ -349,7 +355,7 @@ class Window(QMainWindow):
             )
         )
 
-    def _handle_lst_collatedRawDataColumns_clicked(self, item: QListWidgetItem) -> None:
+    def _handle_lst_CollatedRawDataColumns_clicked(self, item: QListWidgetItem) -> None:
         """
         Toggles the checkbox on the corresponding row in the list.
 
@@ -552,6 +558,9 @@ class Window(QMainWindow):
         self._window.pb_Cancel.setEnabled(True)
         self._window.pb_Run.setEnabled(False)
 
+        # Configure the progress bar
+        self._update_pgb_Output()
+
         # Force the user to choose the file to which the collation will be saved
         if self._collation_xlsx is None:
             QMessageBox.warning(
@@ -588,15 +597,11 @@ class Window(QMainWindow):
         )
 
         # Analyse and collate all of the experiments
-        for i in range(self._window.tbl_Files.rowCount()):
-            self._window.tbl_Output.setRowCount(i + 1)
-            self._window.tbl_Output.setItem(
-                i,
-                0,
-                QTableWidgetItem(
-                    f"{i + 1}/{len(self._samples)}: {self._samples[i].output_xlsx.name}"
-                ),
-            )
+        self._window.tree_Output.clear()
+        for i, sample in enumerate(self._samples):
+            # Create the sample view
+            sample_item = QTreeWidgetItem(self._window.tree_Output)
+            sample_item.setText(0, sample.output_xlsx.name)
 
             # Analyse
             self._samples[i].analyser.analyse()
@@ -613,8 +618,29 @@ class Window(QMainWindow):
                     )
                     break
 
-            # Update the output table
-            self._window.tbl_Output.scrollToBottom()
+            # Create the sample summary view
+            summary_item = QTreeWidgetItem(sample_item)
+            summary_item.setText(0, "Summary")
+            summary_item.setData(0, Qt.ItemDataRole.UserRole, sample.analyser.summary)
+
+            # Create the sample raw data plot view
+            raw_data_item = QTreeWidgetItem(sample_item)
+            raw_data_item.setText(0, "Raw data")
+            raw_data_item.setData(0, Qt.ItemDataRole.UserRole, sample.analyser)  # TODO
+
+            # Create the sample processed data view
+            processed_data_item = QTreeWidgetItem(sample_item)
+            processed_data_item.setText(0, "Processed data")
+
+            # Create the individual sample processed data plot views
+            for j, data in enumerate(sample.analyser.data):
+                sub_item = QTreeWidgetItem(processed_data_item)
+                sub_item.setText(0, data.processed_frame.sheet_name)
+                sub_item.setData(0, Qt.ItemDataRole.UserRole, data)
+
+            # Update the GUI
+            self._window.tree_Output.scrollToBottom()
+            self._update_pgb_Output(i + 1)
             QApplication.processEvents()
 
             # Cancel the analysis and collation
@@ -676,6 +702,17 @@ class Window(QMainWindow):
         # Update the GUI
         self._update_tb_SaveCollation()
 
+    def _handle_treeOutput_clicked(self, item: QTreeWidgetItem, column: int) -> None:
+        """
+        Updates the output viewer based on the clicked item.
+
+        Args:
+            item: The tree item that was clicked.
+            column: The column that was clicked.
+        """
+
+        pass
+
     def _reset(self) -> None:
         """
         Resets the window.
@@ -695,8 +732,9 @@ class Window(QMainWindow):
         self._raw_collation = None
         self._summary_collation = None
 
-        # Reset the output table
-        self._window.tbl_Output.setRowCount(0)
+        # Reset the outputs
+        self._window.tree_Output.clear()
+        self._update_pgb_Output()
 
         # Reset the cancel button
         self._window.pb_Cancel.setEnabled(False)
@@ -726,9 +764,22 @@ class Window(QMainWindow):
 
         for column in columns:
             item = QListWidgetItem(column)
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            # NOTE: checking is handled solely within the
+            #       _handle_lst_CollatedRawDataColumns_clicked() method
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(Qt.CheckState.Checked)
             self._window.lst_CollatedRawDataColumns.addItem(item)
+
+    def _update_pgb_Output(self, value: int = 0) -> None:
+        """
+        Updates the pgb_Output with the progress of the analysis.
+
+        Args:
+            value: Number of samples processed.
+        """
+
+        self._window.pgb_Output.setMaximum(len(self._samples))
+        self._window.pgb_Output.setValue(value)
 
     def _update_tb_SaveAnalysis(self) -> None:
         """

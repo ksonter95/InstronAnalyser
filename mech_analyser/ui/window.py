@@ -18,9 +18,10 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QGridLayout,
     QHeaderView, QLabel, QListWidget, QListWidgetItem,
-    QMainWindow, QMenu, QMenuBar, QPushButton,
-    QSizePolicy, QSpacerItem, QStackedWidget, QTabWidget,
-    QTableWidget, QTableWidgetItem, QTextBrowser, QWidget)
+    QMainWindow, QMenu, QMenuBar, QProgressBar,
+    QPushButton, QSizePolicy, QSpacerItem, QStackedWidget,
+    QTabWidget, QTableWidget, QTableWidgetItem, QTextBrowser,
+    QTreeWidget, QTreeWidgetItem, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -194,22 +195,22 @@ class Ui_MainWindow(object):
         self.t_Output.setObjectName(u"t_Output")
         self.gl_Output = QGridLayout(self.t_Output)
         self.gl_Output.setObjectName(u"gl_Output")
-        self.tbl_Output = QTableWidget(self.t_Output)
-        if (self.tbl_Output.columnCount() < 1):
-            self.tbl_Output.setColumnCount(1)
-        self.tbl_Output.setObjectName(u"tbl_Output")
-        self.tbl_Output.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.tbl_Output.setRowCount(0)
-        self.tbl_Output.setColumnCount(1)
-        self.tbl_Output.horizontalHeader().setVisible(False)
-        self.tbl_Output.horizontalHeader().setStretchLastSection(True)
-        self.tbl_Output.verticalHeader().setVisible(False)
+        self.tree_Output = QTreeWidget(self.t_Output)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setText(0, u"1");
+        self.tree_Output.setHeaderItem(__qtreewidgetitem)
+        self.tree_Output.setObjectName(u"tree_Output")
+        self.tree_Output.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.tree_Output.setColumnCount(1)
+        self.tree_Output.header().setVisible(False)
 
-        self.gl_Output.addWidget(self.tbl_Output, 0, 0, 1, 3)
+        self.gl_Output.addWidget(self.tree_Output, 0, 0, 1, 3)
 
-        self.s_OutputHorizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.pgb_Output = QProgressBar(self.t_Output)
+        self.pgb_Output.setObjectName(u"pgb_Output")
+        self.pgb_Output.setValue(0)
 
-        self.gl_Output.addItem(self.s_OutputHorizontal, 1, 0, 1, 1)
+        self.gl_Output.addWidget(self.pgb_Output, 1, 0, 1, 1)
 
         self.pb_Cancel = QPushButton(self.t_Output)
         self.pb_Cancel.setObjectName(u"pb_Cancel")
