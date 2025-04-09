@@ -180,9 +180,12 @@ class WidgetManager:
 class Window(QMainWindow):
     """
     User interface window for interacting with the application.
+
+    Args:
+        icon: The icon to display in the window's title bar.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, icon: QIcon) -> None:
         super().__init__()
 
         self._samples: list[Sample] = []
@@ -195,7 +198,7 @@ class Window(QMainWindow):
         # Create the main window
         self._window = Ui_MainWindow()
         self._window.setupUi(self)  # type: ignore
-        self.setWindowIcon(QIcon("ui/MechAnalyser.png"))
+        self.setWindowIcon(icon)
 
         # Create the widget and the widget manager
         self._widget_manager = WidgetManager()
@@ -643,8 +646,8 @@ class Window(QMainWindow):
         collation_xlsx, _ = QFileDialog.getSaveFileName(
             self,
             "Save collation to...",
-            "",
-            "Excel Files (*.xlsx)",
+            "Collation.xlsx",
+            "Excel Files (*.xlsx);;All Files (*)",
         )
         if collation_xlsx == "":
             return
@@ -760,7 +763,12 @@ class Application(QApplication):
     def __init__(self) -> None:
         super().__init__([])
 
-        self._window = Window()
+        window_icon = QIcon(
+            str(Path(__file__).resolve().parent / "ui" / "icons" / "MechAnalyser.png")
+        )
+        self.setWindowIcon(window_icon)
+
+        self._window = Window(window_icon)
         self._window.show()
 
         self.exec()
