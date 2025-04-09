@@ -213,12 +213,12 @@ class Analyser(experiment.Analyser):
 # === User Interface Widgets ================================================= #
 
 
-class Widget(experiment.Widget):
+class ConfigWidget(experiment.ConfigWidget):
     """
-    Base class for all MicroTester G2 user interface widgets.
+    Base class for all MicroTester G2 user interface configuration widgets.
 
     Args:
-        view: Generated user interface widget.
+        view: Generated user interface configuration widget.
         parameters: The parameters to use when analysing the experiment.
     """
 

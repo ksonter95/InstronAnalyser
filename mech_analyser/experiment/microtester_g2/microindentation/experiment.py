@@ -605,9 +605,10 @@ class Analyser(microtester_g2.Analyser):
 # === User Interface Widgets ================================================= #
 
 
-class Widget(microtester_g2.Widget):
+class ConfigWidget(microtester_g2.ConfigWidget):
     """
-    User interface widget for the microindentation MicroTester G2 experiment.
+    User interface configuration widget for the microindentation MicroTester G2
+    experiment.
     """
 
     def __init__(self) -> None:
@@ -644,9 +645,9 @@ class Widget(microtester_g2.Widget):
 
     def init(self) -> None:
         """
-        Initialises the widget by setting the input fields to the defaults of
-        the parameters to use when analysing the experiment and connecting any
-        signals with an associated slot.
+        Initialises the configuration widget by setting the input fields to the
+        defaults of the parameters to use when analysing the experiment and
+        connecting any signals with an associated slot.
         """
 
         # Set the input fields to the defaults
@@ -681,7 +682,7 @@ class Widget(microtester_g2.Widget):
     def sync_parameters(self) -> None:
         """
         Synchronise the parameters to use when analysing the experiment with the
-        widget input fields.
+        configuration widget input fields.
         """
 
         self.parameters.cycles = self.view.sb_Cycles.value()

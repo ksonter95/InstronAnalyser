@@ -159,12 +159,12 @@
             "# === User Interface Widgets ================================================= #",
             "",
             "",
-            "class Widget(experiment.Widget):",
+            "class ConfigWidget(experiment.ConfigWidget):",
             "    \"\"\"",
-            "    Base class for all ${1} user interface widgets.",
+            "    Base class for all ${1} user interface configuration widgets.",
             "",
             "    Args:",
-            "        view: Generated user interface widget.",
+            "        view: Generated user interface configuration widget.",
             "        parameters: The parameters to use when analysing the experiment.",
             "    \"\"\"",
             "",
@@ -393,9 +393,9 @@
             "# === User Interface Widgets ================================================= #",
             "",
             "",
-            "class Widget(${TM_DIRECTORY/.*\\/(.*)\\/(.*)\\/?.*/$1/}.Widget):",
+            "class ConfigWidget(${TM_DIRECTORY/.*\\/(.*)\\/(.*)\\/?.*/$1/}.ConfigWidget):",
             "    \"\"\"",
-            "    User interface widget for the ${3} ${1} experiment.",
+            "    User interface configuration widget for the ${3} ${1} experiment.",
             "    \"\"\"",
             "",
             "    def __init__(self) -> None:",
@@ -432,9 +432,9 @@
             "",
             "    def init(self) -> None:",
             "        \"\"\"",
-            "        Initialises the widget by setting the input fields to the defaults of",
-            "        the parameters to use when analysing the experiment and connecting any",
-            "        signals with an associated slot.",
+            "        Initialises the configuration widget by setting the input fields to the",
+            "        defaults of the parameters to use when analysing the experiment and",
+            "        connecting any signals with an associated slot.",
             "        \"\"\"",
             "",
             "        # Set the input fields to the defaults",
@@ -449,7 +449,7 @@
             "    def sync_parameters(self) -> None:",
             "        \"\"\"",
             "        Synchronise the parameters to use when analysing the experiment with the",
-            "        widget input fields.",
+            "        configuration widget input fields.",
             "        \"\"\"",
             "",
             "        # TODO",
@@ -523,18 +523,18 @@
         ],
         "description": "Inserts the template for a frame column creation."
     },
-    "Widget Input Field Initialisation": {
-        "prefix": "new widget input field initialisation",
+    "Configuration Widget Input Field Initialisation": {
+        "prefix": "new configuration widget input field initialisation",
         "body": [
             "self.view.${1:sb_Parameter}.${2:setValue}(self.parameters.${3:parameter})",
         ],
-        "description": "Inserts the template for a widget input field initialisation."
+        "description": "Inserts the template for a configuration widget input field initialisation."
     },
-    "Widget Parameter Synchronisation": {
-        "prefix": "new widget parameter synchronisation",
+    "Configuration Widget Parameter Synchronisation": {
+        "prefix": "new configuration widget parameter synchronisation",
         "body": [
             "self.parameters.${1:parameter} = self.view.${2:sb_Parameter}.${3:value}()",
         ],
-        "description": "Inserts the template for a widget parameter synchronisation."
+        "description": "Inserts the template for a configuration widget parameter synchronisation."
     },
 }

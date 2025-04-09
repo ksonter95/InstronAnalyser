@@ -98,43 +98,47 @@ class Sample(object):
         self._group = "All"
 
 
-class WidgetManager:
+class ConfigWidgetManager:
     """
-    Class for managing the experiment widgets.
+    Class for managing the experiment configuration widgets.
     """
 
     def __init__(self) -> None:
-        self._widgets: list[experiment.Widget] = []
+        self._widgets: list[experiment.ConfigWidget] = []
 
-    def add(self, widget: experiment.Widget) -> None:
+    def add(self, widget: experiment.ConfigWidget) -> None:
         """
-        Adds the widget to the list of managed widgets.
+        Adds the configuration widget to the list of managed configuration
+        widgets.
 
         Args:
-            widget: Widget to be added to the list of managed widgets.
+            widget: Configuration widget to be added to the list of managed
+                configuration widgets.
         """
 
         if widget not in self._widgets:
             self._widgets.append(widget)
 
-    def get(self, instrument: str, experiment: str) -> Optional[experiment.Widget]:
+    def get(
+        self, instrument: str, experiment: str
+    ) -> Optional[experiment.ConfigWidget]:
         """
-        Obtains the widget associated with the specified instrument and
+        Obtains the configuration widget associated with the specified instrument and
         experiment.
 
         Args:
-            instrument: Instrument for which to obtain the widget.
-            experiment: Experiment for which to obtain the widget.
+            instrument: Instrument for which to obtain the configuration widget.
+            experiment: Experiment for which to obtain the configuration widget.
 
         Raises:
-            KeyError: If no widget is associated with the specified instrument
-            and experiment.
+            KeyError: If no configuration widget is associated with the
+                specified instrument and experiment.
 
         Returns:
-            Widget: The widget associated with the specified instrument and
-                experiment.
-            None: If no widget is associated with the specified instrument and
-                experiment.
+            ConfigWidget: The configuration widget associated with the specified
+                instrument and experiment.
+            None: If no configuration widget is associated with the specified
+                instrument and experiment.
         """
 
         for widget in self._widgets:
@@ -201,16 +205,18 @@ class Window(QMainWindow):
         self._window.setupUi(self)  # type: ignore
         self.setWindowIcon(icon)
 
-        # Create the widget and the widget manager
-        self._widget_manager = WidgetManager()
+        # Create the configuration widgets and the configuration widget manager
+        self._config_widget_manager = ConfigWidgetManager()
         for e in _EXPERIMENTS:
-            widget: experiment.Widget = getattr(e, "Widget")()
+            widget: experiment.ConfigWidget = getattr(e, "ConfigWidget")()
             widget.init()
             self._window.sw_Configuration.addWidget(widget)
-            self._widget_manager.add(widget)
+            self._config_widget_manager.add(widget)
 
         # Determine the instrument options
-        self._window.cb_Instrument.addItems(self._widget_manager.get_instruments())
+        self._window.cb_Instrument.addItems(
+            self._config_widget_manager.get_instruments()
+        )
 
         # Connect the experiment selection to the configuration view
         self._window.cb_Experiment.currentIndexChanged.connect(
@@ -331,10 +337,11 @@ class Window(QMainWindow):
 
     def _handle_cb_Experiment_changed(self) -> None:
         """
-        Activates the widget corresponding to the instrument and experiment.
+        Activates the configuration widget corresponding to the instrument and
+        experiment.
         """
 
-        widget: Optional[experiment.Widget] = self._widget_manager.get(
+        widget: Optional[experiment.ConfigWidget] = self._config_widget_manager.get(
             self._window.cb_Instrument.currentText(),
             self._window.cb_Experiment.currentText(),
         )
@@ -350,7 +357,7 @@ class Window(QMainWindow):
 
         self._window.cb_Experiment.clear()
         self._window.cb_Experiment.addItems(
-            self._widget_manager.get_experiments(
+            self._config_widget_manager.get_experiments(
                 self._window.cb_Instrument.currentText()
             )
         )
@@ -572,7 +579,7 @@ class Window(QMainWindow):
             return
 
         # Create all of the analysers
-        widget: experiment.Widget = self._window.sw_Configuration.currentWidget()  # type: ignore
+        widget: experiment.ConfigWidget = self._window.sw_Configuration.currentWidget()  # type: ignore
         widget.sync_parameters()
         for sample in self._samples:
             sample.analyser = widget.create_analyser(

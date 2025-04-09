@@ -422,9 +422,10 @@ class Analyser(instron_68tm.Analyser):
 # === User Interface Widgets ================================================= #
 
 
-class Widget(instron_68tm.Widget):
+class ConfigWidget(instron_68tm.ConfigWidget):
     """
-    User interface widget for the stepwise compression Instron 68TM experiment.
+    User interface configuration widget for the stepwise compression Instron
+    68TM experiment.
     """
 
     def __init__(self) -> None:
@@ -461,9 +462,9 @@ class Widget(instron_68tm.Widget):
 
     def init(self) -> None:
         """
-        Initialises the widget by setting the input fields to the defaults of
-        the parameters to use when analysing the experiment and connecting any
-        signals with an associated slot.
+        Initialises the configuration widget by setting the input fields to the
+        defaults of the parameters to use when analysing the experiment and
+        connecting any signals with an associated slot.
         """
 
         # Set the input fields to the defaults
@@ -492,7 +493,7 @@ class Widget(instron_68tm.Widget):
     def sync_parameters(self) -> None:
         """
         Synchronise the parameters to use when analysing the experiment with the
-        widget input fields.
+        configuration widget input fields.
         """
 
         self.parameters.relaxation_strain_intervals = (

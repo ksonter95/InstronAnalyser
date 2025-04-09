@@ -493,16 +493,43 @@ class Widget(QWidget):
 
     Args:
         view: Generated user interface widget.
+    """
+
+    def __init__(self, view: ViewBase) -> None:
+        super().__init__()
+
+        self._view: ViewBase = view
+
+        self.view.setupUi(self)
+
+    @property
+    def view(self) -> ViewBase:
+        return self._view
+
+    def activate(self, viewer: QStackedWidget) -> None:
+        """
+        Activates and displays the widget within the viewer.
+
+        Args:
+            viewer: The viewer in which to display the widget.
+        """
+
+        viewer.setCurrentWidget(self)
+
+
+class ConfigWidget(Widget):
+    """
+    Base class for all user interface configuration widgets.
+
+    Args:
+        view: Generated user interface configuration widget.
         parameters: The parameters to use when analysing the experiment.
     """
 
     def __init__(self, view: ViewBase, parameters: AnalyserParameters) -> None:
-        super().__init__()
+        super().__init__(view)
 
         self._parameters: AnalyserParameters = parameters
-        self._view: ViewBase = view
-
-        self.view.setupUi(self)
 
     @property
     def columns(self) -> list[str]:
@@ -519,21 +546,6 @@ class Widget(QWidget):
     @property
     def parameters(self) -> AnalyserParameters:
         return self._parameters
-
-    @property
-    def view(self) -> ViewBase:
-        return self._view
-
-    def activate(self, configuration_viewer: QStackedWidget) -> None:
-        """
-        Activates and displays the widget within the configuration viewer.
-
-        Args:
-            configuration_viewer: The configuration viewer in which to display
-                the widget.
-        """
-
-        configuration_viewer.setCurrentWidget(self)
 
     def create_analyser(
         self, input_csv: Path, output_xlsx: Path, parameters: AnalyserParameters

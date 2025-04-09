@@ -206,6 +206,13 @@ class Ui_MainWindow(object):
 
         self.gl_Output.addWidget(self.tree_Output, 0, 0, 1, 3)
 
+        self.sw_Output = QStackedWidget(self.t_Output)
+        self.sw_Output.setObjectName(u"sw_Output")
+        sizePolicy4.setHeightForWidth(self.sw_Output.sizePolicy().hasHeightForWidth())
+        self.sw_Output.setSizePolicy(sizePolicy4)
+
+        self.gl_Output.addWidget(self.sw_Output, 0, 3, 2, 1)
+
         self.pgb_Output = QProgressBar(self.t_Output)
         self.pgb_Output.setObjectName(u"pgb_Output")
         self.pgb_Output.setValue(0)
@@ -245,6 +252,7 @@ class Ui_MainWindow(object):
 
         self.tw_Main.setCurrentIndex(0)
         self.sw_Configuration.setCurrentIndex(-1)
+        self.sw_Output.setCurrentIndex(-1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
