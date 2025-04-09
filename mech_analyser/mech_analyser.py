@@ -228,6 +228,11 @@ class Window(QMainWindow):
         )
         self._window.a_OpenCsvs.triggered.connect(self._handle_a_OpenCsvs_triggered)
 
+        # Connect the list clicked functionality
+        self._window.lst_CollatedRawDataColumns.itemClicked.connect(
+            self._handle_lst_collatedRawDataColumns_clicked
+        )
+
         # Connect the button functionalities
         self._window.pb_Clear.clicked.connect(self._handle_pb_Clear_triggered)
         self._window.pb_EditOutput.clicked.connect(self._handle_pb_EditOutput_clicked)
@@ -342,6 +347,20 @@ class Window(QMainWindow):
             self._widget_manager.get_experiments(
                 self._window.cb_Instrument.currentText()
             )
+        )
+
+    def _handle_lst_collatedRawDataColumns_clicked(self, item: QListWidgetItem) -> None:
+        """
+        Toggles the checkbox on the corresponding row in the list.
+
+        Args:
+            item: The list item that was clicked.
+        """
+
+        item.setCheckState(
+            Qt.CheckState.Unchecked
+            if item.checkState() == Qt.CheckState.Checked
+            else Qt.CheckState.Checked
         )
 
     def _handle_pb_Cancel_clicked(self) -> None:
@@ -675,6 +694,9 @@ class Window(QMainWindow):
         # Reset the collations
         self._raw_collation = None
         self._summary_collation = None
+
+        # Reset the output table
+        self._window.tbl_Output.setRowCount(0)
 
         # Reset the cancel button
         self._window.pb_Cancel.setEnabled(False)
