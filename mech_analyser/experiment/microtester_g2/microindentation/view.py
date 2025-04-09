@@ -49,7 +49,7 @@ class Ui_w_Microindentation(object):
 
         self.s_Horizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gl_Microindentation.addItem(self.s_Horizontal, 0, 3, 9, 1)
+        self.gl_Microindentation.addItem(self.s_Horizontal, 0, 3, 10, 1)
 
         self.l_SamplesToSkip = QLabel(w_Microindentation)
         self.l_SamplesToSkip.setObjectName(u"l_SamplesToSkip")
@@ -133,14 +133,7 @@ class Ui_w_Microindentation(object):
         sizePolicy.setHeightForWidth(self.l_OffsetTipDisplacement.sizePolicy().hasHeightForWidth())
         self.l_OffsetTipDisplacement.setSizePolicy(sizePolicy)
 
-        self.gl_Microindentation.addWidget(self.l_OffsetTipDisplacement, 6, 1, 1, 1)
-
-        self.l_OffsetForce = QLabel(w_Microindentation)
-        self.l_OffsetForce.setObjectName(u"l_OffsetForce")
-        sizePolicy.setHeightForWidth(self.l_OffsetForce.sizePolicy().hasHeightForWidth())
-        self.l_OffsetForce.setSizePolicy(sizePolicy)
-
-        self.gl_Microindentation.addWidget(self.l_OffsetForce, 6, 2, 1, 1)
+        self.gl_Microindentation.addWidget(self.l_OffsetTipDisplacement, 7, 0, 1, 1)
 
         self.sb_OffsetTipDisplacement = QDoubleSpinBox(w_Microindentation)
         self.sb_OffsetTipDisplacement.setObjectName(u"sb_OffsetTipDisplacement")
@@ -148,11 +141,18 @@ class Ui_w_Microindentation(object):
 
         self.gl_Microindentation.addWidget(self.sb_OffsetTipDisplacement, 7, 1, 1, 1)
 
+        self.l_OffsetForce = QLabel(w_Microindentation)
+        self.l_OffsetForce.setObjectName(u"l_OffsetForce")
+        sizePolicy.setHeightForWidth(self.l_OffsetForce.sizePolicy().hasHeightForWidth())
+        self.l_OffsetForce.setSizePolicy(sizePolicy)
+
+        self.gl_Microindentation.addWidget(self.l_OffsetForce, 8, 0, 1, 1)
+
         self.sb_OffsetForce = QDoubleSpinBox(w_Microindentation)
         self.sb_OffsetForce.setObjectName(u"sb_OffsetForce")
         self.sb_OffsetForce.setMaximum(1000000.000000000000000)
 
-        self.gl_Microindentation.addWidget(self.sb_OffsetForce, 7, 2, 1, 1)
+        self.gl_Microindentation.addWidget(self.sb_OffsetForce, 8, 1, 1, 1)
 
         self.s_Vertical = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
@@ -211,13 +211,13 @@ class Ui_w_Microindentation(object):
 #endif // QT_CONFIG(tooltip)
         self.l_OffsetTipDisplacement.setText(QCoreApplication.translate("w_Microindentation", u"Tip Displacement (a)", None))
 #if QT_CONFIG(tooltip)
-        self.l_OffsetForce.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b", None))
-#endif // QT_CONFIG(tooltip)
-        self.l_OffsetForce.setText(QCoreApplication.translate("w_Microindentation", u"Force (b)", None))
-#if QT_CONFIG(tooltip)
         self.sb_OffsetTipDisplacement.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b", None))
 #endif // QT_CONFIG(tooltip)
         self.sb_OffsetTipDisplacement.setSuffix(QCoreApplication.translate("w_Microindentation", u"\u00b5m", None))
+#if QT_CONFIG(tooltip)
+        self.l_OffsetForce.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b", None))
+#endif // QT_CONFIG(tooltip)
+        self.l_OffsetForce.setText(QCoreApplication.translate("w_Microindentation", u"Force (b)", None))
 #if QT_CONFIG(tooltip)
         self.sb_OffsetForce.setToolTip(QCoreApplication.translate("w_Microindentation", u"Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b", None))
 #endif // QT_CONFIG(tooltip)
