@@ -25,6 +25,8 @@ class Frame:
         self._frame: pd.DataFrame = frame.copy(deep=True)
         self._frame.reset_index(drop=True, inplace=True)
 
+        self._plot = pg.PlotWidget()
+
         self.sheet_name: str = sheet_name
 
     @property
@@ -34,6 +36,17 @@ class Frame:
     @property
     def frame(self) -> pd.DataFrame:
         return self._frame
+
+    @property
+    def plot(self) -> pg.PlotWidget:
+        return self._plot
+
+    def generate_plot(self, **kwargs: dict[str, Any]) -> None:
+        """
+        Generates a plot of the data.
+        """
+
+        raise NotImplementedError
 
     def write_to_excel(self, writer: pd.ExcelWriter) -> None:
         """
@@ -61,11 +74,7 @@ class RawFrame(Frame):
     def __init__(self, frame: pd.DataFrame) -> None:
         super().__init__(frame, "Raw Data")
 
-        self._plot: pg.PlotWidget = self._generate_plot()
-
-    @property
-    def plot(self) -> pg.PlotWidget:
-        return self._plot
+        self.generate_plot()
 
     @classmethod
     def load(cls, csv: Path, **kwargs: dict[str, Any]) -> "Frame":
@@ -77,16 +86,6 @@ class RawFrame(Frame):
 
         Args:
             csv: The path to the CSV file containing the output.
-        """
-
-        raise NotImplementedError
-
-    def _generate_plot(self) -> pg.PlotWidget:
-        """
-        Generates a plot of the raw data.
-
-        Returns:
-            Plot of the raw data.
         """
 
         raise NotImplementedError

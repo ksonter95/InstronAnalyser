@@ -2,6 +2,7 @@ import dataclasses
 import experiment.experiment as experiment
 import experiment.instron_68tm.experiment as instron_68tm
 import experiment.instron_68tm.stepwise.view as view
+import pyqtgraph as pg  # type: ignore
 import util.utils as utils
 
 import numpy as np
@@ -9,7 +10,7 @@ import pandas as pd
 
 from pathlib import Path
 from scipy.optimize import curve_fit  # type: ignore
-from typing import Optional
+from typing import Any, Optional
 
 # === Data frames ============================================================ #
 
@@ -58,6 +59,49 @@ class Frame(instron_68tm.ProcessedFrame):
             self._frame.columns.get_loc("Time [s]") + 1,  # type: ignore
             "Relative Time [s]",
             column,
+        )
+
+    def generate_plot(self, **kwargs: dict[str, Any]) -> None:
+        """
+        Generates a plot of the data.
+
+        Args:
+            regression_data_points: Maximum number of data points to be included
+                in the regression analysis.
+            tau_r2: Reduced modulus of the exponential decay regression.
+        """
+
+        regression_data_points: Optional[int] = kwargs.get("regression_data_points")  # type: ignore
+        tau_r2: float = kwargs.get("tau_r2")  # type: ignore
+
+        # Plot the data
+        self._plot.getPlotItem().setTitle("Exponential decay stress-time regression")  # type: ignore
+        self._plot.getPlotItem().setLabel("bottom", self.relative_time.name)  # type: ignore
+        self._plot.getPlotItem().setLabel("left", self.stress.name)  # type: ignore
+        self._plot.getPlotItem().addLegend()  # type: ignore
+        self._plot.getPlotItem().plot(  # type: ignore
+            self.relative_time.values, self.stress.values, name=self.stress.name
+        )
+        self._plot.getPlotItem().plot(  # type: ignore
+            self.relative_time.values,
+            self.regression_stress.values,
+            name=self.regression_stress.name,
+            pen=pg.mkPen("r"),  # type: ignore
+        )
+
+        # Add the regression domain
+        self._plot.getPlotItem().plot(  # type: ignore
+            [0, self.relative_time[regression_data_points or self.frame.index.size]],
+            [self.stress[0]] * 2,  # type: ignore
+            name="Regression domain",
+            pen=None,
+            fillLevel=self.stress[regression_data_points or self.frame.index.size],  # type: ignore
+            brush=pg.mkBrush(200, 200, 255, 100),  # type: ignore
+        )
+
+        # Add the regression coefficient of determination
+        self._plot.getPlotItem().plot(  # type: ignore
+            [], [], name=f"R^2 = {round(tau_r2, 4)}", pen=None  # type: ignore
         )
 
 
@@ -241,6 +285,12 @@ class Data(instron_68tm.Data):
         # Calculate the remaining summary parameters
         self._max_id = self.processed_frame.force.idxmax()  # type: ignore
         self._min_id = self.processed_frame.force.idxmin()  # type: ignore
+
+        # Generate the processed data plot
+        self.processed_frame.generate_plot(
+            regression_data_points=parameters.regression_data_points,  # type: ignore
+            tau_r2=self.tau_r2,  # type: ignore
+        )
 
     def _execute_regression(
         self, regression_data_points: Optional[int]

@@ -3,6 +3,7 @@ import enum
 import experiment.experiment as experiment
 import experiment.instron_68tm.experiment as instron_68tm
 import experiment.instron_68tm.failure.view as view
+import pyqtgraph as pg  # type: ignore
 import util.utils as utils
 
 import numpy as np
@@ -12,7 +13,7 @@ from PySide6.QtCore import Qt
 from pathlib import Path
 from scipy.integrate import cumulative_trapezoid  # type: ignore
 from scipy.optimize import curve_fit  # type: ignore
-from typing import Optional
+from typing import Any, Optional
 
 # === Data frames ============================================================ #
 
@@ -33,7 +34,25 @@ class Frame(instron_68tm.ProcessedFrame):
         super().__init__(frame, sheet_name)
 
         # Initially populate the processed data columns with default values
+        self.regression_stress = pd.Series([0.0] * self._frame.index.size)
         self.toughness = pd.Series([0.0] * self._frame.index.size)  # type: ignore
+
+    @property
+    def regression_stress(self) -> "pd.Series[float]":
+        return self._frame["Regression stress [MPa]"]  # type: ignore
+
+    @regression_stress.setter
+    def regression_stress(self, value: "pd.Series[float]") -> None:
+        self._frame["Regression stress [MPa]"] = value
+
+        # Move the regression stress column to be directly after the stress
+        # column
+        column: pd.Series = self._frame.pop("Regression stress [MPa]")  # type: ignore
+        self._frame.insert(  # type: ignore
+            self._frame.columns.get_loc("Compressive stress [MPa]") + 1,  # type: ignore
+            "Regression stress [MPa]",
+            column,
+        )
 
     @property
     def toughness(self) -> "pd.Series[float]":
@@ -42,6 +61,52 @@ class Frame(instron_68tm.ProcessedFrame):
     @toughness.setter
     def toughness(self, value: "pd.Series[float]") -> None:
         self._frame["Toughness [MPa]"] = value
+
+    def generate_plot(self, **kwargs: dict[str, Any]) -> None:
+        """
+        Generates a plot of the data.
+
+        Args:
+            strain1_pct: Strain at which the regression begins.
+            strain2_pct: Strain at which the regression ends.
+            e_modulus_r2: Reduced modulus of the linear regression.
+        """
+
+        strain1_pct: float = kwargs.get("strain1_pct")  # type: ignore
+        strain2_pct: float = kwargs.get("strain2_pct")  # type: ignore
+        e_modulus_r2: float = kwargs.get("e_modulus_r2")  # type: ignore
+
+        # Plot the data
+        self._plot.getPlotItem().setTitle("Linear stress-strain regression")  # type: ignore
+        self._plot.getPlotItem().setLabel("bottom", self.strain.name)  # type: ignore
+        self._plot.getPlotItem().setLabel("left", self.stress.name)  # type: ignore
+        self._plot.getPlotItem().addLegend()  # type: ignore
+        self._plot.getPlotItem().plot(  # type: ignore
+            self.strain.values, self.stress.values, name=self.stress.name
+        )
+        self._plot.getPlotItem().plot(  # type: ignore
+            self.strain.values,
+            self.regression_stress.values,
+            name=self.regression_stress.name,
+            pen=pg.mkPen("r"),  # type: ignore
+        )
+
+        # Add the regression domain
+        self._plot.getPlotItem().plot(  # type: ignore
+            [strain1_pct, strain2_pct],
+            [self.stress.iloc[(self.strain[self.strain > strain2_pct]).idxmin()]] * 2,  # type: ignore
+            name="Regression domain",
+            pen=None,
+            fillLevel=self.stress.iloc[
+                (self.strain[self.strain < strain1_pct]).idxmax()
+            ],  # type: ignore
+            brush=pg.mkBrush(200, 200, 255, 100),  # type: ignore
+        )
+
+        # Add the regression coefficient of determination
+        self._plot.getPlotItem().plot(  # type: ignore
+            [], [], name=f"R^2 = {round(e_modulus_r2, 4)}", pen=None  # type: ignore
+        )
 
 
 # === Parameters ============================================================= #
@@ -197,6 +262,7 @@ class Data(instron_68tm.Data):
         )
 
         self._aborted: bool = False
+        self._c_MPa: float = 0.0
         self._e_modulus_MPa: float = 0.0
         self._e_modulus_r2: float = 0.0
         self._e_modulus_strain1_pct: float = 0.0
@@ -208,6 +274,10 @@ class Data(instron_68tm.Data):
     @property
     def aborted(self) -> bool:
         return self._aborted
+
+    @property
+    def c_MPa(self) -> float:
+        return self._c_MPa
 
     @property
     def e_modulus_MPa(self) -> float:
@@ -277,12 +347,14 @@ class Data(instron_68tm.Data):
             -
 
         Columns that are populated:
+            - Regression stress: Stress at each strain point as calculated by
+                the E-modulus regression equation of the stress.
             - Toughness: The area under the stress-strain curve up until each
                 data point.
 
         Summary parameters that are calculated:
-            - E-modulus: The slope of the stress-strain curve between the
-                specified strains as determined by linear regression.
+            - Linear regression equation parameters (E and c in
+                σ = E * ε + c, where E is the Young's modulus of the sample)
             - E-modulus coefficient of determination: The R-squared value of
                 the linear regression used to determine the E-modulus.
             - E-modulus strains: The strains over which the E-modulus was
@@ -344,9 +416,11 @@ class Data(instron_68tm.Data):
             case DataParameters.Method.FIXED_RANGE:
                 self._e_modulus_strain1_pct = parameters.e_modulus_fixed_strain1_pct
                 self._e_modulus_strain2_pct = parameters.e_modulus_fixed_strain2_pct
-                self._e_modulus_MPa, self._e_modulus_r2 = self._execute_regression(
-                    self._e_modulus_strain1_pct,
-                    self._e_modulus_strain2_pct,
+                self._c_MPa, self._e_modulus_MPa, self._e_modulus_r2 = (
+                    self._execute_regression(
+                        self._e_modulus_strain1_pct,
+                        self._e_modulus_strain2_pct,
+                    )
                 )
 
             # Calculate the E-modulus for the range that is anchored to a point
@@ -403,15 +477,17 @@ class Data(instron_68tm.Data):
                 )
 
                 # Execute the regression
-                self._e_modulus_MPa, self._e_modulus_r2 = self._execute_regression(
-                    self._e_modulus_strain1_pct,
-                    self._e_modulus_strain2_pct,
+                self._c_MPa, self._e_modulus_MPa, self._e_modulus_r2 = (
+                    self._execute_regression(
+                        self._e_modulus_strain1_pct,
+                        self._e_modulus_strain2_pct,
+                    )
                 )
 
             # Calculate the E-modulus for all possible windows and save the one
             # with the highest R^2 value
             case DataParameters.Method.FIND_RANGE:
-                results: list[tuple[int, int, float, float]] = [
+                results: list[tuple[int, int, float, float, float]] = [
                     (
                         strain_pct,
                         int(strain_pct + parameters.e_modulus_find_strain_width_pct),
@@ -434,19 +510,36 @@ class Data(instron_68tm.Data):
                 (
                     self._e_modulus_strain1_pct,
                     self._e_modulus_strain2_pct,
+                    self._c_MPa,
                     self._e_modulus_MPa,
                     self._e_modulus_r2,
-                ) = max(results, key=lambda x: x[1])
+                ) = max(results, key=lambda x: x[4])
 
             case _:
                 self._e_modulus_strain1_pct = float("NaN")
                 self._e_modulus_strain2_pct = float("NaN")
+                self._c_MPa = float("NaN")
                 self._e_modulus_MPa = float("NaN")
                 self._e_modulus_r2 = float("NaN")
 
+        # Add the regression stress column
+        self.processed_frame.regression_stress = pd.Series(
+            [
+                self.y(x / 100.0, self.e_modulus_MPa, self.c_MPa)  # type: ignore
+                for x in self.processed_frame.strain  # type: ignore
+            ]
+        )
+
+        # Generate the processed data plot
+        self.processed_frame.generate_plot(
+            strain1_pct=self.e_modulus_strain1_pct,  # type: ignore
+            strain2_pct=self.e_modulus_strain2_pct,  # type: ignore
+            e_modulus_r2=self.e_modulus_r2,  # type: ignore
+        )
+
     def _execute_regression(
         self, strain1_pct: float, strain2_pct: float
-    ) -> tuple[float, float]:
+    ) -> tuple[float, float, float]:
         """
         Executes the regression to determine the E-modulus and its corresponding
         coefficient of determination.
@@ -458,8 +551,8 @@ class Data(instron_68tm.Data):
                 regress.
 
         Returns:
-            Tuple of the E-modulus and its corresponding coefficient of
-            determination.
+            Tuple of c and E-modulus (the linear regression equation parameters)
+            and their corresponding coefficient of determination.
         """
 
         x: "pd.Series[float]" = (
@@ -478,7 +571,7 @@ class Data(instron_68tm.Data):
         # Ensure that the regression has more data points than the polynomial
         # degree
         if len(x) < 3:
-            return 0.0, 0.0
+            return 0.0, 0.0, 0.0
 
         [e_modulus_MPa, c], _ = curve_fit(self.y, x, y)  # type: ignore
 
@@ -487,7 +580,7 @@ class Data(instron_68tm.Data):
             [self.y(strain_pct, e_modulus_MPa, c) for strain_pct in x],  # type: ignore
         )
 
-        return e_modulus_MPa, e_modulus_r2  # type: ignore
+        return c, e_modulus_MPa, e_modulus_r2  # type: ignore
 
     @staticmethod
     def y(x: float, E: float, c: float) -> float:
@@ -528,6 +621,7 @@ class Summary(instron_68tm.Summary):
                     "Ultimate strength [MPa]",
                     "E-modulus strain 1 [%]",
                     "E-modulus strain 2 [%]",
+                    "c [MPa]",
                     "E-modulus [MPa]",
                     "E-modulus R^2 [MPa^2/MPa^2]",
                     "Toughness strain [%]",
@@ -556,6 +650,7 @@ class Summary(instron_68tm.Summary):
             data.ultimate_strength_MPa,
             data.e_modulus_strain1_pct,
             data.e_modulus_strain2_pct,
+            data.c_MPa,
             data.e_modulus_MPa,
             data.e_modulus_r2,
             data.toughness_strain_pct,

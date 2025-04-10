@@ -4,6 +4,7 @@ import pyqtgraph as pg  # type: ignore
 import re
 
 from pathlib import Path
+from typing import Any
 
 
 # === Data frames ============================================================ #
@@ -55,6 +56,17 @@ class RawFrame(experiment.RawFrame, Frame):
         frame: Underlying pd.DataFrame representation of the data.
     """
 
+    def generate_plot(self, **kwargs: dict[str, Any]) -> None:
+        """
+        Generates a plot of the raw data.
+        """
+
+        # Plot the force-tip displacement graph
+        self._plot.getPlotItem().setTitle("Force-tip displacement")  # type: ignore
+        self._plot.getPlotItem().setLabel("bottom", self.tip_displacement.name)  # type: ignore
+        self._plot.getPlotItem().setLabel("left", self.force.name)  # type: ignore
+        self._plot.getPlotItem().plot(self.tip_displacement.values, self.force.values)  # type: ignore
+
     @classmethod
     def load(cls, csv: Path) -> "RawFrame":  # type: ignore
         """
@@ -105,24 +117,6 @@ class RawFrame(experiment.RawFrame, Frame):
             raise ValueError(f"Invalid CSV file: {csv}")
 
         return RawFrame(frame)
-
-    def _generate_plot(self) -> pg.PlotWidget:
-        """
-        Generates a plot of the raw data.
-
-        Returns:
-            Plot of the raw data.
-        """
-
-        plot = pg.PlotWidget()
-
-        # Plot the force-tip displacement graph
-        plot.getPlotItem().plot(self.tip_displacement.values, self.force.values)  # type: ignore
-        plot.getPlotItem().setTitle("Force-tip displacement")  # type: ignore
-        plot.getPlotItem().setLabel("bottom", self.tip_displacement.name)  # type: ignore
-        plot.getPlotItem().setLabel("left", self.force.name)  # type: ignore
-
-        return plot
 
 
 class ProcessedFrame(experiment.ProcessedFrame, Frame):

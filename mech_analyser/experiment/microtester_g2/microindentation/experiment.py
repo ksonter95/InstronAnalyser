@@ -4,12 +4,13 @@ import experiment.microtester_g2.experiment as microtester_g2
 import experiment.microtester_g2.microindentation.view as view
 import numpy as np
 import pandas as pd
+import pyqtgraph as pg  # type: ignore
 import util.utils as utils
 
 from numpy.typing import NDArray
 from pathlib import Path
 from scipy.optimize import curve_fit  # type: ignore
-from typing import Optional
+from typing import Any, Optional
 
 
 # === Data frames ============================================================ #
@@ -99,6 +100,51 @@ class Frame(microtester_g2.ProcessedFrame):
             self._frame.columns.get_loc("Indentation Force [uN]") + 1,  # type: ignore
             "Regression Force [uN]",
             column,
+        )
+
+    def generate_plot(self, **kwargs: dict[str, Any]) -> None:
+        """
+        Generates a plot of the data.
+
+        Args:
+            e_modulus_r2: Reduced modulus of the non-linear Hertz model
+                regression.
+        """
+
+        e_modulus_r2: float = kwargs.get("e_modulus_r2")  # type: ignore
+
+        # Plot the data
+        self._plot.getPlotItem().setTitle(  # type: ignore
+            "Hertz equation force-displacement regression"
+        )
+        self._plot.getPlotItem().setLabel("bottom", self.tip_displacement.name)  # type: ignore
+        self._plot.getPlotItem().setLabel("left", self.force.name)  # type: ignore
+        self._plot.getPlotItem().addLegend()  # type: ignore
+        self._plot.getPlotItem().plot(  # type: ignore
+            self.tip_displacement.values,
+            self.force.values,
+            name=self.force.name,
+        )
+        self._plot.getPlotItem().plot(  # type: ignore
+            self.tip_displacement.values,
+            self.regression_force.values,
+            name=self.regression_force.name,
+            pen=pg.mkPen("r"),  # type: ignore
+        )
+
+        # Add the regression domain
+        self._plot.getPlotItem().plot(  # type: ignore
+            [self.tip_displacement.min(), self.tip_displacement.max()],
+            [max(self.force.max(), self.regression_force.max())] * 2,  # type: ignore
+            name="Regression domain",
+            pen=None,
+            fillLevel=min(self.force.min(), self.regression_force.min()),  # type: ignore
+            brush=pg.mkBrush(200, 200, 255, 100),  # type: ignore
+        )
+
+        # Add the regression coefficient of determination
+        self._plot.getPlotItem().plot(  # type: ignore
+            [], [], name=f"R^2 = {round(e_modulus_r2, 4)}", pen=None  # type: ignore
         )
 
 
@@ -324,6 +370,9 @@ class Data(microtester_g2.Data):
         self.processed_frame.h_R = (
             self.processed_frame.indentation_depth / parameters.R_um  # type: ignore
         )
+
+        # Generate the processed data plot
+        self.processed_frame.generate_plot(e_modulus_r2=self.e_modulus_r2)  # type: ignore
 
     def _calculate_energy_dissipated_uJ(
         self, cycle: int, samples_to_skip: int

@@ -665,11 +665,14 @@ class Window(QMainWindow):
             processed_data_item.setData(0, Qt.ItemDataRole.UserRole, None)
 
             # Create the individual sample processed data plot views
-            for _, data in enumerate(sample.analyser.data):
+            for data in sample.analyser.data:
                 sub_item = QTreeWidgetItem(processed_data_item)
-                sub_item.setText(0, data.processed_frame.sheet_name)
-                sub_item.setData(0, Qt.ItemDataRole.UserRole, None)
-                # sub_item.setData(0, Qt.ItemDataRole.UserRole, data)
+                sub_item.setText(
+                    0, data.processed_frame.plot.getPlotItem().titleLabel.text  # type: ignore
+                )
+                processed_data_widget = experiment.PlotWidget(data.processed_frame.plot)
+                sub_item.setData(0, Qt.ItemDataRole.UserRole, processed_data_widget)
+                self._window.sw_Output.addWidget(processed_data_widget)
 
             # Update the GUI
             self._window.tree_Output.scrollToBottom()

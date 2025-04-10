@@ -4,6 +4,7 @@ import pandas as pd
 import pyqtgraph as pg  # type: ignore
 
 from pathlib import Path
+from typing import Any
 
 
 # === Data frames ============================================================ #
@@ -103,6 +104,16 @@ class RawFrame(experiment.RawFrame, Frame):
     def tare_time_s(self) -> float:
         return self._tare_time_s
 
+    def generate_plot(self, **kwargs: dict[str, Any]) -> None:
+        """
+        Generates a plot of the raw data.
+        """
+
+        self._plot.getPlotItem().setTitle("Stress-strain")  # type: ignore
+        self._plot.getPlotItem().setLabel("bottom", self.strain.name)  # type: ignore
+        self._plot.getPlotItem().setLabel("left", self.stress.name)  # type: ignore
+        self._plot.getPlotItem().plot(self.strain.values, self.stress.values)  # type: ignore
+
     @classmethod
     def load(cls, csv: Path, tare_force_N: float = 0.0) -> "RawFrame":  # type: ignore
         """
@@ -161,24 +172,6 @@ class RawFrame(experiment.RawFrame, Frame):
             raise ValueError(f"Invalid CSV file: {csv}")
 
         return RawFrame(frame, tare_force_N)
-
-    def _generate_plot(self) -> pg.PlotWidget:
-        """
-        Generates a plot of the raw data.
-
-        Returns:
-            Plot of the raw data.
-        """
-
-        plot = pg.PlotWidget()
-
-        # Plot the stress-strain graph
-        plot.getPlotItem().plot(self.strain.values, self.stress.values)  # type: ignore
-        plot.getPlotItem().setTitle("Stress-strain")  # type: ignore
-        plot.getPlotItem().setLabel("bottom", self.strain.name)  # type: ignore
-        plot.getPlotItem().setLabel("left", self.stress.name)  # type: ignore
-
-        return plot
 
 
 class ProcessedFrame(experiment.ProcessedFrame, Frame):
