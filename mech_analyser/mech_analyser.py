@@ -628,22 +628,27 @@ class Window(QMainWindow):
             # Create the sample summary view
             summary_item = QTreeWidgetItem(sample_item)
             summary_item.setText(0, "Summary")
-            summary_item.setData(0, Qt.ItemDataRole.UserRole, sample.analyser.summary)
+            summary_widget = experiment.SummaryWidget(sample.analyser.summary.frame)
+            summary_item.setData(0, Qt.ItemDataRole.UserRole, summary_widget)
+            self._window.sw_Output.addWidget(summary_widget)
 
             # Create the sample raw data plot view
             raw_data_item = QTreeWidgetItem(sample_item)
             raw_data_item.setText(0, "Raw data")
-            raw_data_item.setData(0, Qt.ItemDataRole.UserRole, sample.analyser)  # TODO
+            raw_data_item.setData(0, Qt.ItemDataRole.UserRole, None)  # TODO
+            # raw_data_item.setData(0, Qt.ItemDataRole.UserRole, sample.analyser)  # TODO
 
             # Create the sample processed data view
             processed_data_item = QTreeWidgetItem(sample_item)
             processed_data_item.setText(0, "Processed data")
+            processed_data_item.setData(0, Qt.ItemDataRole.UserRole, None)  # TODO
 
             # Create the individual sample processed data plot views
-            for j, data in enumerate(sample.analyser.data):
+            for _, data in enumerate(sample.analyser.data):
                 sub_item = QTreeWidgetItem(processed_data_item)
                 sub_item.setText(0, data.processed_frame.sheet_name)
-                sub_item.setData(0, Qt.ItemDataRole.UserRole, data)
+                sub_item.setData(0, Qt.ItemDataRole.UserRole, None)
+                # sub_item.setData(0, Qt.ItemDataRole.UserRole, data)
 
             # Update the GUI
             self._window.tree_Output.scrollToBottom()
@@ -718,7 +723,14 @@ class Window(QMainWindow):
             column: The column that was clicked.
         """
 
-        pass
+        widget: Optional[experiment.SummaryWidget] = item.data(
+            0, Qt.ItemDataRole.UserRole
+        )
+
+        if widget is None:
+            return
+
+        widget.activate(self._window.sw_Output)
 
     def _reset(self) -> None:
         """

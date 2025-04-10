@@ -301,6 +301,12 @@
     <layout class="QGridLayout" name="gl_Output">
      <item row="0" column="0" colspan="3">
       <widget class="QTreeWidget" name="tree_Output">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="editTriggers">
         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
        </property>

@@ -200,6 +200,11 @@ class Ui_MainWindow(object):
         __qtreewidgetitem.setText(0, u"1");
         self.tree_Output.setHeaderItem(__qtreewidgetitem)
         self.tree_Output.setObjectName(u"tree_Output")
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.tree_Output.sizePolicy().hasHeightForWidth())
+        self.tree_Output.setSizePolicy(sizePolicy5)
         self.tree_Output.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tree_Output.setColumnCount(1)
         self.tree_Output.header().setVisible(False)
