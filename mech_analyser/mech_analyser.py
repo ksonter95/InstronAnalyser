@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QTableWidgetItem,
     QTreeWidgetItem,
+    QWidget,
 )
 from pathlib import Path
 from typing import Optional
@@ -258,6 +259,24 @@ class Window(QMainWindow):
         self._window.pb_Run.clicked.connect(self._handle_pb_Run_clicked)
 
         self._reset()
+
+    def _clear_t_Output(self) -> None:
+        """
+        Clears the tw_Output widget of all contents.
+        """
+
+        # Clear the output tree and progress bar
+        self._window.tree_Output.clear()
+        self._update_pgb_Output()
+
+        # Clear the output viewers
+        for i in range(self._window.sw_Output.count()):
+            widget: experiment.QWidget = self._window.sw_Output.widget(i)
+            self._window.sw_Output.removeWidget(widget)
+            widget.deleteLater()
+
+        # Add a blank output viewer
+        self._window.sw_Output.addWidget(QWidget())
 
     def _create_output_xlsx(self, input_csv: Path) -> Path:
         """
@@ -604,11 +623,12 @@ class Window(QMainWindow):
         )
 
         # Analyse and collate all of the experiments
-        self._window.tree_Output.clear()
+        self._clear_t_Output()
         for i, sample in enumerate(self._samples):
             # Create the sample view
             sample_item = QTreeWidgetItem(self._window.tree_Output)
             sample_item.setText(0, sample.output_xlsx.name)
+            sample_item.setData(0, Qt.ItemDataRole.UserRole, None)
 
             # Analyse
             self._samples[i].analyser.analyse()
@@ -628,20 +648,21 @@ class Window(QMainWindow):
             # Create the sample summary view
             summary_item = QTreeWidgetItem(sample_item)
             summary_item.setText(0, "Summary")
-            summary_widget = experiment.SummaryWidget(sample.analyser.summary.frame)
+            summary_widget = experiment.TableWidget(sample.analyser.summary.frame)
             summary_item.setData(0, Qt.ItemDataRole.UserRole, summary_widget)
             self._window.sw_Output.addWidget(summary_widget)
 
             # Create the sample raw data plot view
             raw_data_item = QTreeWidgetItem(sample_item)
             raw_data_item.setText(0, "Raw data")
-            raw_data_item.setData(0, Qt.ItemDataRole.UserRole, None)  # TODO
-            # raw_data_item.setData(0, Qt.ItemDataRole.UserRole, sample.analyser)  # TODO
+            raw_data_widget = experiment.PlotWidget(sample.analyser.raw_frame.plot)
+            raw_data_item.setData(0, Qt.ItemDataRole.UserRole, raw_data_widget)
+            self._window.sw_Output.addWidget(raw_data_widget)
 
             # Create the sample processed data view
             processed_data_item = QTreeWidgetItem(sample_item)
             processed_data_item.setText(0, "Processed data")
-            processed_data_item.setData(0, Qt.ItemDataRole.UserRole, None)  # TODO
+            processed_data_item.setData(0, Qt.ItemDataRole.UserRole, None)
 
             # Create the individual sample processed data plot views
             for _, data in enumerate(sample.analyser.data):
@@ -723,11 +744,10 @@ class Window(QMainWindow):
             column: The column that was clicked.
         """
 
-        widget: Optional[experiment.SummaryWidget] = item.data(
-            0, Qt.ItemDataRole.UserRole
-        )
+        widget: Optional[experiment.Widget] = item.data(0, Qt.ItemDataRole.UserRole)
 
         if widget is None:
+            self._window.sw_Output.setCurrentIndex(0)  # NOTE: index of blank widget
             return
 
         widget.activate(self._window.sw_Output)
@@ -752,8 +772,7 @@ class Window(QMainWindow):
         self._summary_collation = None
 
         # Reset the outputs
-        self._window.tree_Output.clear()
-        self._update_pgb_Output()
+        self._clear_t_Output()
 
         # Reset the cancel button
         self._window.pb_Cancel.setEnabled(False)

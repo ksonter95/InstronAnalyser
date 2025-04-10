@@ -1,6 +1,7 @@
 import dataclasses
 import experiment.experiment as experiment
 import pandas as pd
+import pyqtgraph as pg  # type: ignore
 
 from pathlib import Path
 
@@ -53,6 +54,7 @@ class RawFrame(experiment.RawFrame, Frame):
         self._tare_stress_MPa: float = 0.0
         self._tare_time_s: float = 0.0
 
+        # Use raw data without taring
         if tare_force_N == 0.0:
             return super().__init__(frame)
 
@@ -159,6 +161,24 @@ class RawFrame(experiment.RawFrame, Frame):
             raise ValueError(f"Invalid CSV file: {csv}")
 
         return RawFrame(frame, tare_force_N)
+
+    def _generate_plot(self) -> pg.PlotWidget:
+        """
+        Generates a plot of the raw data.
+
+        Returns:
+            Plot of the raw data.
+        """
+
+        plot = pg.PlotWidget()
+
+        # Plot the stress-strain graph
+        plot.getPlotItem().plot(self.strain.values, self.stress.values)  # type: ignore
+        plot.getPlotItem().setTitle("Stress-strain")  # type: ignore
+        plot.getPlotItem().setLabel("bottom", self.strain.name)  # type: ignore
+        plot.getPlotItem().setLabel("left", self.stress.name)  # type: ignore
+
+        return plot
 
 
 class ProcessedFrame(experiment.ProcessedFrame, Frame):

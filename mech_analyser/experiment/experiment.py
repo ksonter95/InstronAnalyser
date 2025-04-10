@@ -1,5 +1,6 @@
 import dataclasses
 import pandas as pd
+import pyqtgraph as pg  # type: ignore
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtWidgets import QStackedWidget, QTableView, QVBoxLayout, QWidget
@@ -60,6 +61,12 @@ class RawFrame(Frame):
     def __init__(self, frame: pd.DataFrame) -> None:
         super().__init__(frame, "Raw Data")
 
+        self._plot: pg.PlotWidget = self._generate_plot()
+
+    @property
+    def plot(self) -> pg.PlotWidget:
+        return self._plot
+
     @classmethod
     def load(cls, csv: Path, **kwargs: dict[str, Any]) -> "Frame":
         """
@@ -70,6 +77,16 @@ class RawFrame(Frame):
 
         Args:
             csv: The path to the CSV file containing the output.
+        """
+
+        raise NotImplementedError
+
+    def _generate_plot(self) -> pg.PlotWidget:
+        """
+        Generates a plot of the raw data.
+
+        Returns:
+            Plot of the raw data.
         """
 
         raise NotImplementedError
@@ -488,125 +505,13 @@ class ViewBase(Protocol):
     def retranslateUi(self, parent: QWidget) -> None: ...
 
 
-class PandasModel(QAbstractTableModel):
-    """
-    Model for displaying a pandas DataFrame in a QTableView.
-
-    Args:
-        frame: Underlying pd.DataFrame representation of the data to be
-            displayed.
-    """
-
-    def __init__(self, frame: pd.DataFrame) -> None:
-        super().__init__()
-
-        self._frame: pd.DataFrame = frame
-
-    def columnCount(
-        self,
-        parent: QModelIndex | QPersistentModelIndex = QModelIndex(),
-    ) -> int:
-        """
-        Returns the number of columns in the underlying pd.DataFrame
-        representation of the data.
-
-        Args:
-            parent: Required by the Qt model interface (not used here).
-
-        Returns:
-            Number of columns in the underlying pd.DataFrame representation of
-            the data.
-        """
-
-        return len(self._frame.columns)
-
-    def data(
-        self,
-        index: QModelIndex | QPersistentModelIndex,
-        role: int = Qt.ItemDataRole.DisplayRole,
-    ) -> str | None:
-        """
-        Returns the data to be displayed in the table for the given index and
-        role.
-
-        Args:
-            index: The cell index (row, column).
-            role: The role for which the data is requested.
-
-        Returns:
-            str: The string representation of the underlying pd.DataFrame
-                representation of the data value for display.
-            None: If the role is not DisplayRole.
-        """
-
-        if role != Qt.ItemDataRole.DisplayRole:
-            return None
-
-        return str(self._frame.iloc[index.row(), index.column()])
-
-    def headerData(
-        self,
-        section: int,
-        orientation: Qt.Orientation,
-        role: int = Qt.ItemDataRole.DisplayRole,
-    ) -> Optional[str]:
-        """
-        Returns the header label for the given section and orientation.
-
-        Args:
-            section: The index of the header section.
-            orientation: Horizontal (column) or Vertical (row) header.
-            role: The role for which the header data is requested.
-
-        Returns:
-            str: The column name or row index as a string.
-            None: If role is not DisplayRole.
-        """
-
-        if role != Qt.ItemDataRole.DisplayRole:
-            return None
-        elif orientation == Qt.Orientation.Horizontal:
-            return self._frame.columns[section]
-        else:
-            return self._frame.index[section]
-
-    def rowCount(
-        self,
-        parent: QModelIndex | QPersistentModelIndex = QModelIndex(),
-    ) -> int:
-        """
-        Returns the number of rows in the underlying pd.DataFrame representation
-        of the data.
-
-        Args:
-            parent: Required by the Qt model interface (not used here).
-
-        Returns:
-            Number of rows in the underlying pd.DataFrame representation of the
-            data.
-        """
-
-        return len(self._frame)
-
-
 class Widget(QWidget):
     """
     Base class for all user interface widgets.
-
-    Args:
-        view: Generated user interface widget.
     """
 
-    def __init__(self, view: ViewBase) -> None:
+    def __init__(self) -> None:
         super().__init__()
-
-        self._view: ViewBase = view
-
-        self.view.setupUi(self)
-
-    @property
-    def view(self) -> ViewBase:
-        return self._view
 
     def activate(self, viewer: QStackedWidget) -> None:
         """
@@ -629,9 +534,12 @@ class ConfigWidget(Widget):
     """
 
     def __init__(self, view: ViewBase, parameters: AnalyserParameters) -> None:
-        super().__init__(view)
+        super().__init__()
 
+        self._view: ViewBase = view
         self._parameters: AnalyserParameters = parameters
+
+        self.view.setupUi(self)
 
     @property
     def columns(self) -> list[str]:
@@ -648,6 +556,10 @@ class ConfigWidget(Widget):
     @property
     def parameters(self) -> AnalyserParameters:
         return self._parameters
+
+    @property
+    def view(self) -> ViewBase:
+        return self._view
 
     def create_analyser(
         self, input_csv: Path, output_xlsx: Path, parameters: AnalyserParameters
@@ -689,42 +601,139 @@ class ConfigWidget(Widget):
         raise NotImplementedError
 
 
-class SummaryWidget(Widget):
+class TableWidget(Widget):
     """
-    Base class for all user interface configuration widgets.
+    Base class for all user interface table widgets.
 
     Args:
-        frame: Underlying pd.DataFrame representation of the summary.
+        frame: Underlying pd.DataFrame representation of the table.
     """
 
-    class View:
-        def setupUi(self, parent: QWidget) -> None:
-            """
-            Sets up the UI representation of the widget.
-
-            Args:
-                parent: The parent widget in which this widget will be placed.
-            """
-
-            self.gl_Summary = QVBoxLayout(parent)
-            self.tv_Summary = QTableView(parent)
-            self.gl_Summary.addWidget(self.tv_Summary)
-
-        def retranslateUi(self, parent: QWidget) -> None:
-            """
-            Re-translates the UI representation of the widget.
-
-            Args:
-                parent: The parent widget in which this widget will be placed.
-            """
-
-            pass
-
     def __init__(self, frame: pd.DataFrame) -> None:
-        super().__init__(self.View())
+        super().__init__()
 
-        self.view.tv_Summary.setModel(PandasModel(frame))
+        # Create the table viewer
+        table = QTableView()
+        table.setModel(self.Model(frame))
 
-    @property
-    def view(self) -> View:  # type: ignore
-        return super().view  # type: ignore
+        # Add the table viewer to the widget
+        layout = QVBoxLayout()
+        layout.addWidget(table)
+        self.setLayout(layout)
+
+    class Model(QAbstractTableModel):
+        """
+        Model for displaying a pandas DataFrame in a QTableView.
+
+        Args:
+            frame: Underlying pd.DataFrame representation of the data to be
+                displayed.
+        """
+
+        def __init__(self, frame: pd.DataFrame) -> None:
+            super().__init__()
+
+            self._frame: pd.DataFrame = frame
+
+        def columnCount(
+            self,
+            parent: QModelIndex | QPersistentModelIndex = QModelIndex(),
+        ) -> int:
+            """
+            Returns the number of columns in the underlying pd.DataFrame
+            representation of the data.
+
+            Args:
+                parent: Required by the Qt model interface (not used here).
+
+            Returns:
+                Number of columns in the underlying pd.DataFrame representation of
+                the data.
+            """
+
+            return len(self._frame.columns)
+
+        def data(
+            self,
+            index: QModelIndex | QPersistentModelIndex,
+            role: int = Qt.ItemDataRole.DisplayRole,
+        ) -> str | None:
+            """
+            Returns the data to be displayed in the table for the given index and
+            role.
+
+            Args:
+                index: The cell index (row, column).
+                role: The role for which the data is requested.
+
+            Returns:
+                str: The string representation of the underlying pd.DataFrame
+                    representation of the data value for display.
+                None: If the role is not DisplayRole.
+            """
+
+            if role != Qt.ItemDataRole.DisplayRole:
+                return None
+
+            return str(self._frame.iloc[index.row(), index.column()])
+
+        def headerData(
+            self,
+            section: int,
+            orientation: Qt.Orientation,
+            role: int = Qt.ItemDataRole.DisplayRole,
+        ) -> Optional[str]:
+            """
+            Returns the header label for the given section and orientation.
+
+            Args:
+                section: The index of the header section.
+                orientation: Horizontal (column) or Vertical (row) header.
+                role: The role for which the header data is requested.
+
+            Returns:
+                str: The column name or row index as a string.
+                None: If role is not DisplayRole.
+            """
+
+            if role != Qt.ItemDataRole.DisplayRole:
+                return None
+            elif orientation == Qt.Orientation.Horizontal:
+                return self._frame.columns[section]
+            else:
+                return self._frame.index[section]
+
+        def rowCount(
+            self,
+            parent: QModelIndex | QPersistentModelIndex = QModelIndex(),
+        ) -> int:
+            """
+            Returns the number of rows in the underlying pd.DataFrame representation
+            of the data.
+
+            Args:
+                parent: Required by the Qt model interface (not used here).
+
+            Returns:
+                Number of rows in the underlying pd.DataFrame representation of the
+                data.
+            """
+
+            return len(self._frame)
+
+
+class PlotWidget(Widget):
+    """
+    Base class for all user interface plot widgets.
+
+    Args:
+        plot: The plot object to be displayed.
+    """
+
+    def __init__(self, plot: pg.PlotWidget) -> None:
+        super().__init__()
+
+        # Add the table viewer to the widget
+        layout = QVBoxLayout()
+        layout.addWidget(plot)
+        self.setLayout(layout)
