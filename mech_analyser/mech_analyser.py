@@ -2,8 +2,8 @@ import experiment.experiment as experiment
 import importlib
 import os
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import QUrl, Qt
+from PySide6.QtGui import QIcon, QDesktopServices
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -270,8 +270,8 @@ class Window(QMainWindow):
         self._update_pgb_Output()
 
         # Clear the output viewers
-        for i in range(self._window.sw_Output.count()):
-            widget: experiment.QWidget = self._window.sw_Output.widget(i)
+        while self._window.sw_Output.count() > 0:
+            widget: experiment.QWidget = self._window.sw_Output.widget(0)
             self._window.sw_Output.removeWidget(widget)
             widget.deleteLater()
 
@@ -580,6 +580,14 @@ class Window(QMainWindow):
         Runs the analysis, collates the results, and updates the GUI.
         """
 
+        def reset_buttons() -> None:
+            """
+            Resets the buttons to their default state.
+            """
+
+            self._window.pb_Cancel.setEnabled(False)
+            self._window.pb_Run.setEnabled(True)
+
         # Configure the buttons
         self._window.pb_Cancel.setEnabled(True)
         self._window.pb_Run.setEnabled(False)
@@ -595,15 +603,26 @@ class Window(QMainWindow):
                 "Please choose a file to which to save the collation",
                 QMessageBox.StandardButton.Ok,
             )
+            reset_buttons()
             return
 
         # Create all of the analysers
-        widget: experiment.ConfigWidget = self._window.sw_Configuration.currentWidget()  # type: ignore
-        widget.sync_parameters()
-        for sample in self._samples:
-            sample.analyser = widget.create_analyser(
-                sample.input_csv, sample.output_xlsx, widget.parameters
+        try:
+            widget: experiment.ConfigWidget = self._window.sw_Configuration.currentWidget()  # type: ignore
+            widget.sync_parameters()
+            for sample in self._samples:
+                sample.analyser = widget.create_analyser(
+                    sample.input_csv, sample.output_xlsx, widget.parameters
+                )
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                "Run",
+                "Failed to create analyser:\n" + str(e),
+                QMessageBox.StandardButton.Ok,
             )
+            reset_buttons()
+            return
 
         # Create the collator
         collator = experiment.Collator(
@@ -631,8 +650,18 @@ class Window(QMainWindow):
             sample_item.setData(0, Qt.ItemDataRole.UserRole, None)
 
             # Analyse
-            self._samples[i].analyser.analyse()
-            self._samples[i].analyser.save()
+            try:
+                self._samples[i].analyser.analyse()
+                self._samples[i].analyser.save()
+            except Exception as e:
+                QMessageBox.warning(
+                    self,
+                    "Run",
+                    "Failed to analyse:\n" + str(e),
+                    QMessageBox.StandardButton.Ok,
+                )
+                reset_buttons()
+                return
 
             # Collate
             collator.raw_collation.append(
@@ -682,14 +711,27 @@ class Window(QMainWindow):
             # Cancel the analysis and collation
             if self._cancel_flag:
                 self._cancel_flag = False
-                break
+                reset_buttons()
+                return
 
         # Save the collation
         collator.save()
 
         # Configure the buttons
-        self._window.pb_Cancel.setEnabled(False)
-        self._window.pb_Run.setEnabled(True)
+        reset_buttons()
+
+        # Open collation
+        reply: QMessageBox.StandardButton = QMessageBox.question(
+            None,  # type: ignore
+            "Run",
+            "Analyis and collation complete! Open collation?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            QDesktopServices.openUrl(
+                QUrl.fromLocalFile(str(self._collation_xlsx.parent.absolute()))
+            )
 
     def _handle_pb_SaveAnalysis_clicked(self) -> None:
         """
