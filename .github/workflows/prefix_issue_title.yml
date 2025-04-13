@@ -1,0 +1,40 @@
+name: Prefix Issue Title
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  prefix-title:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Prefix issue title with correct key
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ORIGINAL_TITLE: ${{ github.event.issue.title }}
+        run: |
+          CORRECT_PREFIX="MAS-${ISSUE_NUMBER}"
+          
+          # Extract prefix if present
+          PREFIX_REGEX='^(MAS-)([0-9]+): (.+)$'
+
+          if [[ "$ORIGINAL_TITLE" =~ $PREFIX_REGEX ]]; then
+            EXISTING_PREFIX_NUMBER="${BASH_REMATCH[2]}"
+            TITLE_BODY="${BASH_REMATCH[3]}"
+
+            if [[ "$EXISTING_PREFIX_NUMBER" != "$ISSUE_NUMBER" ]]; then
+              echo "Incorrect prefix. Updating to correct number."
+              NEW_TITLE="${CORRECT_PREFIX}: ${TITLE_BODY}"
+              gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --title "$NEW_TITLE"
+            else
+              echo "Prefix is correct. No action needed."
+            fi
+          else
+            echo "No prefix found. Adding one."
+            NEW_TITLE="${CORRECT_PREFIX}: ${ORIGINAL_TITLE}"
+            gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --title "$NEW_TITLE"
+          fi
