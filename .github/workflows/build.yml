@@ -32,7 +32,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MechAnalyser
+          name: MechAnalyser-Windows
           path: dist/*
 
   build-macos-arm:
@@ -61,7 +61,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MechAnalyser
+          name: MechAnalyser-MacOS-ARM
           path: dist/*
 
   build-macos-x86_64:
@@ -90,5 +90,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MechAnalyser
+          name: MechAnalyser-MacOS-x86_64
           path: dist/*
