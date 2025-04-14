@@ -1,6 +1,6 @@
+import config
 import experiment.experiment as experiment
 import importlib
-import os
 
 from PySide6.QtCore import QUrl, Qt
 from PySide6.QtGui import QIcon, QDesktopServices
@@ -19,18 +19,7 @@ from pathlib import Path
 from typing import Optional
 from ui.window import Ui_MainWindow
 
-
-_EXPERIMENTS_DIR: str = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "experiment")
-)
-_EXPERIMENTS = [
-    importlib.import_module(f"experiment.{d1}.{d2}.experiment")
-    for d1 in os.listdir(_EXPERIMENTS_DIR)
-    if os.path.isdir(os.path.join(_EXPERIMENTS_DIR, d1))
-    for d2 in os.listdir(os.path.join(_EXPERIMENTS_DIR, d1))
-    if os.path.isdir(os.path.join(_EXPERIMENTS_DIR, d1, d2))
-    and os.path.exists(os.path.join(_EXPERIMENTS_DIR, d1, d2, "experiment.py"))
-]
+_EXPERIMENTS = [importlib.import_module(module) for module in config.EXPERIMENT_MODULES]
 
 
 class Sample(object):
