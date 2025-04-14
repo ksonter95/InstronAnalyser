@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MechAnalyser-Windows
-          path: dist/*
+          path: dist/MechAnalyser.exe
 
   build-macos-arm:
     runs-on: macos-latest
@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MechAnalyser-MacOS-ARM
-          path: dist/*
+          path: dist/MechAnalyser.app
 
   build-macos-x86_64:
     runs-on: macos-13
@@ -91,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MechAnalyser-MacOS-x86_64
-          path: dist/*
+          path: dist/MechAnalyser.app
 
   create-release:
     if: startsWith(github.ref, 'refs/tags/')
