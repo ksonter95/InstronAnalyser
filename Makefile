@@ -9,6 +9,13 @@ ENTRY := $(APP_PATH)/mech_analyser.py
 PYTHON ?= python
 PYINSTALLER ?= pyinstaller
 
+# Platform-specific pyinstaller options
+ifeq ($(shell uname -s),Darwin)
+	PYINSTALLER_OPTIONS := --windowed
+else
+	PYINSTALLER_OPTIONS := --windowed --onefile
+endif
+
 .PHONY: all clean dist
 
 all: dist
@@ -19,7 +26,7 @@ clean:
 
 dist: $(ENTRY)
 	$(PYINSTALLER) \
-		--windowed \
+		$(PYINSTALLER_OPTIONS) \
 		--name "$(APP_NAME)" \
 		--icon=$(ICON) \
 		--paths=$(APP_PATH) \
