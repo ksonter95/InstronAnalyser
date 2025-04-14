@@ -34,6 +34,8 @@ class Ui_MainWindow(object):
         self.a_OpenCsvs.setObjectName(u"a_OpenCsvs")
         self.a_Documentation = QAction(MainWindow)
         self.a_Documentation.setObjectName(u"a_Documentation")
+        self.a_Version = QAction(MainWindow)
+        self.a_Version.setObjectName(u"a_Version")
         self.tw_Main = QTabWidget(MainWindow)
         self.tw_Main.setObjectName(u"tw_Main")
         self.t_Files = QWidget()
@@ -252,6 +254,8 @@ class Ui_MainWindow(object):
         self.m_File.addAction(self.a_OpenDirectory)
         self.m_File.addAction(self.a_OpenCsvs)
         self.m_Help.addAction(self.a_Documentation)
+        self.m_Help.addSeparator()
+        self.m_Help.addAction(self.a_Version)
 
         self.retranslateUi(MainWindow)
 
@@ -268,6 +272,7 @@ class Ui_MainWindow(object):
         self.a_OpenDirectory.setText(QCoreApplication.translate("MainWindow", u"Open directory...", None))
         self.a_OpenCsvs.setText(QCoreApplication.translate("MainWindow", u"Open CSVs...", None))
         self.a_Documentation.setText(QCoreApplication.translate("MainWindow", u"Documentation", None))
+        self.a_Version.setText(QCoreApplication.translate("MainWindow", u"Version", None))
 #if QT_CONFIG(tooltip)
         self.pb_SaveAnalysis.setToolTip(QCoreApplication.translate("MainWindow", u"Select the directory to which all analysis outputs will be saved.  By default, the analysis corresponding to the input CSVs will be saved in the same directory as the CSVs.", None))
 #endif // QT_CONFIG(tooltip)

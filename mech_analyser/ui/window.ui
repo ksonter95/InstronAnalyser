@@ -387,6 +387,8 @@
      <string>Help</string>
     </property>
     <addaction name="a_Documentation"/>
+    <addaction name="separator"/>
+    <addaction name="a_Version"/>
    </widget>
    <addaction name="m_File"/>
    <addaction name="m_Help"/>
@@ -404,6 +406,11 @@
   <action name="a_Documentation">
    <property name="text">
     <string>Documentation</string>
+   </property>
+  </action>
+  <action name="a_Version">
+   <property name="text">
+    <string>Version</string>
    </property>
   </action>
  </widget>

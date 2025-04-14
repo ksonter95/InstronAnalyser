@@ -1,6 +1,7 @@
 import config
 import experiment.experiment as experiment
 import importlib
+import version
 
 from PySide6.QtCore import QUrl, Qt
 from PySide6.QtGui import QIcon, QDesktopServices
@@ -194,6 +195,7 @@ class Window(QMainWindow):
         self._window = Ui_MainWindow()
         self._window.setupUi(self)  # type: ignore
         self.setWindowIcon(icon)
+        self._window.a_Version.setText(f"Version: {version.__version__}")
 
         # Create the configuration widgets and the configuration widget manager
         self._config_widget_manager = ConfigWidgetManager()
