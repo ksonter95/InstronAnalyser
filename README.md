@@ -1,1 +1,1 @@
-# InstronAnalyser
+# MechAnalyser
