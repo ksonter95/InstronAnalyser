@@ -16,7 +16,7 @@ else
 	PYINSTALLER_OPTIONS := --windowed --onefile
 endif
 
-.PHONY: all clean dist
+.PHONY: all clean dist test
 
 all: dist
 
@@ -33,3 +33,11 @@ dist: $(ENTRY)
 		--collect-submodules=experiment \
 		$$($(PYTHON) -c "from $(APP_PATH).config import EXPERIMENT_MODULES; print(' '.join(f'--hidden-import {m}' for m in EXPERIMENT_MODULES))") \
 		$(ENTRY)
+
+test:
+	python -m unittest tests/experiment/test_data.py
+	python -m unittest tests/experiment/test_phase.py
+	python -m unittest tests/experiment/test_analyser.py
+	python -m unittest tests/study/test_sample.py
+	python -m unittest tests/study/test_study.py
+	python -m unittest tests/util/test_serialiser.py
