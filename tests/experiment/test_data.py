@@ -18,8 +18,10 @@ from mech_analyser.experiment.data import (
 from mech_analyser.util.serialiser import Serialiser
 import pandas as pd
 from pathlib import Path
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
 import tempfile
-from typing import cast
+from typing import Union, cast
 
 
 class TestBase(unittest.TestCase):
@@ -32,11 +34,14 @@ class TestBase(unittest.TestCase):
         Set up the unit test environment.
         """
 
+        self.app: Union[QApplication, QCoreApplication] = (
+            QApplication.instance() or QApplication([])
+        )
         self.columns: dict[str, Transcoder.Column] = {
             "Column1": Transcoder.Column(
                 name="Column1",
                 input_name="Input1 (units)",
-                output_name="Output1 (units)",
+                output_name="Output1\n(units)",
                 input_header_rows=[0, 1],
                 input_header_column=0,
                 output_header_column=0,
@@ -75,11 +80,12 @@ class TestBase(unittest.TestCase):
 
     def tearDown(self) -> None:
         """
-        Clean up the temporary CSV and XLSX files after tests.
+        Cleans up after tests.
         """
 
         self.test_csv.unlink(missing_ok=True)
         self.test_xlsx.unlink(missing_ok=True)
+        self.app.quit()
 
     def _create_temporary_file_paths(self) -> None:
         """
@@ -136,7 +142,7 @@ class TestTranscoder(TestBase):
         """
 
         input_name: str = self.transcoder.get_input_name("Column1")
-        self.assertEqual(input_name, "Input1 (units)")
+        self.assertEqual(input_name, self.columns["Column1"].input_name)
 
     def test_get_output_name(self) -> None:
         """
@@ -144,7 +150,7 @@ class TestTranscoder(TestBase):
         """
 
         output_name: str = self.transcoder.get_output_name("Column1")
-        self.assertEqual(output_name, "Output1 (units)")
+        self.assertEqual(output_name, self.columns["Column1"].output_name)
 
     def test_add_column(self) -> None:
         """
@@ -210,7 +216,18 @@ class TestTranscoder(TestBase):
         self.assertTrue(self.test_xlsx.exists())
 
         # Verify the sample data
-        saved_frame: pd.DataFrame = pd.read_excel(self.test_xlsx, sheet_name="TestSheet")  # type: ignore
+        saved_frame: pd.DataFrame = pd.read_excel(  # type: ignore
+            self.test_xlsx,
+            sheet_name="TestSheet",
+            header=[0, 1],
+        )
+        # Merge multi-line headers into single line, separated by space
+        saved_frame.columns = [
+            "\n".join(
+                ["" if row.startswith("Unnamed") else row for row in column]
+            ).strip()
+            for column in saved_frame.columns
+        ]
         saved_frame.rename(
             columns={c.output_name: c.name for c in self.columns.values()},
             inplace=True,
@@ -294,7 +311,18 @@ class TestData(TestBase):
         self.assertTrue(self.test_xlsx.exists())
 
         # Verify the sample data
-        saved_frame: pd.DataFrame = pd.read_excel(self.test_xlsx, sheet_name="Test Data")  # type: ignore
+        saved_frame: pd.DataFrame = pd.read_excel(  # type: ignore
+            self.test_xlsx,
+            sheet_name="Test Data",
+            header=[0, 1],
+        )
+        # Merge multi-line headers into single line, separated by space
+        saved_frame.columns = [
+            "\n".join(
+                ["" if row.startswith("Unnamed") else row for row in column]
+            ).strip()
+            for column in saved_frame.columns
+        ]
         saved_frame.rename(
             columns={c.output_name: c.name for c in self.columns.values()},
             inplace=True,
@@ -354,7 +382,18 @@ class TestRawTranscoder(TestTranscoder):
         self.assertTrue(self.test_xlsx.exists())
 
         # Verify the sample data
-        saved_frame: pd.DataFrame = pd.read_excel(self.test_xlsx, sheet_name="Raw Data")  # type: ignore
+        saved_frame: pd.DataFrame = pd.read_excel(  # type: ignore
+            self.test_xlsx,
+            sheet_name="Raw Data",
+            header=[0, 1],
+        )
+        # Merge multi-line headers into single line, separated by space
+        saved_frame.columns = [
+            "\n".join(
+                ["" if row.startswith("Unnamed") else row for row in column]
+            ).strip()
+            for column in saved_frame.columns
+        ]
         saved_frame.rename(
             columns={c.output_name: c.name for c in self.columns.values()},
             inplace=True,
@@ -495,7 +534,18 @@ class TestSummaryTranscoder(TestTranscoder):
         self.assertTrue(self.test_xlsx.exists())
 
         # Verify the sample data
-        saved_frame: pd.DataFrame = pd.read_excel(self.test_xlsx, sheet_name="Summary")  # type: ignore
+        saved_frame: pd.DataFrame = pd.read_excel(  # type: ignore
+            self.test_xlsx,
+            sheet_name="Summary",
+            header=[0, 1],
+        )
+        # Merge multi-line headers into single line, separated by space
+        saved_frame.columns = [
+            "\n".join(
+                ["" if row.startswith("Unnamed") else row for row in column]
+            ).strip()
+            for column in saved_frame.columns
+        ]
         saved_frame.rename(
             columns={c.output_name: c.name for c in self.columns.values()},
             inplace=True,

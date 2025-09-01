@@ -35,9 +35,9 @@ dist: $(ENTRY)
 		$(ENTRY)
 
 test:
-	python -m unittest tests/experiment/test_data.py
-	python -m unittest tests/experiment/test_phase.py
-	python -m unittest tests/experiment/test_analyser.py
-	python -m unittest tests/study/test_sample.py
-	python -m unittest tests/study/test_study.py
-	python -m unittest tests/util/test_serialiser.py
+	$(PYTHON) -m unittest tests/experiment/test_data.py
+	$(PYTHON) -m unittest tests/experiment/test_phase.py
+	$(PYTHON) -m unittest tests/experiment/test_analyser.py
+	$(PYTHON) -m unittest tests/study/test_sample.py
+	$(PYTHON) -m unittest tests/study/test_study.py
+	$(PYTHON) -m unittest tests/util/test_serialiser.py

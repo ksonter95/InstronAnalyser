@@ -8,7 +8,9 @@ from mech_analyser.experiment.data import (
 from mech_analyser.experiment.phase import Phase, Parameters, SerialisedPhase
 from mech_analyser.util.serialiser import Serialiser
 import pandas as pd
-from typing import Any, cast
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
+from typing import Any, Union, cast
 import unittest
 
 
@@ -22,6 +24,9 @@ class TestPhase(unittest.TestCase):
         Set up a Phase instance and related objects for testing.
         """
 
+        self.app: Union[QApplication, QCoreApplication] = (
+            QApplication.instance() or QApplication([])
+        )
         self.columns: dict[str, Transcoder.Column] = {
             "Column1": Transcoder.Column(
                 name="Column1",
@@ -49,6 +54,13 @@ class TestPhase(unittest.TestCase):
             ProcessedTranscoder(self.columns),
         )
         self.phase = Phase(self.raw_data, self.processed_data)
+
+    def tearDown(self) -> None:
+        """
+        Cleans up after tests.
+        """
+
+        self.app.quit()
 
     def test_initialisation(self) -> None:
         """

@@ -4,9 +4,10 @@ from mech_analyser.util.units import convert_from_base_units, convert_to_base_un
 import openpyxl.utils
 import openpyxl.worksheet.worksheet
 import pandas as pd
-import pint
 from pathlib import Path
-from typing import Any, Literal, Mapping, Self, Union, cast
+import pint
+import pyqtgraph as pg  # type: ignore
+from typing import Any, Literal, Mapping, Optional, Self, Union, cast
 
 # Serialised type aliases
 SerialisedColumn = Mapping[str, Union[str, int, list[int], type, pint.Unit]]
@@ -36,7 +37,9 @@ class Transcoder(Serialiser):
         Args:
             name: The name of the column as recognised by the program.
             input_name: The name of the column in the input file.
-            output_name: The name of the column in the output file.
+            output_name: The name of the column in the output file.  To utilise multiple
+                rows for the name of the column, use a newline character ('\n') to
+                separate the rows.
             input_header_rows: The rows in the input file that contain the header.
             input_header_column: The column in the input file that contains the header.
             output_header_column: The column in the output file that contains the header.
@@ -71,6 +74,23 @@ class Transcoder(Serialiser):
                         f"Header must occupy consecutive rows in CSV file: "
                         f"{self.input_header_rows}"
                     )
+
+        def get_output_name_as_tuple(self, number_of_rows: int) -> tuple[str, ...]:
+            """
+            Returns the output name as a tuple of strings, split by newline characters.
+
+            Args:
+                number_of_rows: The number of rows in the output file that contain the
+                    header.
+
+            Returns:
+                tuple[str, ...]: The output name as a tuple of strings.
+            """
+
+            return tuple(
+                self.output_name.split("\n")
+                + [""] * (number_of_rows - (self.output_name.count("\n") + 1))
+            )
 
         def load(self, input_file: Path, **kwargs: Any) -> pd.DataFrame:
             """
@@ -184,6 +204,14 @@ class Transcoder(Serialiser):
     @property
     def columns(self) -> dict[str, Column]:
         return self._columns
+
+    @property
+    def header_rows(self) -> int:
+        return (
+            max(column.output_name.count("\n") + 1 for column in self._columns.values())
+            if len(self._columns) > 0
+            else 1
+        )
 
     def get_column(self, name: str) -> Column:
         """
@@ -306,6 +334,8 @@ class Transcoder(Serialiser):
             raise ValueError("Output header column indices must be consecutive.")
 
         # Combine all columns into a single DataFrame, ordered by the output header column
+        # If the output name contains newline characters, it will be split into multiple
+        # rows in the output file
         output_frame: pd.DataFrame = pd.concat(
             [
                 frame[[column.name]].copy(deep=True)
@@ -316,38 +346,65 @@ class Transcoder(Serialiser):
         )
         output_frame.rename(
             columns={
-                column.name: column.output_name
+                column.name: self._get_output_name_as_tuple(column)
                 for column in ordered_columns
                 if column.output_name
             },
             inplace=True,
         )
+        output_frame.columns = pd.MultiIndex.from_tuples(output_frame.columns)  # type: ignore
         output_frame.reset_index(drop=True, inplace=True)
 
         # Convert the units of the output frame
         for column in ordered_columns:
             try:
-                output_frame[column.output_name] = output_frame[column.output_name].apply(  # type: ignore
+                output_frame[self._get_output_name_as_tuple(column)] = output_frame[
+                    self._get_output_name_as_tuple(column)
+                ].apply(  # type: ignore
                     lambda x: convert_from_base_units(x, column.output_units)  # type: ignore
                 )
             except pint.UndefinedUnitError:
                 raise ValueError(
-                    f"Column '{column.output_name}' in output file has undefined units: "
-                    f"{column.output_units}"
+                    f"Column '{self._get_output_name_as_tuple(column)}' in output file "
+                    f"has undefined units: {column.output_units}"
                 )
 
         # Save the frame to the output file
-        mode: Union[Literal["w"], Literal["a"]] = "w" if not output_file.exists() else "a"
-        with pd.ExcelWriter(output_file, engine="openpyxl", mode=mode) as writer:
+        mode: Literal["w", "a"] = "w" if not output_file.exists() else "a"
+        if_sheet_exists: Optional[Literal["overlay"]] = (
+            "overlay" if output_file.exists() else None
+        )
+        with pd.ExcelWriter(
+            output_file,
+            engine="openpyxl",
+            mode=mode,
+            if_sheet_exists=if_sheet_exists,
+        ) as writer:
+            # NOTE: header and data written separately to avoid blank row between them and
+            #       to allow for multi-row headers without an index column
+            output_frame.drop(output_frame.index).to_excel(  # type: ignore
+                writer,
+                sheet_name=name,
+                startcol=ordered_columns[0].output_header_column,
+            )
+            # NOTE: if the Excel file already exists and therefore was opened in append
+            #       mode, this second call to to_excel() would always raise an exception.
+            #       Therefore, it is necessary to specify if_sheet_exists="overlay" when
+            #       opening the ExcelWriter in append mode.
             output_frame.to_excel(  # type: ignore
                 writer,
                 sheet_name=name,
-                index=False,
+                header=False,
+                startrow=self.header_rows - 1,
                 startcol=ordered_columns[0].output_header_column,
             )
 
-            # Autofit the column size
             worksheet: openpyxl.worksheet.worksheet.Worksheet = writer.sheets[name]
+
+            # Remove the index column
+            worksheet.delete_cols(1)
+
+            # Autofit the column size
             for id, column in enumerate(worksheet.iter_cols(), start=1):
                 max_length: int = max(
                     len(str(cell.value)) if cell.value is not None else 0
@@ -394,6 +451,19 @@ class Transcoder(Serialiser):
         )
 
         return cls._deserialise(id, serialised_object, columns, **kwargs)
+
+    def _get_output_name_as_tuple(self, column: Column) -> tuple[str, ...]:
+        """
+        Returns the output name as a tuple of strings, split by newline characters.
+
+        Args:
+            column: The column object.
+
+        Returns:
+            tuple[str, ...]: The output name as a tuple of strings.
+        """
+
+        return column.get_output_name_as_tuple(self.header_rows)
 
     @classmethod
     def _deserialise(
@@ -503,6 +573,9 @@ class Data(Serialiser):
         self._frame: pd.DataFrame = frame.copy(deep=True)
         self._frame.reset_index(drop=True, inplace=True)
         self._transcoder: Transcoder = transcoder
+        self._plot: pg.PlotWidget = (
+            pg.PlotWidget()
+        )  # TODO: evaluate if plotting should be external to the class
 
     @property
     def frame(self) -> pd.DataFrame:
@@ -513,8 +586,24 @@ class Data(Serialiser):
         return self._transcoder
 
     @property
+    def plot(self) -> pg.PlotWidget:
+        # TODO: evaluate if plotting should be external to the class
+        return self._plot
+
+    @property
     def columns(self) -> list[str]:
         return [i for i in self._frame.columns]
+
+    def generate_plot(self, **kwargs: dict[str, Any]) -> None:
+        """
+        Generates a plot of the data.
+
+        NOTE: this is an abstract method that will be overwritten in the child classes.
+
+        TODO: evaluate if plotting should be external to the class
+        """
+
+        pass
 
     def save(self, output_file: Path, name: str = "", **kwargs: Any) -> None:
         """
@@ -709,6 +798,8 @@ class RawData(Data):
     ) -> None:
         super().__init__(frame, transcoder, id)
 
+        self.generate_plot()
+
     @property
     def transcoder(self) -> RawTranscoder:
         return cast(RawTranscoder, self._transcoder)
@@ -832,6 +923,10 @@ class SummaryData(Data):
     @property
     def transcoder(self) -> SummaryTranscoder:
         return cast(SummaryTranscoder, self._transcoder)
+
+    @property
+    def collate_vertical(self) -> bool:
+        return len(self._frame) == 1
 
     def append_row(self, row: Row) -> None:
         """

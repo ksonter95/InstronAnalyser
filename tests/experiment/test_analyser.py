@@ -13,7 +13,9 @@ from mech_analyser.experiment.phase import Phase, SerialisedPhase
 from mech_analyser.util.serialiser import Serialiser
 import pandas as pd
 from pathlib import Path
-from typing import Any, cast
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication
+from typing import Any, Union, cast
 import unittest
 
 
@@ -27,6 +29,9 @@ class TestAnalyser(unittest.TestCase):
         Set up an Analyser instance and related objects for testing.
         """
 
+        self.app: Union[QApplication, QCoreApplication] = (
+            QApplication.instance() or QApplication([])
+        )
         self.parameters = Parameters(id="1234")
         self.columns: dict[str, Transcoder.Column] = {
             "Column1": Transcoder.Column(
@@ -84,6 +89,7 @@ class TestAnalyser(unittest.TestCase):
         """
 
         self.test_xlsx.unlink(missing_ok=True)
+        self.app.quit()
 
     def test_initialisation(self) -> None:
         """
