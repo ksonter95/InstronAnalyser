@@ -16,7 +16,7 @@ SerialisedPhase = Mapping[str, Union[str, SerialisedData]]
 @dataclasses.dataclass
 class Parameters:
     """
-    Base class for all sample parameters.
+    Base class for all phase parameters.
     """
 
     pass

@@ -558,7 +558,7 @@ class Data(Serialiser):
     """
     Base class for all data.
 
-    TODO: Alternative for self._plot, self.plot(), and self.generate_plot() not yet
+    TODO: Alternative for self._plot, self.plot, and self.generate_plot() not yet
           implemented.
 
     Args:
@@ -756,6 +756,8 @@ class RawTranscoder(Transcoder):
     Args:
         columns: The mapping between the column name that the program recognises, the
             column name in the input file, and the column name in the output file.
+        id: The unique identifier for the transcoder. If empty, a new identifier is
+            generated.
     """
 
     def save(
@@ -833,6 +835,8 @@ class ProcessedTranscoder(Transcoder):
     Args:
         columns: The mapping between the column name that the program recognises, the
             column name in the input file, and the column name in the output file.
+        id: The unique identifier for the transcoder. If empty, a new identifier is
+            generated.
     """
 
     pass
@@ -868,6 +872,8 @@ class SummaryTranscoder(Transcoder):
     Args:
         columns: The mapping between the column name that the program recognises, the
             column name in the input file, and the column name in the output file.
+        id: The unique identifier for the transcoder. If empty, a new identifier is
+            generated.
     """
 
     def save(
