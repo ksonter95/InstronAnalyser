@@ -272,24 +272,243 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0" colspan="5">
-      <widget class="QLabel" name="l_CollatedRawDataColumns">
+     <item row="2" column="0">
+      <widget class="QLabel" name="l_Transcoder">
        <property name="toolTip">
-        <string>Select all columns within the raw dataset that will be included in the collated raw dataset</string>
+        <string>Configure the transcoder settings for the raw data input, raw data output, processed data output, and summary data output</string>
        </property>
        <property name="text">
-        <string>Collation</string>
+        <string>Transcoder:</string>
        </property>
       </widget>
      </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="cb_Transcoder">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <item>
+        <property name="text">
+         <string>Raw</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Processed</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Summary</string>
+        </property>
+       </item>
+      </widget>
+     </item>
      <item row="3" column="0" colspan="5">
-      <widget class="QListWidget" name="lst_CollatedRawDataColumns">
-       <property name="toolTip">
-        <string>Select all columns within the raw dataset that will be included in the collated raw dataset</string>
+      <widget class="QStackedWidget" name="sw_Transcoder">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="selectionMode">
-        <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+       <property name="currentIndex">
+        <number>0</number>
        </property>
+       <widget class="QWidget" name="w_RawTranscoder">
+        <property name="toolTip">
+         <string>Configure the raw data input and output transcoder settings</string>
+        </property>
+        <layout class="QGridLayout" name="gl_RawTranscoder">
+         <item row="0" column="0">
+          <widget class="QTableWidget" name="tbl_RawTranscoder">
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+           </property>
+           <property name="editTriggers">
+            <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed</set>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectionBehavior::SelectItems</enum>
+           </property>
+           <property name="rowCount">
+            <number>0</number>
+           </property>
+           <property name="columnCount">
+            <number>9</number>
+           </property>
+           <attribute name="horizontalHeaderVisible">
+            <bool>true</bool>
+           </attribute>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Input Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Input Units</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Input Row</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Input Column</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Output Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Output Units</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Output Column</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Collate</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="w_ProcessedTranscoder">
+        <property name="toolTip">
+         <string>Configure the processed data output transcoder settings</string>
+        </property>
+        <layout class="QGridLayout" name="gl_ProcessedTranscoder">
+         <item row="0" column="0">
+          <widget class="QTableWidget" name="tbl_ProcessedTranscoder">
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+           </property>
+           <property name="editTriggers">
+            <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed</set>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectionBehavior::SelectItems</enum>
+           </property>
+           <property name="rowCount">
+            <number>0</number>
+           </property>
+           <property name="columnCount">
+            <number>5</number>
+           </property>
+           <attribute name="horizontalHeaderVisible">
+            <bool>true</bool>
+           </attribute>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Output Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Units</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Column</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Collate</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="w_SummaryTranscoder">
+        <property name="toolTip">
+         <string>Configure the summary data output transcoder settings</string>
+        </property>
+        <layout class="QGridLayout" name="gl_SummaryTranscoder">
+         <item row="0" column="0">
+          <widget class="QTableWidget" name="tbl_SummaryTranscoder">
+           <property name="horizontalScrollBarPolicy">
+            <enum>Qt::ScrollBarPolicy::ScrollBarAsNeeded</enum>
+           </property>
+           <property name="editTriggers">
+            <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed</set>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectionBehavior::SelectItems</enum>
+           </property>
+           <property name="rowCount">
+            <number>0</number>
+           </property>
+           <property name="columnCount">
+            <number>5</number>
+           </property>
+           <attribute name="horizontalHeaderVisible">
+            <bool>true</bool>
+           </attribute>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>true</bool>
+           </attribute>
+           <column>
+            <property name="text">
+             <string>Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Output Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Units</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Column</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Collate</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </item>
     </layout>
