@@ -10,6 +10,7 @@ on:
 
 jobs:
   build-windows:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'windows' || inputs.target == 'all' }}
     runs-on: windows-latest
     steps:
       - name: Checkout code
@@ -36,6 +37,7 @@ jobs:
           path: dist/MechAnalyser.exe
 
   build-macos-arm:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'macos-arm' || inputs.target == 'all' }}
     runs-on: macos-latest
     steps:
       - name: Checkout code
@@ -70,6 +72,7 @@ jobs:
           path: dist/MechAnalyser.zip
 
   build-macos-x86_64:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'macos-x86_64' || inputs.target == 'all' }}
     runs-on: macos-13
     steps:
       - name: Checkout code
