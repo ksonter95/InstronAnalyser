@@ -60,6 +60,7 @@ class Analyser(Serialiser):
         parameters: The parameters to use when analysing the experiment.
         raw_data: The raw experiment data.
         summary_data: The summary of the analysis.
+        phases: The phases of the experiment.
         id: The unique identifier for the analyser. If empty, a new identifier is
             generated.
     """
@@ -119,6 +120,11 @@ class Analyser(Serialiser):
                 results.
         """
 
+        # Delete the file if it already exists
+        if output_file.exists():
+            output_file.unlink()
+
+        # Save the file
         self._raw_data.save(output_file, **kwargs)
         self._summary_data.save(output_file, **kwargs)
         for phase in self._phases:

@@ -10,11 +10,27 @@ class Transcoder(ma_data.Transcoder):
     Base class for all collation data file transcoders.
 
     Args:
-        columns: The mapping between the column name that the program recognises, the
-            column name in the input file, and the column name in the output file.
+        base_columns: The mapping between the column name of the data to be collated that
+            the program recognises and the column name in the output file.
+        columns: The mapping between the column name that the program recognises and the
+            column name in the output file.
         id: The unique identifier for the transcoder. If empty, a new identifier is
             generated.
     """
+
+    def __init__(
+        self,
+        base_columns: dict[str, ma_data.Transcoder.Column],
+        columns: dict[str, ma_data.Transcoder.Column] = {},
+        id: str = "",
+    ) -> None:
+        super().__init__(columns, id)
+
+        self._base_columns: dict[str, ma_data.Transcoder.Column] = base_columns
+
+    @property
+    def base_columns(self) -> dict[str, ma_data.Transcoder.Column]:
+        return self._base_columns
 
     def load(self, input_file: Path, **kwargs: Any) -> pd.DataFrame:
         """
@@ -33,148 +49,6 @@ class Transcoder(ma_data.Transcoder):
         """
 
         raise NotImplementedError("Collation transcoders cannot load data.")
-
-
-class Collation(ma_data.Data):
-    """
-    Base class for all collated data.
-
-    Args:
-        frame: The underlying pd.DataFrame representation of the data.
-        transcoder: The transcoder used to save the data.
-        id: The unique identifier for the data. If empty, a new identifier is generated.
-    """
-
-    def __init__(
-        self,
-        frame: pd.DataFrame,
-        transcoder: Transcoder,
-        id: str = "",
-    ) -> None:
-        super().__init__(frame, transcoder, id)
-
-    @property
-    def transcoder(self) -> Transcoder:
-        return cast(Transcoder, self._transcoder)
-
-    def append(self, data: ma_data.Data, sample_name: str) -> None:
-        """
-        Appends the data to the collated data.
-
-        NOTE: this is an abstract method that will be overwritten in the child classes.
-
-        Args:
-            data: The data to append.
-            sample_name: The name of the sample to which the data belongs.
-        """
-
-        pass
-
-
-class VerticalTranscoder(Transcoder):
-    """
-    Base class for all vertically-collated data file transcoders.
-
-    Args:
-        columns: The mapping between the column name that the program recognises, the
-            column name in the input file, and the column name in the output file.
-        id: The unique identifier for the transcoder. If empty, a new identifier is
-            generated.
-    """
-
-    def __init__(
-        self,
-        columns: dict[str, ma_data.Transcoder.Column],
-        id: str = "",
-    ) -> None:
-        super().__init__(columns, id)
-
-        assert "Sample" in self.columns, "A 'Sample' column must be defined."
-
-    @property
-    def sample_column(self) -> ma_data.Transcoder.Column:
-        return self.get_column("Sample")
-
-
-class VerticalCollation(Collation):
-    """
-    Base class for all vertically-collated data.
-
-    Args:
-        transcoder: The transcoder used to load and save the data.
-        frame: The underlying pd.DataFrame representation of the data.  If none is
-            provided, an empty frame is created using the transcoder columns.
-        id: The unique identifier for the data. If empty, a new identifier is generated.
-    """
-
-    def __init__(
-        self,
-        transcoder: VerticalTranscoder,
-        frame: Optional[pd.DataFrame] = None,
-        id: str = "",
-    ) -> None:
-
-        super().__init__(
-            frame or pd.DataFrame(columns=list(transcoder.columns)),
-            transcoder,
-            id,
-        )
-
-    @property
-    def transcoder(self) -> VerticalTranscoder:
-        return cast(VerticalTranscoder, self._transcoder)
-
-    def append(self, data: ma_data.Data, sample_name: str) -> None:
-        """
-        Appends the data to the collated data.
-
-        Args:
-            data: The data to append.
-            sample_name: The name of the sample to which the data belongs.
-        """
-
-        # Extract the relevant columns from the data and add the sample name
-        subset_frame: pd.DataFrame = data.frame[
-            [
-                column_name
-                for column_name in data.transcoder.columns
-                if column_name in self.transcoder.columns
-            ]
-        ].copy(deep=True)
-        subset_frame.insert(0, self.transcoder.sample_column.name, sample_name)  # type: ignore
-
-        # Append the subset frame to the collated frame
-        self._frame = pd.concat([self._frame, subset_frame], ignore_index=True)
-
-
-class HorizontalTranscoder(Transcoder):
-    """
-    Base class for all horizontally-collated data file transcoders.
-
-    Args:
-        columns: The mapping between the column name that the program recognises, the
-            column name in the input file, and the column name in the output file.
-        base_columns: The mapping between the column name of the data to be collated that
-            the program recognises and the column name in the output file.  The elements
-            of `columns` should be constructed from this mapping and the sample name
-            according to the format `{sample name}: {base column name}`.
-        id: The unique identifier for the transcoder. If empty, a new identifier is
-            generated.
-    """
-
-    def __init__(
-        self,
-        columns: dict[str, ma_data.Transcoder.Column] = {},
-        base_columns: dict[str, ma_data.Transcoder.Column] = {},
-        id: str = "",
-    ) -> None:
-        super().__init__(columns, id)
-
-        self._base_columns: dict[str, ma_data.Transcoder.Column] = base_columns
-
-    @property
-    def base_columns(self) -> dict[str, ma_data.Transcoder.Column]:
-        return self._base_columns
 
     def get_base_column(self, base_name: str) -> ma_data.Transcoder.Column:
         """
@@ -224,7 +98,7 @@ class HorizontalTranscoder(Transcoder):
         """
 
         # Add the base column
-        self._base_columns[base_column.name] = base_column
+        self._base_columns[base_column.name] = base_column.copy()
 
         # Adds any columns that can be derived from this base column
         # TODO
@@ -243,6 +117,188 @@ class HorizontalTranscoder(Transcoder):
 
         # Remove all columns derived from this base column
         # TODO
+
+    def remove_all_base_columns(self) -> None:
+        """
+        Removes all base columns from the mapping.
+        """
+
+        self._base_columns.clear()
+
+    def reorder_base_columns(self) -> None:
+        """
+        Reorders the base columns such that their output header columns are indexed
+        sequentially from 0.
+        """
+
+        sorted_columns: list[ma_data.Transcoder.Column] = list(
+            self._base_columns.values()
+        )
+        sorted_columns.sort(key=lambda c: c.output_header_column)
+
+        # Update the output header column indices
+        for i, column in enumerate(sorted_columns):
+            self._base_columns[column.name].output_header_column = i
+
+    def init_columns(self) -> None:
+        """
+        Initialises the columns from the base columns.
+        """
+
+        self.reorder_base_columns()
+        self.remove_all_columns()
+
+
+class Collation(ma_data.Data):
+    """
+    Base class for all collated data.
+
+    Args:
+        frame: The underlying pd.DataFrame representation of the data.
+        transcoder: The transcoder used to save the data.
+        id: The unique identifier for the data. If empty, a new identifier is generated.
+    """
+
+    def __init__(
+        self,
+        frame: pd.DataFrame,
+        transcoder: Transcoder,
+        id: str = "",
+    ) -> None:
+        super().__init__(frame, transcoder, id)
+
+    @property
+    def transcoder(self) -> Transcoder:
+        return cast(Transcoder, self._transcoder)
+
+    def append(self, data: ma_data.Data, name: str) -> None:
+        """
+        Appends the data to the collated data.
+
+        NOTE: this is an abstract method that will be overwritten in the child classes.
+
+        Args:
+            data: The data to append.
+            name: The name of the data.
+        """
+
+        pass
+
+
+class VerticalTranscoder(Transcoder):
+    """
+    Base class for all vertically-collated data file transcoders.
+
+    Args:
+        base_columns: The mapping between the column name of the data to be collated that
+            the program recognises and the column name in the output file.
+        heading_column: The mapping between the column name that the program recognises
+            and the column name in the output file for the column which contains the
+            row heading.
+        columns: The mapping between the column name that the program recognises and the
+            column name in the output file.
+        id: The unique identifier for the transcoder. If empty, a new identifier is
+            generated.
+    """
+
+    def __init__(
+        self,
+        base_columns: dict[str, ma_data.Transcoder.Column],
+        heading_column: ma_data.Transcoder.Column,
+        columns: dict[str, ma_data.Transcoder.Column] = {},
+        id: str = "",
+    ) -> None:
+        super().__init__(base_columns, columns, id)
+
+        self._heading_column: ma_data.Transcoder.Column = heading_column
+
+    @property
+    def heading_column(self) -> ma_data.Transcoder.Column:
+        return self._heading_column
+
+    def init_columns(self) -> None:
+        """
+        Initialises the columns from the base columns.
+        """
+
+        super().init_columns()
+
+        # Add the heading column
+        self._columns[self._heading_column.name] = self._heading_column.copy()
+
+        # Add the base columns, offsetting their output header columns by 1 to account
+        # for the heading column
+        for column_name, column in self._base_columns.items():
+            self._columns[column_name] = column.copy()
+            self._columns[column_name].output_header_column += 1
+
+
+class VerticalCollation(Collation):
+    """
+    Base class for all vertically-collated data.
+
+    Args:
+        transcoder: The transcoder used to load and save the data.
+        frame: The underlying pd.DataFrame representation of the data.  If none is
+            provided, an empty frame is created using the transcoder columns.
+        id: The unique identifier for the data. If empty, a new identifier is generated.
+    """
+
+    def __init__(
+        self,
+        transcoder: VerticalTranscoder,
+        frame: Optional[pd.DataFrame] = None,
+        id: str = "",
+    ) -> None:
+
+        super().__init__(
+            frame or pd.DataFrame(columns=list(transcoder.columns)),
+            transcoder,
+            id,
+        )
+
+    @property
+    def transcoder(self) -> VerticalTranscoder:
+        return cast(VerticalTranscoder, self._transcoder)
+
+    def append(self, data: ma_data.Data, name: str) -> None:
+        """
+        Appends the data to the collated data.
+
+        Args:
+            data: The data to append.
+            name: The name of the data.
+        """
+
+        # Extract the relevant columns from the data and add the name
+        subset_frame: pd.DataFrame = data.frame[
+            [column_name for column_name in self.transcoder.base_columns]
+        ].copy(deep=True)
+        subset_frame.insert(0, self.transcoder.heading_column.name, name)  # type: ignore
+
+        # Append the subset frame to the collated frame
+        if self._frame.empty:
+            self._frame = subset_frame.copy(deep=True)
+        else:
+            self._frame = pd.concat([self._frame, subset_frame], ignore_index=True)
+
+
+class HorizontalTranscoder(Transcoder):
+    """
+    Base class for all horizontally-collated data file transcoders.
+
+    Args:
+        base_columns: The mapping between the column name of the data to be collated that
+            the program recognises and the column name in the output file.  The elements
+            of `columns` should be constructed from this mapping and the data name
+            according to the format `{data name}: {base column name}`.
+        columns: The mapping between the column name that the program recognises and the
+            column name in the output file.
+        id: The unique identifier for the transcoder. If empty, a new identifier is
+            generated.
+    """
+
+    pass
 
 
 class HorizontalCollation(Collation):
@@ -268,30 +324,30 @@ class HorizontalCollation(Collation):
     def transcoder(self) -> HorizontalTranscoder:
         return cast(HorizontalTranscoder, self._transcoder)
 
-    def append(self, data: ma_data.Data, sample_name: str) -> None:
+    def append(self, data: ma_data.Data, name: str) -> None:
         """
         Appends the data to the collated data.
 
         Args:
             data: The data to append.
-            sample_name: The name of the sample to which the data belongs.
+            name: The name of the data.
         """
 
-        # Extract the relevant columns from the data and add the sample name
-        base_columns: list[str] = [
-            column_name
-            for column_name in data.transcoder.columns
-            if column_name in self.transcoder.base_columns
-        ]
-        subset_frame: pd.DataFrame = data.frame[base_columns].copy(deep=True)
+        # Extract the relevant columns from the data and add the name
+        subset_frame: pd.DataFrame = data.frame[
+            [column_name for column_name in self.transcoder.base_columns]
+        ].copy(deep=True)
         subset_frame.columns = [
-            f"{sample_name}: {column_name}" for column_name in subset_frame.columns
+            f"{name}: {column_name}" for column_name in subset_frame.columns
         ]
 
         # Append the subset frame to the collated frame
-        self._frame = pd.concat([self._frame, subset_frame], axis=1)
+        if self._frame.empty:
+            self._frame = subset_frame.copy(deep=True)
+        else:
+            self._frame = pd.concat([self._frame, subset_frame], axis=1)
 
-        # Update the transcoder columns to include the new sample columns
+        # Update the transcoder columns to include the new columns
         start_index: int = (
             max(
                 [c.output_header_column for c in self.transcoder.columns.values()],
@@ -299,14 +355,11 @@ class HorizontalCollation(Collation):
             )
             + 1
         )
-        for column_name, column in data.transcoder.columns.items():
-            if column_name not in self.transcoder.base_columns:
-                continue
-
+        for column_name, column in self.transcoder.base_columns.items():
             self.transcoder.add_column(
                 ma_data.Transcoder.Column(
-                    name=f"{sample_name}: {column_name}",
-                    output_name=f"{sample_name}\n{column.output_name}",
+                    name=f"{name}: {column_name}",
+                    output_name=f"{name}\n{column.output_name}",
                     output_header_column=start_index + column.output_header_column,
                     data_type=column.data_type,
                     input_units=column.input_units,
@@ -320,29 +373,43 @@ class HorizontalTranscoderWithHeader(HorizontalTranscoder):
     Base class for all horizontally-collated data file transcoders with a header column.
 
     Args:
-        columns: The mapping between the column name that the program recognises, the
-            column name in the input file, and the column name in the output file.
         base_columns: The mapping between the column name of the data to be collated that
             the program recognises and the column name in the output file.  The elements
-            of `columns` should be constructed from this mapping and the sample name
-            according to the format `{sample name}: {base column name}`.
+            of `columns` should be constructed from this mapping and the data name
+            according to the format `{data name}: {base column name}`.
+        heading_column: The mapping between the column name that the program recognises
+            and the column name in the output file for the column which contains the
+            row heading.
+        columns: The mapping between the column name that the program recognises and the
+            column name in the output file.
         id: The unique identifier for the transcoder. If empty, a new identifier is
             generated.
     """
 
     def __init__(
         self,
-        columns: dict[str, ma_data.Transcoder.Column],
         base_columns: dict[str, ma_data.Transcoder.Column],
+        heading_column: ma_data.Transcoder.Column,
+        columns: dict[str, ma_data.Transcoder.Column] = {},
         id: str = "",
     ) -> None:
-        super().__init__(columns, base_columns, id)
+        super().__init__(base_columns, columns, id)
 
-        assert "Row Header" in self.base_columns, "A 'Row Header' column must be defined."
+        self._heading_column: ma_data.Transcoder.Column = heading_column
 
     @property
-    def row_header_column(self) -> ma_data.Transcoder.Column:
-        return self.get_column("Row Header")
+    def heading_column(self) -> ma_data.Transcoder.Column:
+        return self._heading_column
+
+    def init_columns(self) -> None:
+        """
+        Initialises the columns from the base columns.
+        """
+
+        super().init_columns()
+
+        # Add the heading column
+        self._columns[self._heading_column.name] = self._heading_column.copy()
 
 
 class HorizontalCollationWithHeader(HorizontalCollation):
@@ -368,66 +435,23 @@ class HorizontalCollationWithHeader(HorizontalCollation):
     def transcoder(self) -> HorizontalTranscoderWithHeader:
         return cast(HorizontalTranscoderWithHeader, self._transcoder)
 
-    def append(self, data: ma_data.Data, sample_name: str) -> None:
+    def append(self, data: ma_data.Data, name: str) -> None:
         """
         Appends the data to the collated data.  The row header column is assumed to be
         the same for all data sets.
 
         Args:
             data: The data to append.
-            sample_name: The name of the sample to which the data belongs.
+            name: The name of the data.
         """
 
         # Add the row header column to all blank frames
         if self._frame.empty:
-            self._frame = pd.concat(
-                [
-                    self._frame,
-                    data.frame[[self.transcoder.row_header_column.name]].copy(deep=True),
-                ],
-                axis=1,
+            self._frame = data.frame[[self.transcoder.heading_column.name]].copy(
+                deep=True
             )
 
-        # Extract the relevant columns from the data and add the sample name
-        base_columns: list[str] = [
-            column_name
-            for column_name in data.transcoder.columns
-            if column_name in self.transcoder.base_columns
-            and column_name != self.transcoder.row_header_column.name
-        ]
-        subset_frame: pd.DataFrame = data.frame[base_columns].copy(deep=True)
-        subset_frame.columns = [
-            f"{sample_name}: {column_name}" for column_name in subset_frame.columns
-        ]
-
-        # Append the subset frame to the collated frame
-        self._frame = pd.concat([self._frame, subset_frame], axis=1)
-
-        # Update the transcoder columns to include the new sample columns
-        start_index: int = (
-            max(
-                [c.output_header_column for c in self.transcoder.columns.values()],
-                default=-1,
-            )
-            + 1
-        )
-        for column_name, column in data.transcoder.columns.items():
-            if (
-                column_name not in self.transcoder.base_columns
-                or column_name == self.transcoder.row_header_column.name
-            ):
-                continue
-
-            self.transcoder.add_column(
-                ma_data.Transcoder.Column(
-                    name=f"{sample_name}: {column_name}",
-                    output_name=f"{sample_name}\n{column.output_name}",
-                    output_header_column=start_index + column.output_header_column,
-                    data_type=column.data_type,
-                    input_units=column.input_units,
-                    output_units=column.output_units,
-                )
-            )
+        super().append(data, name)
 
 
 class RawTranscoder(HorizontalTranscoder):
@@ -435,8 +459,12 @@ class RawTranscoder(HorizontalTranscoder):
     Base class for all collated raw data file transcoders.
 
     Args:
-        columns: The mapping between the column name that the program recognises, the
-            column name in the input file, and the column name in the output file.
+        base_columns: The mapping between the column name of the data to be collated that
+            the program recognises and the column name in the output file.  The elements
+            of `columns` should be constructed from this mapping and the data name
+            according to the format `{data name}: {base column name}`.
+        columns: The mapping between the column name that the program recognises and the
+            column name in the output file.
         id: The unique identifier for the transcoder. If empty, a new identifier is
             generated.
     """
@@ -492,8 +520,12 @@ class ProcessedTranscoder(HorizontalTranscoder):
     Base class for all collated processed data file transcoders.
 
     Args:
-        columns: The mapping between the column name that the program recognises, the
-            column name in the input file, and the column name in the output file.
+        base_columns: The mapping between the column name of the data to be collated that
+            the program recognises and the column name in the output file.  The elements
+            of `columns` should be constructed from this mapping and the data name
+            according to the format `{data name}: {base column name}`.
+        columns: The mapping between the column name that the program recognises and the
+            column name in the output file.
         id: The unique identifier for the transcoder. If empty, a new identifier is
             generated.
     """
@@ -530,47 +562,18 @@ class SummaryVerticalTranscoder(VerticalTranscoder):
     Base class for all vertically-collated summary data file transcoders.
 
     Args:
-        columns: The mapping between the column name that the program recognises, the
-            column name in the input file, and the column name in the output file.
-        name: The name of the summary.
+        base_columns: The mapping between the column name of the data to be collated that
+            the program recognises and the column name in the output file.
+        heading_column: The mapping between the column name that the program recognises
+            and the column name in the output file for the column which contains the
+            row heading.
+        columns: The mapping between the column name that the program recognises and the
+            column name in the output file.
         id: The unique identifier for the transcoder. If empty, a new identifier is
             generated.
     """
 
-    def __init__(
-        self,
-        columns: dict[str, ma_data.Transcoder.Column] = {},
-        name: str = "Summary",
-        id: str = "",
-    ) -> None:
-        super().__init__(columns, id)
-
-        self._name: str = name
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    def save(
-        self,
-        output_file: Path,
-        frame: pd.DataFrame,
-        name: str = "",
-        **kwargs: Any,
-    ) -> None:
-        """
-        Saves the summary frame to the output file.
-
-        NOTE: This method can be overwritten in the child classes if the output file
-                is not an Excel file.
-
-        Args:
-            output_file: The path to the output file.
-            frame: The frame to save to the output file.
-            name: The name by which the data will be referenced within the output file.
-        """
-
-        super().save(output_file, frame, name or self._name, **kwargs)
+    pass
 
 
 class SummaryVerticalCollation(VerticalCollation):
@@ -599,52 +602,20 @@ class SummaryHorizontalTranscoder(HorizontalTranscoderWithHeader):
     column.
 
     Args:
-        columns: The mapping between the column name that the program recognises, the
-            column name in the input file, and the column name in the output file.
         base_columns: The mapping between the column name of the data to be collated that
-            the program recognises and the column name in the output file. The elements of
-            columns should be constructed from this mapping and the sample name
-            according to the format {sample name}: {base column name}.
-        name: The name of the summary.
+            the program recognises and the column name in the output file.  The elements
+            of `columns` should be constructed from this mapping and the data name
+            according to the format `{data name}: {base column name}`.
+        heading_column: The mapping between the column name that the program recognises
+            and the column name in the output file for the column which contains the
+            row heading.
+        columns: The mapping between the column name that the program recognises and the
+            column name in the output file.
         id: The unique identifier for the transcoder. If empty, a new identifier is
             generated.
     """
 
-    def __init__(
-        self,
-        columns: dict[str, ma_data.Transcoder.Column] = {},
-        base_columns: dict[str, ma_data.Transcoder.Column] = {},
-        name: str = "Summary",
-        id: str = "",
-    ) -> None:
-        super().__init__(columns, base_columns, id)
-
-        self._name: str = name
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    def save(
-        self,
-        output_file: Path,
-        frame: pd.DataFrame,
-        name: str = "",
-        **kwargs: Any,
-    ) -> None:
-        """
-        Saves the summary frame to the output file.
-
-        NOTE: This method can be overwritten in the child classes if the output file
-                is not an Excel file.
-
-        Args:
-            output_file: The path to the output file.
-            frame: The frame to save to the output file.
-            name: The name by which the data will be referenced within the output file.
-        """
-
-        super().save(output_file, frame, name or self._name, **kwargs)
+    pass
 
 
 class SummaryHorizontalCollation(HorizontalCollationWithHeader):
@@ -668,6 +639,7 @@ class SummaryHorizontalCollation(HorizontalCollationWithHeader):
 
 
 # Summary type aliases
+SummaryTranscoder = Union[SummaryHorizontalTranscoder, SummaryVerticalTranscoder]
 SummaryCollation = Union[SummaryHorizontalCollation, SummaryVerticalCollation]
 
 
@@ -677,7 +649,8 @@ class Collator(Serialiser):
 
     Args:
         raw_collation: The collated raw data.
-        summary_collations: The list of all summary collations.
+        summary_collations: The dictionary of all summary collations.  The keys are the
+            names of the summary collations.
         id: The unique identifier for the collator. If empty, a new identifier is
             generated.
     """
@@ -685,20 +658,20 @@ class Collator(Serialiser):
     def __init__(
         self,
         raw_collation: RawCollation,
-        summary_collations: list[SummaryCollation],
+        summary_collations: dict[str, SummaryCollation],
         id: str = "",
     ) -> None:
         super().__init__(id)
 
         self._raw_collation: RawCollation = raw_collation
-        self._summary_collations: list[SummaryCollation] = summary_collations
+        self._summary_collations: dict[str, SummaryCollation] = summary_collations
 
     @property
     def raw_collation(self) -> RawCollation:
         return self._raw_collation
 
     @property
-    def summary_collations(self) -> list[SummaryCollation]:
+    def summary_collations(self) -> dict[str, SummaryCollation]:
         return self._summary_collations
 
     def save(self, output_file: Path, **kwargs: Any) -> None:
@@ -710,6 +683,11 @@ class Collator(Serialiser):
             output_file: The path to the output file which will contain the collation.
         """
 
+        # Remove the file if it already exists
+        if output_file.exists():
+            output_file.unlink()
+
+        # Save the raw and summary collations
         self._raw_collation.save(output_file, **kwargs)
-        for summary_collation in self.summary_collations:
-            summary_collation.save(output_file, **kwargs)
+        for name, summary_collation in self.summary_collations.items():
+            summary_collation.save(output_file, name, **kwargs)

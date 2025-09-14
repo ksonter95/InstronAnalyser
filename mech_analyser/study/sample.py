@@ -1,6 +1,7 @@
 import dataclasses
 from mech_analyser.experiment.analyser import Analyser, SerialisedAnalyser
 from mech_analyser.util.serialiser import Serialiser
+from pathlib import Path
 from typing import Any, Mapping, Optional, Union
 
 # Serialised type aliases
@@ -164,6 +165,10 @@ class Sample(Base):
     specimen: Optional[Specimen] = None
     region: Optional[Region] = None
     analyser: Optional[Analyser] = None
+
+    # TODO: remove paths if not needed
+    input_file: Path = Path("")
+    output_file: Path = Path("")
 
     def serialise(self) -> SerialisedSample:
         """

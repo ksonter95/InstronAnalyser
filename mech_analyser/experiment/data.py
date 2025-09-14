@@ -75,6 +75,15 @@ class Transcoder(Serialiser):
                         f"{self.input_header_rows}"
                     )
 
+        def copy(self) -> Self:
+            """
+            Returns a copy of the column.
+
+            Returns:
+                Self: A copy of the column.
+            """
+            return type(self)(**dataclasses.asdict(self))
+
         def get_output_name_as_tuple(self, number_of_rows: int) -> tuple[str, ...]:
             """
             Returns the output name as a tuple of strings, split by newline characters.
@@ -107,19 +116,19 @@ class Transcoder(Serialiser):
             """
 
             frame: pd.DataFrame = pd.read_csv(  # type: ignore
-                input_file,
-                header=self.input_header_rows,
+                input_file, header=self.input_header_rows, skip_blank_lines=False
             )
-            frame.columns = [
-                " ".join(
-                    [
-                        str(row).strip()
-                        for row in column
-                        if not str(row).startswith("Unnamed")
-                    ]
-                )
-                for column in frame.columns
-            ]
+            if len(self.input_header_rows) > 1:
+                frame.columns = [
+                    " ".join(
+                        [
+                            str(row).strip()
+                            for row in column
+                            if not str(row).startswith("Unnamed")
+                        ]
+                    )
+                    for column in frame.columns
+                ]
 
             # Select the desired column manually
             if self.input_header_column < 0:
@@ -273,6 +282,25 @@ class Transcoder(Serialiser):
         if name in self._columns:
             del self._columns[name]
 
+    def remove_all_columns(self) -> None:
+        """
+        Removes all columns from the mapping.
+        """
+
+        self._columns.clear()
+
+    def reorder_columns(self) -> None:
+        """
+        Reorders the columns such that their output header columns are indexed
+        sequentially from 0.
+        """
+
+        # Update the output header column indices
+        for i, column in enumerate(
+            sorted(self._columns.values(), key=lambda c: c.output_header_column)
+        ):
+            column.output_header_column = i
+
     def load(self, input_file: Path, **kwargs: Any) -> pd.DataFrame:
         """
         Loads the input file into a frame and validates its contents.
@@ -401,9 +429,6 @@ class Transcoder(Serialiser):
 
             worksheet: openpyxl.worksheet.worksheet.Worksheet = writer.sheets[name]
 
-            # Remove the index column
-            worksheet.delete_cols(1)
-
             # Autofit the column size
             for id, column in enumerate(worksheet.iter_cols(), start=1):
                 max_length: int = max(
@@ -413,6 +438,11 @@ class Transcoder(Serialiser):
                 worksheet.column_dimensions[
                     openpyxl.utils.get_column_letter(id)
                 ].width = (max_length + 2)
+
+            # Hide the index column
+            # NOTE: worksheet.delete_cols() does not work if there is a multi-row header
+            #       with merged cells
+            worksheet.column_dimensions["A"].hidden = True
 
     def serialise(self) -> SerialisedTranscoder:
         """
@@ -820,6 +850,7 @@ class RawData(Data):
 
         Args:
             input_file: The path to the input file.
+            transcoder: The transcoder used to load the data.
 
         Returns:
             RawData: The loaded raw data.
@@ -902,8 +933,6 @@ class SummaryData(Data):
     """
     Base class for all summary data.
 
-    TODO: Alternative for self.collate_vertical() not yet implemented.
-
     Args:
         frame: The underlying pd.DataFrame representation of the data.
         transcoder: The transcoder used to load and save the data.
@@ -930,10 +959,6 @@ class SummaryData(Data):
     def transcoder(self) -> SummaryTranscoder:
         return cast(SummaryTranscoder, self._transcoder)
 
-    @property
-    def collate_vertical(self) -> bool:
-        return len(self._frame) == 1
-
     def append_row(self, row: Row) -> None:
         """
         Append a row to the summary frame.
@@ -951,7 +976,10 @@ class SummaryData(Data):
         )
 
         # Append the row to the summary data
-        self._frame = pd.concat([self._frame, frame_row], ignore_index=True)
+        if self._frame.empty:
+            self._frame = frame_row.copy(deep=True)
+        else:
+            self._frame = pd.concat([self._frame, frame_row], ignore_index=True)
         self._frame.reset_index(drop=True, inplace=True)
 
     def clear_all_rows(self) -> None:
@@ -960,3 +988,21 @@ class SummaryData(Data):
         """
 
         self._frame.drop(self._frame.index, inplace=True)  # type: ignore
+
+    def get_transcoded_frame(self) -> pd.DataFrame:
+        """
+        Obtains the transcoded frame.
+
+        Returns:
+            pd.DataFrame: The transcoded frame.
+        """
+
+        transcoded_frame: pd.DataFrame = pd.DataFrame()
+
+        for column in self.transcoder.columns.values():
+            if column.name in self._frame.columns:
+                transcoded_frame[column.output_name] = self._frame[column.name].apply(  # type: ignore
+                    lambda x: convert_from_base_units(x, column.output_units)  # type: ignore
+                )
+
+        return transcoded_frame

@@ -3,6 +3,7 @@ import pint
 # Create the unit registry
 unit_registry = pint.UnitRegistry()
 unit_registry.default_system = "SI"  # Set the default system to SI units
+unit_registry.formatter.default_format = "~"  # Use abbreviated unit names
 pint.set_application_registry(unit_registry)  # type: ignore
 
 

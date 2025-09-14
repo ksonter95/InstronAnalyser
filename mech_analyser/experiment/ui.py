@@ -1,6 +1,7 @@
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
 from PySide6.QtWidgets import QStackedWidget, QTableView, QVBoxLayout, QWidget
-import mech_analyser.experiment.analyser as analyser
+import mech_analyser.experiment.analyser as ma_analyser
+import mech_analyser.experiment.data as ma_data
 import pandas as pd
 from pathlib import Path
 import pyqtgraph as pg  # type: ignore
@@ -44,28 +45,16 @@ class ConfigWidget(Widget):
         parameters: The parameters to use when analysing the experiment.
     """
 
-    def __init__(self, view: ViewBase, parameters: analyser.Parameters) -> None:
+    def __init__(self, view: ViewBase, parameters: ma_analyser.Parameters) -> None:
         super().__init__()
 
         self._view: ViewBase = view
-        self._parameters: analyser.Parameters = parameters
+        self._parameters: ma_analyser.Parameters = parameters
 
         self.view.setupUi(self)
 
     @property
-    def columns(self) -> list[str]:
-        raise NotImplementedError
-
-    @property
-    def experiment(self) -> str:
-        raise NotImplementedError
-
-    @property
-    def instrument(self) -> str:
-        raise NotImplementedError
-
-    @property
-    def parameters(self) -> analyser.Parameters:
+    def parameters(self) -> ma_analyser.Parameters:
         return self._parameters
 
     @property
@@ -74,19 +63,21 @@ class ConfigWidget(Widget):
 
     def create_analyser(
         self,
-        input_csv: Path,
-        output_xlsx: Path,
-        parameters: analyser.Parameters,
-    ) -> analyser.Analyser:
+        input_file: Path,
+        parameters: ma_analyser.Parameters,
+        raw_transcoder: ma_data.RawTranscoder,
+        processed_transcoder: ma_data.ProcessedTranscoder,
+        summary_transcoder: ma_data.SummaryTranscoder,
+    ) -> ma_analyser.Analyser:
         """
         Creates the experiment analyser.
 
         Args:
-            input_csv: The path to the CSV file containing the output of the
-                experiment.
-            output_xlsx: The path to the Excel file which will contain the
-                analysis results.
+            input_file: The path to the CSV file containing the output of the experiment.
             parameters: The parameters to use when analysing the experiment.
+            raw_transcoder: The raw data transcoder.
+            processed_transcoder: The processed data transcoder.
+            summary_transcoder: The summary data transcoder.
         """
 
         raise NotImplementedError
