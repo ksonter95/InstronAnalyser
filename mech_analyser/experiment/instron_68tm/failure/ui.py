@@ -3,10 +3,12 @@ import mech_analyser.experiment.instron_68tm.failure.data as ma_data
 import mech_analyser.experiment.instron_68tm.failure.phase as ma_phase
 import mech_analyser.experiment.instron_68tm.failure.view as view
 import mech_analyser.experiment.instron_68tm.ui as ma_ui
+import mech_analyser.study.sample as ma_sample
 
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFileDialog
 from pathlib import Path
-from typing import cast
+from typing import Optional, cast
 
 
 class ConfigWidget(ma_ui.ConfigWidget):
@@ -18,6 +20,8 @@ class ConfigWidget(ma_ui.ConfigWidget):
     def __init__(self) -> None:
         super().__init__(view.Ui_w_Failure(), ma_analyser.Parameters())  # type: ignore
 
+        self._properties_csv: Optional[Path] = None
+
     @property
     def parameters(self) -> ma_analyser.Parameters:
         return cast(ma_analyser.Parameters, self._parameters)
@@ -28,26 +32,26 @@ class ConfigWidget(ma_ui.ConfigWidget):
 
     def create_analyser(
         self,
-        input_file: Path,
-        parameters: ma_analyser.ma_analyser.ma_analyser.Parameters,
+        sample: ma_sample.Sample,
         raw_transcoder: ma_data.ma_data.ma_data.RawTranscoder,
         processed_transcoder: ma_data.ma_data.ma_data.ProcessedTranscoder,
         summary_transcoder: ma_data.ma_data.ma_data.SummaryTranscoder,
-    ) -> ma_analyser.Analyser:
+    ) -> None:
         """
         Creates the experiment analyser.
 
         Args:
-            input_file: The path to the CSV file containing the output of the experiment.
-            parameters: The parameters to use when analysing the experiment.
+            sample: The sample being tested in the experiment.
             raw_transcoder: The raw data transcoder.
             processed_transcoder: The processed data transcoder.
             summary_transcoder: The summary data transcoder.
         """
 
-        return ma_analyser.Analyser(
-            input_file,
-            cast(ma_analyser.Parameters, parameters),
+        self.parameters.calculate_sample_parameters(sample.name)
+
+        sample.analyser = ma_analyser.Analyser(
+            sample.input_file,
+            self.parameters,
             cast(ma_data.ma_data.RawTranscoder, raw_transcoder),
             cast(ma_data.ProcessedTranscoder, processed_transcoder),
             cast(ma_data.SummaryTranscoder, summary_transcoder),
@@ -94,6 +98,26 @@ class ConfigWidget(ma_ui.ConfigWidget):
         self.view.sb_StrainWindowWidth.setValue(
             self.parameters.e_modulus_find_strain_width_pct
         )
+        self.view.cb_Properties.setChecked(False)
+        self.view.tb_ReadProperties.setText("")
+        self.view.sb_Area.setValue(
+            self.parameters.cross_sectional_area_m2 * 1e6
+            if self.parameters.cross_sectional_area_m2 is not None
+            else 1.0
+        )
+        self.view.cb_Area.setChecked(
+            self.parameters.cross_sectional_area_m2 is None
+            and self.parameters.properties_file is not None
+        )
+        self.view.sb_Length.setValue(
+            self.parameters.initial_length_m * 1e3
+            if self.parameters.initial_length_m is not None
+            else 1.0
+        )
+        self.view.cb_Length.setChecked(
+            self.parameters.initial_length_m is None
+            and self.parameters.properties_file is not None
+        )
 
         # Connect signals with slots
         self.view.cb_Toughness.checkStateChanged.connect(
@@ -102,12 +126,19 @@ class ConfigWidget(ma_ui.ConfigWidget):
         self.view.rb_FixedRange.toggled.connect(self._handle_rb_FixedRange_toggled)
         self.view.rb_AnchorPoint.toggled.connect(self._handle_rb_AnchorPoint_toggled)
         self.view.rb_FindRange.toggled.connect(self._handle_rb_FindRange_toggled)
+        self.view.cb_Properties.toggled.connect(self._handle_cb_Properties_toggled)
+        self.view.pb_ReadProperties.clicked.connect(
+            self._handle_pb_ReadProperties_clicked
+        )
+        self.view.cb_Area.toggled.connect(self._handle_cb_Area_toggled)
+        self.view.cb_Length.toggled.connect(self._handle_cb_Length_toggled)
 
         # Set initial views
         self._handle_cb_Toughness_changed()
         self._handle_rb_FixedRange_toggled()
         self._handle_rb_AnchorPoint_toggled()
         self._handle_rb_FindRange_toggled()
+        self._handle_cb_Properties_toggled()
 
     def sync_parameters(self) -> None:
         """
@@ -143,6 +174,67 @@ class ConfigWidget(ma_ui.ConfigWidget):
         self.parameters.e_modulus_find_strain_width_pct = (
             self.view.sb_StrainWindowWidth.value()
         )
+        self.parameters.properties_file = (
+            self._properties_csv if self.view.cb_Properties.isChecked() else None
+        )
+        self.parameters.cross_sectional_area_m2 = (
+            self.view.sb_Area.value() * 1e-6
+            if self.view.cb_Properties.isChecked() and not self.view.cb_Area.isChecked()
+            else None
+        )
+        self.parameters.initial_length_m = (
+            self.view.sb_Length.value() * 1e-3
+            if self.view.cb_Properties.isChecked() and not self.view.cb_Length.isChecked()
+            else None
+        )
+
+    def _handle_cb_Area_toggled(self) -> None:
+        """
+        Enables/disables l_Area and sb_Area.
+        """
+
+        self.view.l_Area.setEnabled(not self.view.cb_Area.isChecked())
+        self.view.sb_Area.setEnabled(not self.view.cb_Area.isChecked())
+        self.view.pb_ReadProperties.setEnabled(
+            self.view.cb_Area.isChecked() or self.view.cb_Length.isChecked()
+        )
+        self.view.tb_ReadProperties.setEnabled(
+            self.view.cb_Area.isChecked() or self.view.cb_Length.isChecked()
+        )
+
+    def _handle_cb_Length_toggled(self) -> None:
+        """
+        Enables/disables l_Length and sb_Length.
+        """
+
+        self.view.l_Length.setEnabled(not self.view.cb_Length.isChecked())
+        self.view.sb_Length.setEnabled(not self.view.cb_Length.isChecked())
+        self.view.pb_ReadProperties.setEnabled(
+            self.view.cb_Area.isChecked() or self.view.cb_Length.isChecked()
+        )
+        self.view.tb_ReadProperties.setEnabled(
+            self.view.cb_Area.isChecked() or self.view.cb_Length.isChecked()
+        )
+
+    def _handle_cb_Properties_toggled(self) -> None:
+        """
+        Enables/disables pb_ReadProperties, tb_ReadProperties, l_Area, sb_Area, cb_Area,
+        l_Length, sb_Length, and cb_Length.
+        """
+
+        self.view.pb_ReadProperties.setEnabled(self.view.cb_Properties.isChecked())
+        self.view.tb_ReadProperties.setEnabled(self.view.cb_Properties.isChecked())
+        self.view.cb_Area.setEnabled(self.view.cb_Properties.isChecked())
+        self.view.cb_Length.setEnabled(self.view.cb_Properties.isChecked())
+
+        if self.view.cb_Properties.isChecked():
+            self._handle_cb_Area_toggled()
+            self._handle_cb_Length_toggled()
+        else:
+            self.view.l_Area.setEnabled(False)
+            self.view.sb_Area.setEnabled(False)
+            self.view.l_Length.setEnabled(False)
+            self.view.sb_Length.setEnabled(False)
 
     def _handle_cb_Toughness_changed(self) -> None:
         """
@@ -150,6 +242,28 @@ class ConfigWidget(ma_ui.ConfigWidget):
         """
 
         self.view.sb_Toughness.setEnabled(self.view.cb_Toughness.isChecked())
+
+    def _handle_pb_ReadProperties_clicked(self) -> None:
+        """
+        Opens a file dialogue to select a physical properties file.
+        """
+
+        # Obtain the CSV
+        properties_csv, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Physical Properties CSV File",
+            "",
+            "CSV File (*.csv)",
+        )
+
+        # User cancelled the file search
+        if not properties_csv:
+            return
+
+        self._properties_csv = Path(properties_csv)
+
+        # Update the GUI
+        self._update_tb_ReadProperties()
 
     def _handle_rb_AnchorPoint_toggled(self) -> None:
         """
@@ -200,3 +314,12 @@ class ConfigWidget(ma_ui.ConfigWidget):
         self.view.sb_Strain1.setEnabled(self.view.rb_FixedRange.isChecked())
         self.view.l_To1.setEnabled(self.view.rb_FixedRange.isChecked())
         self.view.sb_Strain2.setEnabled(self.view.rb_FixedRange.isChecked())
+
+    def _update_tb_ReadProperties(self) -> None:
+        """
+        Updates the text box showing the selected physical properties file.
+        """
+
+        self.view.tb_ReadProperties.setText(
+            str(self._properties_csv) if self._properties_csv is not None else ""
+        )

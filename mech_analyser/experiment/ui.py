@@ -2,8 +2,8 @@ from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelInd
 from PySide6.QtWidgets import QStackedWidget, QTableView, QVBoxLayout, QWidget
 import mech_analyser.experiment.analyser as ma_analyser
 import mech_analyser.experiment.data as ma_data
+import mech_analyser.study.sample as ma_sample
 import pandas as pd
-from pathlib import Path
 import pyqtgraph as pg  # type: ignore
 from typing import Protocol, Optional
 
@@ -63,18 +63,16 @@ class ConfigWidget(Widget):
 
     def create_analyser(
         self,
-        input_file: Path,
-        parameters: ma_analyser.Parameters,
+        sample: ma_sample.Sample,
         raw_transcoder: ma_data.RawTranscoder,
         processed_transcoder: ma_data.ProcessedTranscoder,
         summary_transcoder: ma_data.SummaryTranscoder,
-    ) -> ma_analyser.Analyser:
+    ) -> None:
         """
         Creates the experiment analyser.
 
         Args:
-            input_file: The path to the CSV file containing the output of the experiment.
-            parameters: The parameters to use when analysing the experiment.
+            sample: The sample being tested in the experiment.
             raw_transcoder: The raw data transcoder.
             processed_transcoder: The processed data transcoder.
             summary_transcoder: The summary data transcoder.

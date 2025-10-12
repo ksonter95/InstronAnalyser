@@ -359,11 +359,11 @@ class HorizontalCollation(Collation):
             self.transcoder.add_column(
                 ma_data.Transcoder.Column(
                     name=f"{name}: {column_name}",
+                    input_included=False,
                     output_name=f"{name}\n{column.output_name}",
+                    output_units=column.output_units,
                     output_header_column=start_index + column.output_header_column,
                     data_type=column.data_type,
-                    input_units=column.input_units,
-                    output_units=column.output_units,
                 )
             )
 

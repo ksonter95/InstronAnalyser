@@ -24,9 +24,17 @@ class Data:
     def strain(self) -> "pd.Series[float]":
         return self._frame["Strain"]  # type: ignore
 
+    @strain.setter
+    def strain(self, value: "pd.Series[float]") -> None:
+        self._frame["Strain"] = value  # type: ignore
+
     @property
     def stress(self) -> "pd.Series[float]":
         return self._frame["Stress"]  # type: ignore
+
+    @stress.setter
+    def stress(self, value: "pd.Series[float]") -> None:
+        self._frame["Stress"] = value  # type: ignore
 
     @property
     def time(self) -> "pd.Series[float]":
@@ -64,52 +72,54 @@ class RawTranscoder(ma_data.RawTranscoder):
                     "Time": ma_data.RawTranscoder.Column(
                         name="Time",
                         input_name="Time (s)",
-                        output_name="Time [s]",
+                        input_units=ma_units.unit_registry.parse_units("s"),
                         input_header_rows=[19, 20],
                         input_header_column=0,
-                        output_header_column=0,
-                        input_units=ma_units.unit_registry.parse_units("s"),
+                        output_name="Time [s]",
                         output_units=ma_units.unit_registry.parse_units("s"),
+                        output_header_column=0,
                     ),
                     "Displacement": ma_data.RawTranscoder.Column(
                         name="Displacement",
                         input_name="Displacement (mm)",
-                        output_name="Displacement [mm]",
+                        input_units=ma_units.unit_registry.parse_units("mm"),
                         input_header_rows=[19, 20],
                         input_header_column=1,
-                        output_header_column=1,
-                        input_units=ma_units.unit_registry.parse_units("mm"),
+                        output_name="Displacement [mm]",
                         output_units=ma_units.unit_registry.parse_units("mm"),
+                        output_header_column=1,
                     ),
                     "Force": ma_data.RawTranscoder.Column(
                         name="Force",
                         input_name="Force (N)",
-                        output_name="Force [N]",
+                        input_units=ma_units.unit_registry.parse_units("N"),
                         input_header_rows=[19, 20],
                         input_header_column=2,
-                        output_header_column=2,
-                        input_units=ma_units.unit_registry.parse_units("N"),
+                        output_name="Force [N]",
                         output_units=ma_units.unit_registry.parse_units("N"),
+                        output_header_column=2,
                     ),
                     "Strain": ma_data.RawTranscoder.Column(
                         name="Strain",
+                        input_included_editing=True,
                         input_name="Strain (%)",
-                        output_name="Strain [%]",
+                        input_units=ma_units.unit_registry.parse_units("%"),
                         input_header_rows=[19, 20],
                         input_header_column=3,
-                        output_header_column=3,
-                        input_units=ma_units.unit_registry.parse_units("%"),
+                        output_name="Strain [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
+                        output_header_column=3,
                     ),
                     "Stress": ma_data.RawTranscoder.Column(
                         name="Stress",
+                        input_included_editing=True,
                         input_name="Compressive stress (MPa)",
-                        output_name="Compressive Stress [MPa]",
+                        input_units=ma_units.unit_registry.parse_units("MPa"),
                         input_header_rows=[19, 20],
                         input_header_column=4,
-                        output_header_column=4,
-                        input_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_name="Compressive Stress [MPa]",
                         output_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_header_column=4,
                     ),
                 },
                 id,
@@ -202,20 +212,39 @@ class RawData(ma_data.RawData, Data):
         TODO: evaluate if plotting should be external to the class
         """
 
-        strain_column: RawTranscoder.Column = self.transcoder.get_column("Strain")
-        stress_column: RawTranscoder.Column = self.transcoder.get_column("Stress")
+        x_series: "pd.Series[float]"
+        y_series: "pd.Series[float]"
+        x_column: RawTranscoder.Column
+        y_column: RawTranscoder.Column
+        title: str
 
-        self._plot.getPlotItem().setTitle("Stress-strain")  # type: ignore
-        self._plot.getPlotItem().setLabel("bottom", strain_column.output_name)  # type: ignore
-        self._plot.getPlotItem().setLabel("left", stress_column.output_name)  # type: ignore
+        if (
+            self.transcoder.get_column("Strain").input_included
+            and self.transcoder.get_column("Stress").input_included
+        ):
+            title = "Stress-strain"
+            x_column = self.transcoder.get_column("Strain")
+            y_column = self.transcoder.get_column("Stress")
+            x_series = self.strain
+            y_series = self.stress
+        else:
+            title = "Force-displacement"
+            x_column = self.transcoder.get_column("Displacement")
+            y_column = self.transcoder.get_column("Force")
+            x_series = self.displacement
+            y_series = self.force
+
+        self._plot.getPlotItem().setTitle(title)  # type: ignore
+        self._plot.getPlotItem().setLabel("bottom", x_column.output_name)  # type: ignore
+        self._plot.getPlotItem().setLabel("left", y_column.output_name)  # type: ignore
         self._plot.getPlotItem().plot(  # type: ignore
             [
-                ma_units.convert_from_base_units(x, strain_column.output_units)
-                for x in cast(list[float], list(self.strain.values))
+                ma_units.convert_from_base_units(x, x_column.output_units)
+                for x in cast(list[float], list(x_series.values))
             ],
             [
-                ma_units.convert_from_base_units(x, stress_column.output_units)
-                for x in cast(list[float], list(self.stress.values))
+                ma_units.convert_from_base_units(x, y_column.output_units)
+                for x in cast(list[float], list(y_series.values))
             ],
         )
 

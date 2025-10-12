@@ -44,52 +44,52 @@ class ProcessedTranscoder(ma_data.ProcessedTranscoder):
                 {
                     "Time": ma_data.ProcessedTranscoder.Column(
                         name="Time",
+                        input_included=False,
                         output_name="Time [s]",
-                        output_header_column=0,
-                        input_units=ma_units.unit_registry.parse_units("s"),
                         output_units=ma_units.unit_registry.parse_units("s"),
+                        output_header_column=0,
                     ),
                     "Displacement": ma_data.ProcessedTranscoder.Column(
                         name="Displacement",
+                        input_included=False,
                         output_name="Displacement [mm]",
-                        output_header_column=1,
-                        input_units=ma_units.unit_registry.parse_units("mm"),
                         output_units=ma_units.unit_registry.parse_units("mm"),
+                        output_header_column=1,
                     ),
                     "Force": ma_data.ProcessedTranscoder.Column(
                         name="Force",
+                        input_included=False,
                         output_name="Force [N]",
-                        output_header_column=2,
-                        input_units=ma_units.unit_registry.parse_units("N"),
                         output_units=ma_units.unit_registry.parse_units("N"),
+                        output_header_column=2,
                     ),
                     "Strain": ma_data.ProcessedTranscoder.Column(
                         name="Strain",
+                        input_included=False,
                         output_name="Strain [%]",
-                        output_header_column=3,
-                        input_units=ma_units.unit_registry.parse_units("%"),
                         output_units=ma_units.unit_registry.parse_units("%"),
+                        output_header_column=3,
                     ),
                     "Stress": ma_data.ProcessedTranscoder.Column(
                         name="Stress",
+                        input_included=False,
                         output_name="Compressive stress [MPa]",
-                        output_header_column=4,
-                        input_units=ma_units.unit_registry.parse_units("MPa"),
                         output_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_header_column=4,
                     ),
                     "Regression stress": ma_data.ProcessedTranscoder.Column(
                         name="Regression stress",
+                        input_included=False,
                         output_name="Regression stress [MPa]",
-                        output_header_column=5,
-                        input_units=ma_units.unit_registry.parse_units("MPa"),
                         output_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_header_column=5,
                     ),
                     "Toughness": ma_data.ProcessedTranscoder.Column(
                         name="Toughness",
+                        input_included=False,
                         output_name="Toughness [MPa]",
-                        output_header_column=6,
-                        input_units=ma_units.unit_registry.parse_units("MPa"),
                         output_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_header_column=6,
                     ),
                 },
                 id,
@@ -115,6 +115,10 @@ class ProcessedData(ma_data.ProcessedData):
         super().__init__(frame, transcoder, id)
 
         # Initially populate the processed data columns with default values
+        if "Strain" not in self._frame.columns:  # type: ignore
+            self.strain = pd.Series([0.0] * self._frame.index.size)  # type: ignore
+        if "Stress" not in self._frame.columns:  # type: ignore
+            self.stress = pd.Series([0.0] * self._frame.index.size)  # type: ignore
         self.regression_stress = pd.Series([0.0] * self._frame.index.size)  # type: ignore
         self.toughness = pd.Series([0.0] * self._frame.index.size)  # type: ignore
 
@@ -273,92 +277,93 @@ class SummaryTranscoder(ma_data.SummaryTranscoder):
                 {
                     "Yield force": ma_data.RawTranscoder.Column(
                         name="Yield force",
+                        input_included=False,
                         output_name="Yield force [N]",
-                        output_header_column=0,
-                        input_units=ma_units.unit_registry.parse_units("N"),
                         output_units=ma_units.unit_registry.parse_units("N"),
+                        output_header_column=0,
                     ),
                     "Yield strain": ma_data.RawTranscoder.Column(
                         name="Yield strain",
+                        input_included=False,
                         output_name="Yield strain [%]",
-                        output_header_column=1,
-                        input_units=ma_units.unit_registry.parse_units("%"),
                         output_units=ma_units.unit_registry.parse_units("%"),
+                        output_header_column=1,
                     ),
                     "Yield strength": ma_data.RawTranscoder.Column(
                         name="Yield strength",
+                        input_included=False,
                         output_name="Yield strength [MPa]",
-                        output_header_column=2,
-                        input_units=ma_units.unit_registry.parse_units("MPa"),
                         output_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_header_column=2,
                     ),
                     "Ultimate force": ma_data.RawTranscoder.Column(
                         name="Ultimate force",
+                        input_included=False,
                         output_name="Ultimate force [N]",
-                        output_header_column=3,
-                        input_units=ma_units.unit_registry.parse_units("N"),
                         output_units=ma_units.unit_registry.parse_units("N"),
+                        output_header_column=3,
                     ),
                     "Ultimate strain": ma_data.RawTranscoder.Column(
                         name="Ultimate strain",
+                        input_included=False,
                         output_name="Ultimate strain [%]",
-                        output_header_column=4,
-                        input_units=ma_units.unit_registry.parse_units("%"),
                         output_units=ma_units.unit_registry.parse_units("%"),
+                        output_header_column=4,
                     ),
                     "Ultimate strength": ma_data.RawTranscoder.Column(
                         name="Ultimate strength",
+                        input_included=False,
                         output_name="Ultimate strength [MPa]",
-                        output_header_column=5,
-                        input_units=ma_units.unit_registry.parse_units("MPa"),
                         output_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_header_column=5,
                     ),
                     "E-modulus strain 1": ma_data.RawTranscoder.Column(
                         name="E-modulus strain 1",
+                        input_included=False,
                         output_name="E-modulus strain 1 [%]",
-                        output_header_column=6,
-                        input_units=ma_units.unit_registry.parse_units("%"),
                         output_units=ma_units.unit_registry.parse_units("%"),
+                        output_header_column=6,
                     ),
                     "E-modulus strain 2": ma_data.RawTranscoder.Column(
                         name="E-modulus strain 2",
+                        input_included=False,
                         output_name="E-modulus strain 2 [%]",
-                        output_header_column=7,
-                        input_units=ma_units.unit_registry.parse_units("%"),
                         output_units=ma_units.unit_registry.parse_units("%"),
+                        output_header_column=7,
                     ),
                     "c": ma_data.RawTranscoder.Column(
                         name="c",
+                        input_included=False,
                         output_name="c [MPa]",
-                        output_header_column=8,
-                        input_units=ma_units.unit_registry.parse_units("MPa"),
                         output_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_header_column=8,
                     ),
                     "E-modulus": ma_data.RawTranscoder.Column(
                         name="E-modulus",
+                        input_included=False,
                         output_name="E-modulus [MPa]",
-                        output_header_column=9,
-                        input_units=ma_units.unit_registry.parse_units("MPa"),
                         output_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_header_column=9,
                     ),
                     "E-modulus R^2": ma_data.RawTranscoder.Column(
                         name="E-modulus R^2",
+                        input_included=False,
                         output_name="E-modulus R^2 [MPa^2/MPa^2]",
                         output_header_column=10,
                     ),
                     "Toughness strain": ma_data.RawTranscoder.Column(
                         name="Toughness strain",
+                        input_included=False,
                         output_name="Toughness strain [%]",
-                        output_header_column=11,
-                        input_units=ma_units.unit_registry.parse_units("%"),
                         output_units=ma_units.unit_registry.parse_units("%"),
+                        output_header_column=11,
                     ),
                     "Toughness": ma_data.RawTranscoder.Column(
                         name="Toughness",
+                        input_included=False,
                         output_name="Toughness [MPa]",
-                        output_header_column=12,
-                        input_units=ma_units.unit_registry.parse_units("MPa"),
                         output_units=ma_units.unit_registry.parse_units("MPa"),
+                        output_header_column=12,
                     ),
                 },
                 id,
@@ -408,15 +413,9 @@ class SummaryData(ma_data.SummaryData):
         )
         toughness_Pa: float = dataclasses.field(metadata={"column_name": "Toughness"})
 
-    def __init__(
-        self,
-        transcoder: SummaryTranscoder,
-        id: str = "",
-    ) -> None:
+    def __init__(self, transcoder: SummaryTranscoder, id: str = "") -> None:
         super().__init__(
-            pd.DataFrame(
-                columns=list(transcoder.columns.keys()),
-            ),
+            pd.DataFrame(columns=list(transcoder.columns.keys())),
             transcoder,
             id,
         )

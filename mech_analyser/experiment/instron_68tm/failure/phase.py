@@ -18,6 +18,8 @@ class Parameters(ma_phase.Parameters):
     Parameters for a compression-to-failure experiment using an Instron 68TM.
 
     Args:
+        cross_sectional_area_m2: The cross-sectional surface area of the sample.
+        initial_length_m: The initial length of the sample.
         abort_strain_pct: The strain at which the experiment aborts even if the
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
@@ -297,6 +299,10 @@ class Phase(ma_phase.Phase):
             -
 
         Columns that are populated:
+            - Strain: The strain at each data point (if the initial length is manually
+                specified).
+            - Stress: The stress at each data point (if the cross-sectional area is
+                manually specified).
             - Regression stress: Stress at each strain point as calculated by
                 the E-modulus regression equation of the stress.
             - Toughness: The area under the stress-strain curve up until each
@@ -328,11 +334,41 @@ class Phase(ma_phase.Phase):
 
         phase_parameters: Parameters = cast(Parameters, parameters)
 
+        # Ensure that either strain exists in the raw data or it can be created from it
+        if (
+            not self.raw_data.transcoder.get_column("Strain").input_included
+            and phase_parameters.initial_length_m <= 0.0
+        ):
+            raise ValueError(
+                "Initial length must be specified if strain is not in the raw data."
+            )
+        # Ensure that either strain exists in the raw data or it can be created from it
+        elif (
+            not self.raw_data.transcoder.get_column("Stress").input_included
+            and phase_parameters.cross_sectional_area_m2 <= 0.0
+        ):
+            raise ValueError(
+                "Cross-sectional area must be specified if stress is not in the raw data."
+            )
+
+        # Create the processed data frame
         self.processed_data = ma_data.ProcessedData(
             self.raw_data.frame,
             self.processed_data.transcoder,
             self.id,
         )
+
+        # Add the strain column if it does not exist
+        if phase_parameters.initial_length_m > 0.0:
+            self.processed_data.strain = pd.Series(  # type: ignore
+                self.processed_data.displacement / phase_parameters.initial_length_m
+            )
+
+        # Add the stress column if it does not exist
+        if phase_parameters.cross_sectional_area_m2 > 0.0:
+            self.processed_data.stress = pd.Series(  # type: ignore
+                self.processed_data.force / phase_parameters.cross_sectional_area_m2
+            )
 
         # Add the toughness column
         # NOTE: np.insert is required because the output of

@@ -9,9 +9,14 @@ from typing import cast
 class Parameters(ma_phase.Parameters):
     """
     Base class for all Instron 68TM phase parameters.
+
+    Args:
+        cross_sectional_area_m2: The cross-sectional surface area of the sample.
+        initial_length_m: The initial length of the sample.
     """
 
-    pass
+    cross_sectional_area_m2: float = 0.0
+    initial_length_m: float = 0.0
 
 
 class Phase(ma_phase.Phase):

@@ -19,6 +19,10 @@ class Parameters(ma_analyser.Parameters):
             raw data points with force less than the tare force will be
             discarded, and all data points with force greater than the tare
             force will be offset accordingly.
+        properties_file: The path to the properties file containing the cross-sectional
+            area and initial length of the sample.
+        cross_sectional_area_m2: The cross-sectional surface area of the sample.
+        initial_length_m: The initial length of the sample.
         abort_strain_pct: The strain at which the experiment aborts even if the
             sample has not yet failed.
         toughness_strain_pct: The strain at which the toughness is calculated.
@@ -126,6 +130,8 @@ class Analyser(ma_analyser.Analyser):
 
         for i in range(len(self.phases)):
             parameters = ma_phase.Parameters(
+                cross_sectional_area_m2=self.parameters.cross_sectional_area_m2 or 0.0,
+                initial_length_m=self.parameters.initial_length_m or 0.0,
                 abort_strain_pct=self.parameters.abort_strain_pct,
                 toughness_strain_pct=self.parameters.toughness_strain_pct,
                 e_modulus_method=self.parameters.e_modulus_method,

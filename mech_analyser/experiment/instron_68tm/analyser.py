@@ -1,5 +1,6 @@
+import csv
 import dataclasses
-from typing import cast
+from typing import Optional, cast
 import mech_analyser.experiment.analyser as ma_analyser
 import mech_analyser.experiment.instron_68tm.data as ma_data
 import mech_analyser.experiment.instron_68tm.phase as ma_phase
@@ -17,9 +18,48 @@ class Parameters(ma_analyser.Parameters):
             raw data points with force less than the tare force will be
             discarded, and all data points with force greater than the tare
             force will be offset accordingly.
+        properties_file: The path to the properties file containing the cross-sectional
+            area and initial length of the sample.
+        cross_sectional_area_m2: The cross-sectional surface area of the sample.
+        initial_length_m: The initial length of the sample.
     """
 
     tare_force_N: float = 0.0
+    properties_file: Optional[Path] = None
+    cross_sectional_area_m2: Optional[float] = None
+    initial_length_m: Optional[float] = None
+
+    def calculate_sample_parameters(self, name: str) -> None:
+        """
+        Calculates the sample parameters from the properties file if it is set.
+
+        Args:
+            name: The name of the sample.
+
+        Raises:
+            ValueError: If the sample is not found in the properties file and the
+                cross-sectional area and/or initial length are not set.
+        """
+
+        if self.properties_file is None or (
+            self.cross_sectional_area_m2 is None and self.initial_length_m is None
+        ):
+            return
+
+        with self.properties_file.open(newline="") as csv_file:
+            reader: csv.DictReader[str] = csv.DictReader(csv_file)
+
+            for row in reader:
+                if row["Name"] != name:
+                    continue
+                if self.cross_sectional_area_m2 is None:
+                    self.cross_sectional_area_m2 = float(row["Cross-sectional area"])
+                if self.initial_length_m is None:
+                    self.initial_length_m = float(row["Initial length"])
+
+                return
+
+        raise ValueError(f"Sample '{name}' not found in {self.properties_file}")
 
 
 class Analyser(ma_analyser.Analyser):

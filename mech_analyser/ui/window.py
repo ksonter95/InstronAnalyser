@@ -205,8 +205,8 @@ class Ui_MainWindow(object):
         self.gl_RawTranscoder = QGridLayout(self.w_RawTranscoder)
         self.gl_RawTranscoder.setObjectName(u"gl_RawTranscoder")
         self.tbl_RawTranscoder = QTableWidget(self.w_RawTranscoder)
-        if (self.tbl_RawTranscoder.columnCount() < 9):
-            self.tbl_RawTranscoder.setColumnCount(9)
+        if (self.tbl_RawTranscoder.columnCount() < 11):
+            self.tbl_RawTranscoder.setColumnCount(11)
         __qtablewidgetitem4 = QTableWidgetItem()
         self.tbl_RawTranscoder.setHorizontalHeaderItem(0, __qtablewidgetitem4)
         __qtablewidgetitem5 = QTableWidgetItem()
@@ -225,12 +225,16 @@ class Ui_MainWindow(object):
         self.tbl_RawTranscoder.setHorizontalHeaderItem(7, __qtablewidgetitem11)
         __qtablewidgetitem12 = QTableWidgetItem()
         self.tbl_RawTranscoder.setHorizontalHeaderItem(8, __qtablewidgetitem12)
+        __qtablewidgetitem13 = QTableWidgetItem()
+        self.tbl_RawTranscoder.setHorizontalHeaderItem(9, __qtablewidgetitem13)
+        __qtablewidgetitem14 = QTableWidgetItem()
+        self.tbl_RawTranscoder.setHorizontalHeaderItem(10, __qtablewidgetitem14)
         self.tbl_RawTranscoder.setObjectName(u"tbl_RawTranscoder")
         self.tbl_RawTranscoder.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.tbl_RawTranscoder.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked|QAbstractItemView.EditTrigger.EditKeyPressed)
         self.tbl_RawTranscoder.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
         self.tbl_RawTranscoder.setRowCount(0)
-        self.tbl_RawTranscoder.setColumnCount(9)
+        self.tbl_RawTranscoder.setColumnCount(11)
         self.tbl_RawTranscoder.horizontalHeader().setVisible(True)
         self.tbl_RawTranscoder.horizontalHeader().setStretchLastSection(True)
 
@@ -242,24 +246,26 @@ class Ui_MainWindow(object):
         self.gl_ProcessedTranscoder = QGridLayout(self.w_ProcessedTranscoder)
         self.gl_ProcessedTranscoder.setObjectName(u"gl_ProcessedTranscoder")
         self.tbl_ProcessedTranscoder = QTableWidget(self.w_ProcessedTranscoder)
-        if (self.tbl_ProcessedTranscoder.columnCount() < 5):
-            self.tbl_ProcessedTranscoder.setColumnCount(5)
-        __qtablewidgetitem13 = QTableWidgetItem()
-        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(0, __qtablewidgetitem13)
-        __qtablewidgetitem14 = QTableWidgetItem()
-        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(1, __qtablewidgetitem14)
+        if (self.tbl_ProcessedTranscoder.columnCount() < 6):
+            self.tbl_ProcessedTranscoder.setColumnCount(6)
         __qtablewidgetitem15 = QTableWidgetItem()
-        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(2, __qtablewidgetitem15)
+        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(0, __qtablewidgetitem15)
         __qtablewidgetitem16 = QTableWidgetItem()
-        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(3, __qtablewidgetitem16)
+        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(1, __qtablewidgetitem16)
         __qtablewidgetitem17 = QTableWidgetItem()
-        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(4, __qtablewidgetitem17)
+        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(2, __qtablewidgetitem17)
+        __qtablewidgetitem18 = QTableWidgetItem()
+        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(3, __qtablewidgetitem18)
+        __qtablewidgetitem19 = QTableWidgetItem()
+        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(4, __qtablewidgetitem19)
+        __qtablewidgetitem20 = QTableWidgetItem()
+        self.tbl_ProcessedTranscoder.setHorizontalHeaderItem(5, __qtablewidgetitem20)
         self.tbl_ProcessedTranscoder.setObjectName(u"tbl_ProcessedTranscoder")
         self.tbl_ProcessedTranscoder.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.tbl_ProcessedTranscoder.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked|QAbstractItemView.EditTrigger.EditKeyPressed)
         self.tbl_ProcessedTranscoder.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
         self.tbl_ProcessedTranscoder.setRowCount(0)
-        self.tbl_ProcessedTranscoder.setColumnCount(5)
+        self.tbl_ProcessedTranscoder.setColumnCount(6)
         self.tbl_ProcessedTranscoder.horizontalHeader().setVisible(True)
         self.tbl_ProcessedTranscoder.horizontalHeader().setStretchLastSection(True)
 
@@ -271,24 +277,26 @@ class Ui_MainWindow(object):
         self.gl_SummaryTranscoder = QGridLayout(self.w_SummaryTranscoder)
         self.gl_SummaryTranscoder.setObjectName(u"gl_SummaryTranscoder")
         self.tbl_SummaryTranscoder = QTableWidget(self.w_SummaryTranscoder)
-        if (self.tbl_SummaryTranscoder.columnCount() < 5):
-            self.tbl_SummaryTranscoder.setColumnCount(5)
-        __qtablewidgetitem18 = QTableWidgetItem()
-        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(0, __qtablewidgetitem18)
-        __qtablewidgetitem19 = QTableWidgetItem()
-        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(1, __qtablewidgetitem19)
-        __qtablewidgetitem20 = QTableWidgetItem()
-        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(2, __qtablewidgetitem20)
+        if (self.tbl_SummaryTranscoder.columnCount() < 6):
+            self.tbl_SummaryTranscoder.setColumnCount(6)
         __qtablewidgetitem21 = QTableWidgetItem()
-        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(3, __qtablewidgetitem21)
+        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(0, __qtablewidgetitem21)
         __qtablewidgetitem22 = QTableWidgetItem()
-        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(4, __qtablewidgetitem22)
+        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(1, __qtablewidgetitem22)
+        __qtablewidgetitem23 = QTableWidgetItem()
+        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(2, __qtablewidgetitem23)
+        __qtablewidgetitem24 = QTableWidgetItem()
+        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(3, __qtablewidgetitem24)
+        __qtablewidgetitem25 = QTableWidgetItem()
+        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(4, __qtablewidgetitem25)
+        __qtablewidgetitem26 = QTableWidgetItem()
+        self.tbl_SummaryTranscoder.setHorizontalHeaderItem(5, __qtablewidgetitem26)
         self.tbl_SummaryTranscoder.setObjectName(u"tbl_SummaryTranscoder")
         self.tbl_SummaryTranscoder.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.tbl_SummaryTranscoder.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked|QAbstractItemView.EditTrigger.EditKeyPressed)
         self.tbl_SummaryTranscoder.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectItems)
         self.tbl_SummaryTranscoder.setRowCount(0)
-        self.tbl_SummaryTranscoder.setColumnCount(5)
+        self.tbl_SummaryTranscoder.setColumnCount(6)
         self.tbl_SummaryTranscoder.horizontalHeader().setVisible(True)
         self.tbl_SummaryTranscoder.horizontalHeader().setStretchLastSection(True)
 
@@ -432,47 +440,55 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem4 = self.tbl_RawTranscoder.horizontalHeaderItem(0)
         ___qtablewidgetitem4.setText(QCoreApplication.translate("MainWindow", u"Name", None));
         ___qtablewidgetitem5 = self.tbl_RawTranscoder.horizontalHeaderItem(1)
-        ___qtablewidgetitem5.setText(QCoreApplication.translate("MainWindow", u"Input Name", None));
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("MainWindow", u"Input Included", None));
         ___qtablewidgetitem6 = self.tbl_RawTranscoder.horizontalHeaderItem(2)
-        ___qtablewidgetitem6.setText(QCoreApplication.translate("MainWindow", u"Input Units", None));
+        ___qtablewidgetitem6.setText(QCoreApplication.translate("MainWindow", u"Input Name", None));
         ___qtablewidgetitem7 = self.tbl_RawTranscoder.horizontalHeaderItem(3)
-        ___qtablewidgetitem7.setText(QCoreApplication.translate("MainWindow", u"Input Row", None));
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("MainWindow", u"Input Units", None));
         ___qtablewidgetitem8 = self.tbl_RawTranscoder.horizontalHeaderItem(4)
-        ___qtablewidgetitem8.setText(QCoreApplication.translate("MainWindow", u"Input Column", None));
+        ___qtablewidgetitem8.setText(QCoreApplication.translate("MainWindow", u"Input Row", None));
         ___qtablewidgetitem9 = self.tbl_RawTranscoder.horizontalHeaderItem(5)
-        ___qtablewidgetitem9.setText(QCoreApplication.translate("MainWindow", u"Output Name", None));
+        ___qtablewidgetitem9.setText(QCoreApplication.translate("MainWindow", u"Input Column", None));
         ___qtablewidgetitem10 = self.tbl_RawTranscoder.horizontalHeaderItem(6)
-        ___qtablewidgetitem10.setText(QCoreApplication.translate("MainWindow", u"Output Units", None));
+        ___qtablewidgetitem10.setText(QCoreApplication.translate("MainWindow", u"Output Included", None));
         ___qtablewidgetitem11 = self.tbl_RawTranscoder.horizontalHeaderItem(7)
-        ___qtablewidgetitem11.setText(QCoreApplication.translate("MainWindow", u"Output Column", None));
+        ___qtablewidgetitem11.setText(QCoreApplication.translate("MainWindow", u"Output Name", None));
         ___qtablewidgetitem12 = self.tbl_RawTranscoder.horizontalHeaderItem(8)
-        ___qtablewidgetitem12.setText(QCoreApplication.translate("MainWindow", u"Collate", None));
+        ___qtablewidgetitem12.setText(QCoreApplication.translate("MainWindow", u"Output Units", None));
+        ___qtablewidgetitem13 = self.tbl_RawTranscoder.horizontalHeaderItem(9)
+        ___qtablewidgetitem13.setText(QCoreApplication.translate("MainWindow", u"Output Column", None));
+        ___qtablewidgetitem14 = self.tbl_RawTranscoder.horizontalHeaderItem(10)
+        ___qtablewidgetitem14.setText(QCoreApplication.translate("MainWindow", u"Collate", None));
 #if QT_CONFIG(tooltip)
         self.w_ProcessedTranscoder.setToolTip(QCoreApplication.translate("MainWindow", u"Configure the processed data output transcoder settings", None))
 #endif // QT_CONFIG(tooltip)
-        ___qtablewidgetitem13 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(0)
-        ___qtablewidgetitem13.setText(QCoreApplication.translate("MainWindow", u"Name", None));
-        ___qtablewidgetitem14 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(1)
-        ___qtablewidgetitem14.setText(QCoreApplication.translate("MainWindow", u"Output Name", None));
-        ___qtablewidgetitem15 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(2)
-        ___qtablewidgetitem15.setText(QCoreApplication.translate("MainWindow", u"Units", None));
-        ___qtablewidgetitem16 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(3)
-        ___qtablewidgetitem16.setText(QCoreApplication.translate("MainWindow", u"Column", None));
-        ___qtablewidgetitem17 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(4)
-        ___qtablewidgetitem17.setText(QCoreApplication.translate("MainWindow", u"Collate", None));
+        ___qtablewidgetitem15 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(0)
+        ___qtablewidgetitem15.setText(QCoreApplication.translate("MainWindow", u"Name", None));
+        ___qtablewidgetitem16 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(1)
+        ___qtablewidgetitem16.setText(QCoreApplication.translate("MainWindow", u"Output Included", None));
+        ___qtablewidgetitem17 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(2)
+        ___qtablewidgetitem17.setText(QCoreApplication.translate("MainWindow", u"Output Name", None));
+        ___qtablewidgetitem18 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(3)
+        ___qtablewidgetitem18.setText(QCoreApplication.translate("MainWindow", u"Units", None));
+        ___qtablewidgetitem19 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(4)
+        ___qtablewidgetitem19.setText(QCoreApplication.translate("MainWindow", u"Column", None));
+        ___qtablewidgetitem20 = self.tbl_ProcessedTranscoder.horizontalHeaderItem(5)
+        ___qtablewidgetitem20.setText(QCoreApplication.translate("MainWindow", u"Collate", None));
 #if QT_CONFIG(tooltip)
         self.w_SummaryTranscoder.setToolTip(QCoreApplication.translate("MainWindow", u"Configure the summary data output transcoder settings", None))
 #endif // QT_CONFIG(tooltip)
-        ___qtablewidgetitem18 = self.tbl_SummaryTranscoder.horizontalHeaderItem(0)
-        ___qtablewidgetitem18.setText(QCoreApplication.translate("MainWindow", u"Name", None));
-        ___qtablewidgetitem19 = self.tbl_SummaryTranscoder.horizontalHeaderItem(1)
-        ___qtablewidgetitem19.setText(QCoreApplication.translate("MainWindow", u"Output Name", None));
-        ___qtablewidgetitem20 = self.tbl_SummaryTranscoder.horizontalHeaderItem(2)
-        ___qtablewidgetitem20.setText(QCoreApplication.translate("MainWindow", u"Units", None));
-        ___qtablewidgetitem21 = self.tbl_SummaryTranscoder.horizontalHeaderItem(3)
-        ___qtablewidgetitem21.setText(QCoreApplication.translate("MainWindow", u"Column", None));
-        ___qtablewidgetitem22 = self.tbl_SummaryTranscoder.horizontalHeaderItem(4)
-        ___qtablewidgetitem22.setText(QCoreApplication.translate("MainWindow", u"Collate", None));
+        ___qtablewidgetitem21 = self.tbl_SummaryTranscoder.horizontalHeaderItem(0)
+        ___qtablewidgetitem21.setText(QCoreApplication.translate("MainWindow", u"Name", None));
+        ___qtablewidgetitem22 = self.tbl_SummaryTranscoder.horizontalHeaderItem(1)
+        ___qtablewidgetitem22.setText(QCoreApplication.translate("MainWindow", u"Output Included", None));
+        ___qtablewidgetitem23 = self.tbl_SummaryTranscoder.horizontalHeaderItem(2)
+        ___qtablewidgetitem23.setText(QCoreApplication.translate("MainWindow", u"Output Name", None));
+        ___qtablewidgetitem24 = self.tbl_SummaryTranscoder.horizontalHeaderItem(3)
+        ___qtablewidgetitem24.setText(QCoreApplication.translate("MainWindow", u"Units", None));
+        ___qtablewidgetitem25 = self.tbl_SummaryTranscoder.horizontalHeaderItem(4)
+        ___qtablewidgetitem25.setText(QCoreApplication.translate("MainWindow", u"Column", None));
+        ___qtablewidgetitem26 = self.tbl_SummaryTranscoder.horizontalHeaderItem(5)
+        ___qtablewidgetitem26.setText(QCoreApplication.translate("MainWindow", u"Collate", None));
         self.tw_Main.setTabText(self.tw_Main.indexOf(self.t_Configuration), QCoreApplication.translate("MainWindow", u"Configuration", None))
 #if QT_CONFIG(tooltip)
         self.pb_Cancel.setToolTip(QCoreApplication.translate("MainWindow", u"Cancel the running analysis and collation.", None))

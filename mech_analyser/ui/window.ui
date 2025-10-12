@@ -338,7 +338,7 @@
             <number>0</number>
            </property>
            <property name="columnCount">
-            <number>9</number>
+            <number>11</number>
            </property>
            <attribute name="horizontalHeaderVisible">
             <bool>true</bool>
@@ -349,6 +349,11 @@
            <column>
             <property name="text">
              <string>Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Input Included</string>
             </property>
            </column>
            <column>
@@ -369,6 +374,11 @@
            <column>
             <property name="text">
              <string>Input Column</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Output Included</string>
             </property>
            </column>
            <column>
@@ -415,7 +425,7 @@
             <number>0</number>
            </property>
            <property name="columnCount">
-            <number>5</number>
+            <number>6</number>
            </property>
            <attribute name="horizontalHeaderVisible">
             <bool>true</bool>
@@ -426,6 +436,11 @@
            <column>
             <property name="text">
              <string>Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Output Included</string>
             </property>
            </column>
            <column>
@@ -472,7 +487,7 @@
             <number>0</number>
            </property>
            <property name="columnCount">
-            <number>5</number>
+            <number>6</number>
            </property>
            <attribute name="horizontalHeaderVisible">
             <bool>true</bool>
@@ -483,6 +498,11 @@
            <column>
             <property name="text">
              <string>Name</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Output Included</string>
             </property>
            </column>
            <column>

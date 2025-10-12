@@ -1,3 +1,4 @@
+import enum
 import importlib
 import mech_analyser.config as ma_config
 import mech_analyser.experiment.analyser as ma_analyser
@@ -9,6 +10,7 @@ import mech_analyser.study.sample as ma_sample
 import mech_analyser.util.units as ma_units
 import mech_analyser.version as ma_version
 import re
+import traceback
 
 from PySide6.QtCore import QUrl, Qt
 from PySide6.QtGui import QIcon, QDesktopServices
@@ -48,6 +50,47 @@ class Window(QMainWindow):
     Args:
         icon: The icon to display in the window's title bar.
     """
+
+    class ProcessedTranscoderColumns(enum.Enum):
+        """
+        The columns of the processed data transcoder table.
+        """
+
+        NAME = 0
+        OUTPUT_INCLUDED = 1
+        OUTPUT_NAME = 2
+        OUTPUT_UNITS = 3
+        OUTPUT_HEADER_COLUMN = 4
+        COLLATE = 5
+
+    class RawTranscoderColumns(enum.Enum):
+        """
+        The columns of the raw data transcoder table.
+        """
+
+        NAME = 0
+        INPUT_INCLUDED = 1
+        INPUT_NAME = 2
+        INPUT_UNITS = 3
+        INPUT_HEADER_ROWS = 4
+        INPUT_HEADER_COLUMN = 5
+        OUTPUT_INCLUDED = 6
+        OUTPUT_NAME = 7
+        OUTPUT_UNITS = 8
+        OUTPUT_HEADER_COLUMN = 9
+        COLLATE = 10
+
+    class SummaryTranscoderColumns(enum.Enum):
+        """
+        The columns of the summary data transcoder table.
+        """
+
+        NAME = 0
+        OUTPUT_INCLUDED = 1
+        OUTPUT_NAME = 2
+        OUTPUT_UNITS = 3
+        OUTPUT_HEADER_COLUMN = 4
+        COLLATE = 5
 
     def __init__(self, icon: QIcon) -> None:
         super().__init__()
@@ -154,6 +197,9 @@ class Window(QMainWindow):
         # Connect the table clicked functionality
         self._window.tbl_RawTranscoder.itemClicked.connect(
             self._handle_tbl_RawTranscoder_clicked
+        )
+        self._window.tbl_ProcessedTranscoder.itemClicked.connect(
+            self._handle_tbl_ProcessedTranscoder_clicked
         )
         self._window.tbl_SummaryTranscoder.itemClicked.connect(
             self._handle_tbl_SummaryTranscoder_clicked
@@ -264,15 +310,34 @@ class Window(QMainWindow):
         # Add all raw data columns that are selected for collation
         for row in range(self._window.tbl_RawTranscoder.rowCount()):
             name_item: Optional[QTableWidgetItem]
+            input_included_item: Optional[QTableWidgetItem]
+            output_included_item: Optional[QTableWidgetItem]
             collate_item: Optional[QTableWidgetItem]
 
             # Check if the column is selected for collation
-            # NOTE: The "Name" column is column 0 and the "Collate" column is column 8
-            name_item = self._window.tbl_RawTranscoder.item(row, 0)  # "Name" column
-            collate_item = self._window.tbl_RawTranscoder.item(row, 8)  # "Collate" column
+            name_item = self._window.tbl_RawTranscoder.item(
+                row,
+                self.RawTranscoderColumns.NAME.value,
+            )
+            input_included_item = self._window.tbl_RawTranscoder.item(
+                row,
+                self.RawTranscoderColumns.INPUT_INCLUDED.value,
+            )
+            output_included_item = self._window.tbl_RawTranscoder.item(
+                row,
+                self.RawTranscoderColumns.OUTPUT_INCLUDED.value,
+            )
+            collate_item = self._window.tbl_RawTranscoder.item(
+                row,
+                self.RawTranscoderColumns.COLLATE.value,
+            )
             if (
                 name_item is None
+                or input_included_item is None
+                or output_included_item is None
                 or collate_item is None
+                or input_included_item.checkState() != Qt.CheckState.Checked
+                or output_included_item.checkState() != Qt.CheckState.Checked
                 or collate_item.checkState() != Qt.CheckState.Checked
             ):
                 continue
@@ -313,15 +378,27 @@ class Window(QMainWindow):
         # Add all summary columns that are selected for collation
         for row in range(self._window.tbl_SummaryTranscoder.rowCount()):
             name_item: Optional[QTableWidgetItem]
+            output_included_item: Optional[QTableWidgetItem]
             collate_item: Optional[QTableWidgetItem]
 
             # Check if the column is selected for collation
-            # NOTE: The "Name" column is column 0 and the "Collate" column is column 4
-            name_item = self._window.tbl_SummaryTranscoder.item(row, 0)
-            collate_item = self._window.tbl_SummaryTranscoder.item(row, 4)
+            name_item = self._window.tbl_SummaryTranscoder.item(
+                row,
+                self.SummaryTranscoderColumns.NAME.value,
+            )
+            output_included_item = self._window.tbl_RawTranscoder.item(
+                row,
+                self.SummaryTranscoderColumns.OUTPUT_INCLUDED.value,
+            )
+            collate_item = self._window.tbl_SummaryTranscoder.item(
+                row,
+                self.SummaryTranscoderColumns.COLLATE.value,
+            )
             if (
                 name_item is None
+                or output_included_item is None
                 or collate_item is None
+                or output_included_item.checkState() != Qt.CheckState.Checked
                 or collate_item.checkState() != Qt.CheckState.Checked
             ):
                 continue
@@ -685,6 +762,7 @@ class Window(QMainWindow):
         try:
             self._parse_transcoder_columns()
         except Exception as e:
+            traceback.print_exc()
             QMessageBox.warning(
                 self,
                 "Run",
@@ -704,14 +782,14 @@ class Window(QMainWindow):
             widget: ma_ui.ConfigWidget = self._window.sw_Configuration.currentWidget()  # type: ignore
             widget.sync_parameters()
             for sample in self._samples:
-                sample.analyser = widget.create_analyser(
-                    sample.input_file,
-                    widget.parameters,
+                widget.create_analyser(
+                    sample,
                     self._registry.get_raw_transcoder(key),
                     self._registry.get_processed_transcoder(key),
                     self._registry.get_summary_transcoder(key),
                 )
         except Exception as e:
+            traceback.print_exc()
             QMessageBox.warning(
                 self,
                 "Run",
@@ -740,6 +818,7 @@ class Window(QMainWindow):
                 analyser.analyse()
                 analyser.save(sample.output_file)
             except Exception as e:
+                traceback.print_exc()
                 QMessageBox.warning(
                     self,
                     "Run",
@@ -865,6 +944,40 @@ class Window(QMainWindow):
         # Update the GUI
         self._update_tb_SaveCollation()
 
+    def _handle_tbl_ProcessedTranscoder_clicked(self, item: QTableWidgetItem) -> None:
+        """
+        Toggles the checkbox on the corresponding item in the table.
+
+        Args:
+            item: The table item that was clicked.
+        """
+
+        # Only toggle the checkbox if specific items were clicked
+        if item.column() != self.ProcessedTranscoderColumns.OUTPUT_INCLUDED.value:
+            return
+
+        item.setCheckState(
+            Qt.CheckState.Unchecked
+            if item.checkState() == Qt.CheckState.Checked
+            else Qt.CheckState.Checked
+        )
+
+        # Deactivate all unnecessary columns
+        for column in range(
+            item.column() + 1,
+            self.ProcessedTranscoderColumns.COLLATE.value + 1,
+        ):
+            column_item: Optional[QTableWidgetItem] = (
+                self._window.tbl_ProcessedTranscoder.item(item.row(), column)
+            )
+            if column_item is None:
+                continue
+
+            if item.checkState() == Qt.CheckState.Checked:
+                column_item.setFlags(column_item.flags() | Qt.ItemFlag.ItemIsEnabled)
+            else:
+                column_item.setFlags(column_item.flags() & ~Qt.ItemFlag.ItemIsEnabled)
+
     def _handle_tbl_RawTranscoder_clicked(self, item: QTableWidgetItem) -> None:
         """
         Toggles the checkbox on the corresponding item in the table.
@@ -873,8 +986,12 @@ class Window(QMainWindow):
             item: The table item that was clicked.
         """
 
-        # Only toggle the checkbox if the "Collate" item was clicked
-        if item.column() != 8:
+        # Only toggle the checkbox if specific items were clicked
+        if (
+            item.column() != self.RawTranscoderColumns.INPUT_INCLUDED.value
+            and item.column() != self.RawTranscoderColumns.OUTPUT_INCLUDED.value
+            and item.column() != self.RawTranscoderColumns.COLLATE.value
+        ):
             return
 
         item.setCheckState(
@@ -882,6 +999,31 @@ class Window(QMainWindow):
             if item.checkState() == Qt.CheckState.Checked
             else Qt.CheckState.Checked
         )
+
+        if item.column() == self.RawTranscoderColumns.COLLATE.value:
+            return
+
+        # Deactivate all unnecessary columns
+        enable: bool = item.checkState() == Qt.CheckState.Checked
+        for column in range(
+            item.column() + 1,
+            self.RawTranscoderColumns.COLLATE.value + 1,
+        ):
+            column_item: Optional[QTableWidgetItem] = self._window.tbl_RawTranscoder.item(
+                item.row(),
+                column,
+            )
+            if column_item is None:
+                continue
+
+            if enable:
+                column_item.setFlags(column_item.flags() | Qt.ItemFlag.ItemIsEnabled)
+            else:
+                column_item.setFlags(column_item.flags() & ~Qt.ItemFlag.ItemIsEnabled)
+
+            # Output parameters are only enabled if "Output Included" is also checked
+            if column == self.RawTranscoderColumns.OUTPUT_INCLUDED.value:
+                enable &= column_item.checkState() == Qt.CheckState.Checked
 
     def _handle_tbl_SummaryTranscoder_clicked(self, item: QTableWidgetItem) -> None:
         """
@@ -891,8 +1033,11 @@ class Window(QMainWindow):
             item: The table item that was clicked.
         """
 
-        # Only toggle the checkbox if the "Collate" item was clicked
-        if item.column() != 4:
+        # Only toggle the checkbox if specific items were clicked
+        if (
+            item.column() != self.SummaryTranscoderColumns.OUTPUT_INCLUDED.value
+            and item.column() != self.SummaryTranscoderColumns.COLLATE.value
+        ):
             return
 
         item.setCheckState(
@@ -900,6 +1045,25 @@ class Window(QMainWindow):
             if item.checkState() == Qt.CheckState.Checked
             else Qt.CheckState.Checked
         )
+
+        if item.column() == self.RawTranscoderColumns.COLLATE.value:
+            return
+
+        # Deactivate all unnecessary columns
+        for column in range(
+            item.column() + 1,
+            self.SummaryTranscoderColumns.COLLATE.value + 1,
+        ):
+            column_item: Optional[QTableWidgetItem] = (
+                self._window.tbl_SummaryTranscoder.item(item.row(), column)
+            )
+            if column_item is None:
+                continue
+
+            if item.checkState() == Qt.CheckState.Checked:
+                column_item.setFlags(column_item.flags() | Qt.ItemFlag.ItemIsEnabled)
+            else:
+                column_item.setFlags(column_item.flags() & ~Qt.ItemFlag.ItemIsEnabled)
 
     def _handle_treeOutput_clicked(self, item: QTreeWidgetItem, column: int) -> None:
         """
@@ -934,35 +1098,107 @@ class Window(QMainWindow):
             column: ma_data.RawTranscoder.Column
 
             # NOTE: It is known that these items are not None
-            item = cast(QTableWidgetItem, self._window.tbl_RawTranscoder.item(row, 0))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.NAME.value,
+                ),
+            )
             column = self._registry.get_raw_transcoder(key).columns[item.text()]
 
+            # Update the input included state
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.INPUT_INCLUDED.value,
+                ),
+            )
+            column.input_included = item.checkState() == Qt.CheckState.Checked
+
             # Update the input name
-            item = cast(QTableWidgetItem, self._window.tbl_RawTranscoder.item(row, 1))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.INPUT_NAME.value,
+                ),
+            )
             column.input_name = item.text()
 
             # Update the input units
-            item = cast(QTableWidgetItem, self._window.tbl_RawTranscoder.item(row, 2))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.INPUT_UNITS.value,
+                ),
+            )
             column.input_units = ma_units.unit_registry.parse_units(item.text())
 
             # Update the input header rows
-            item = cast(QTableWidgetItem, self._window.tbl_RawTranscoder.item(row, 3))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.INPUT_HEADER_ROWS.value,
+                ),
+            )
             column.input_header_rows = [int(i) for i in re.split(r",\s*", item.text())]
 
             # Update the input header column
-            item = cast(QTableWidgetItem, self._window.tbl_RawTranscoder.item(row, 4))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.INPUT_HEADER_COLUMN.value,
+                ),
+            )
             column.input_header_column = int(item.text())
 
+            # Update the output included state
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.OUTPUT_INCLUDED.value,
+                ),
+            )
+            # NOTE: "Output Included" is only if both the "Input Included" and "Output
+            #       Included" flags are set
+            column.output_included = (
+                column.input_included and item.checkState() == Qt.CheckState.Checked
+            )
+
             # Update the output name
-            item = cast(QTableWidgetItem, self._window.tbl_RawTranscoder.item(row, 5))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.OUTPUT_NAME.value,
+                ),
+            )
             column.output_name = item.text()
 
             # Update the output units
-            item = cast(QTableWidgetItem, self._window.tbl_RawTranscoder.item(row, 6))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.OUTPUT_UNITS.value,
+                ),
+            )
             column.output_units = ma_units.unit_registry.parse_units(item.text())
 
             # Update the output header column
-            item = cast(QTableWidgetItem, self._window.tbl_RawTranscoder.item(row, 7))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_RawTranscoder.item(
+                    row,
+                    self.RawTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
+                ),
+            )
             column.output_header_column = int(item.text())
 
         # Synchronise the processed transcoder
@@ -972,25 +1208,51 @@ class Window(QMainWindow):
 
             # NOTE: It is known that these items are not None
             item = cast(
-                QTableWidgetItem, self._window.tbl_ProcessedTranscoder.item(row, 0)
+                QTableWidgetItem,
+                self._window.tbl_ProcessedTranscoder.item(
+                    row,
+                    self.ProcessedTranscoderColumns.NAME.value,
+                ),
             )
             column = self._registry.get_processed_transcoder(key).columns[item.text()]
 
+            # Update the output included state
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_ProcessedTranscoder.item(
+                    row,
+                    self.ProcessedTranscoderColumns.OUTPUT_INCLUDED.value,
+                ),
+            )
+            column.output_included = item.checkState() == Qt.CheckState.Checked
+
             # Update the output name
             item = cast(
-                QTableWidgetItem, self._window.tbl_ProcessedTranscoder.item(row, 1)
+                QTableWidgetItem,
+                self._window.tbl_ProcessedTranscoder.item(
+                    row,
+                    self.ProcessedTranscoderColumns.OUTPUT_NAME.value,
+                ),
             )
             column.output_name = item.text()
 
             # Update the output units
             item = cast(
-                QTableWidgetItem, self._window.tbl_ProcessedTranscoder.item(row, 2)
+                QTableWidgetItem,
+                self._window.tbl_ProcessedTranscoder.item(
+                    row,
+                    self.ProcessedTranscoderColumns.OUTPUT_UNITS.value,
+                ),
             )
             column.output_units = ma_units.unit_registry.parse_units(item.text())
 
             # Update the output header column
             item = cast(
-                QTableWidgetItem, self._window.tbl_ProcessedTranscoder.item(row, 3)
+                QTableWidgetItem,
+                self._window.tbl_ProcessedTranscoder.item(
+                    row,
+                    self.ProcessedTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
+                ),
             )
             column.output_header_column = int(item.text())
 
@@ -1000,19 +1262,53 @@ class Window(QMainWindow):
             column: ma_data.SummaryTranscoder.Column
 
             # NOTE: It is known that these items are not None
-            item = cast(QTableWidgetItem, self._window.tbl_SummaryTranscoder.item(row, 0))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_SummaryTranscoder.item(
+                    row,
+                    self.SummaryTranscoderColumns.NAME.value,
+                ),
+            )
             column = self._registry.get_summary_transcoder(key).columns[item.text()]
 
+            # Update the output included state
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_SummaryTranscoder.item(
+                    row,
+                    self.SummaryTranscoderColumns.OUTPUT_INCLUDED.value,
+                ),
+            )
+            column.output_included = item.checkState() == Qt.CheckState.Checked
+
             # Update the output name
-            item = cast(QTableWidgetItem, self._window.tbl_SummaryTranscoder.item(row, 1))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_SummaryTranscoder.item(
+                    row,
+                    self.SummaryTranscoderColumns.OUTPUT_NAME.value,
+                ),
+            )
             column.output_name = item.text()
 
             # Update the output units
-            item = cast(QTableWidgetItem, self._window.tbl_SummaryTranscoder.item(row, 2))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_SummaryTranscoder.item(
+                    row,
+                    self.SummaryTranscoderColumns.OUTPUT_UNITS.value,
+                ),
+            )
             column.output_units = ma_units.unit_registry.parse_units(item.text())
 
             # Update the output header column
-            item = cast(QTableWidgetItem, self._window.tbl_SummaryTranscoder.item(row, 3))
+            item = cast(
+                QTableWidgetItem,
+                self._window.tbl_SummaryTranscoder.item(
+                    row,
+                    self.SummaryTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
+                ),
+            )
             column.output_header_column = int(item.text())
 
     def _reset(self) -> None:
@@ -1139,19 +1435,50 @@ class Window(QMainWindow):
             # Add the column name
             item = QTableWidgetItem(column.name)
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            self._window.tbl_ProcessedTranscoder.setItem(i, 0, item)
+            self._window.tbl_ProcessedTranscoder.setItem(
+                i,
+                self.ProcessedTranscoderColumns.NAME.value,
+                item,
+            )
+
+            # Add the column output included
+            # NOTE: checking is handled solely within the
+            #       _handle_tbl_RawTranscoder_clicked() method
+            item = QTableWidgetItem("")
+            item.setFlags(
+                item.flags()
+                & ~(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEditable)
+            )
+            item.setCheckState(Qt.CheckState.Checked)
+            self._window.tbl_ProcessedTranscoder.setItem(
+                i,
+                self.ProcessedTranscoderColumns.OUTPUT_INCLUDED.value,
+                item,
+            )
 
             # Add the column output name
             item = QTableWidgetItem(column.output_name)
-            self._window.tbl_ProcessedTranscoder.setItem(i, 1, item)
+            self._window.tbl_ProcessedTranscoder.setItem(
+                i,
+                self.ProcessedTranscoderColumns.OUTPUT_NAME.value,
+                item,
+            )
 
             # Add the column output units
             item = QTableWidgetItem(str(column.output_units))
-            self._window.tbl_ProcessedTranscoder.setItem(i, 2, item)
+            self._window.tbl_ProcessedTranscoder.setItem(
+                i,
+                self.ProcessedTranscoderColumns.OUTPUT_UNITS.value,
+                item,
+            )
 
             # Add the column output header column
             item = QTableWidgetItem(str(column.output_header_column))
-            self._window.tbl_ProcessedTranscoder.setItem(i, 3, item)
+            self._window.tbl_ProcessedTranscoder.setItem(
+                i,
+                self.ProcessedTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
+                item,
+            )
 
             # Add the collate column
             # NOTE: checking is handled solely within the
@@ -1162,7 +1489,11 @@ class Window(QMainWindow):
                 & ~(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEditable)
             )
             item.setCheckState(Qt.CheckState.Checked)
-            self._window.tbl_ProcessedTranscoder.setItem(i, 4, item)
+            self._window.tbl_ProcessedTranscoder.setItem(
+                i,
+                self.ProcessedTranscoderColumns.COLLATE.value,
+                item,
+            )
 
         self._window.tbl_ProcessedTranscoder.resizeColumnsToContents()
 
@@ -1182,35 +1513,97 @@ class Window(QMainWindow):
             # Add the column name
             item = QTableWidgetItem(column.name)
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            self._window.tbl_RawTranscoder.setItem(i, 0, item)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.NAME.value,
+                item,
+            )
+
+            # Add the column input included
+            # NOTE: checking is handled solely within the
+            #       _handle_tbl_RawTranscoder_clicked() method
+            item = QTableWidgetItem("")
+            item.setFlags(
+                item.flags()
+                & ~(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEditable)
+            )
+            item.setCheckState(Qt.CheckState.Checked)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.INPUT_INCLUDED.value,
+                item,
+            )
 
             # Add the column input name
             item = QTableWidgetItem(column.input_name.replace("\n", "\\n"))
-            self._window.tbl_RawTranscoder.setItem(i, 1, item)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.INPUT_NAME.value,
+                item,
+            )
 
             # Add the column input units
             item = QTableWidgetItem(str(column.input_units))
-            self._window.tbl_RawTranscoder.setItem(i, 2, item)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.INPUT_UNITS.value,
+                item,
+            )
 
             # Add the column input header row
             item = QTableWidgetItem(", ".join(str(i) for i in column.input_header_rows))
-            self._window.tbl_RawTranscoder.setItem(i, 3, item)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.INPUT_HEADER_ROWS.value,
+                item,
+            )
 
             # Add the column input header column
             item = QTableWidgetItem(str(column.input_header_column))
-            self._window.tbl_RawTranscoder.setItem(i, 4, item)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.INPUT_HEADER_COLUMN.value,
+                item,
+            )
+
+            # Add the column output included
+            # NOTE: checking is handled solely within the
+            #       _handle_tbl_RawTranscoder_clicked() method
+            item = QTableWidgetItem("")
+            item.setFlags(
+                item.flags()
+                & ~(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEditable)
+            )
+            item.setCheckState(Qt.CheckState.Checked)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.OUTPUT_INCLUDED.value,
+                item,
+            )
 
             # Add the column output name
             item = QTableWidgetItem(column.output_name)
-            self._window.tbl_RawTranscoder.setItem(i, 5, item)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.OUTPUT_NAME.value,
+                item,
+            )
 
             # Add the column output units
             item = QTableWidgetItem(str(column.output_units))
-            self._window.tbl_RawTranscoder.setItem(i, 6, item)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.OUTPUT_UNITS.value,
+                item,
+            )
 
             # Add the column output header column
             item = QTableWidgetItem(str(column.output_header_column))
-            self._window.tbl_RawTranscoder.setItem(i, 7, item)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
+                item,
+            )
 
             # Add the collate column
             # NOTE: checking is handled solely within the
@@ -1221,10 +1614,15 @@ class Window(QMainWindow):
                 & ~(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEditable)
             )
             item.setCheckState(Qt.CheckState.Checked)
-            self._window.tbl_RawTranscoder.setItem(i, 8, item)
+            self._window.tbl_RawTranscoder.setItem(
+                i,
+                self.RawTranscoderColumns.COLLATE.value,
+                item,
+            )
 
     def _update_tbl_SummaryTranscoder(
-        self, summary_transcoder: ma_data.SummaryTranscoder
+        self,
+        summary_transcoder: ma_data.SummaryTranscoder,
     ) -> None:
         """
         Updates the tbl_SummaryTranscoder with the summary data transcoder parameters.
@@ -1241,19 +1639,50 @@ class Window(QMainWindow):
             # Add the column name
             item = QTableWidgetItem(column.name)
             item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            self._window.tbl_SummaryTranscoder.setItem(i, 0, item)
+            self._window.tbl_SummaryTranscoder.setItem(
+                i,
+                self.SummaryTranscoderColumns.NAME.value,
+                item,
+            )
+
+            # Add the column output included
+            # NOTE: checking is handled solely within the
+            #       _handle_tbl_RawTranscoder_clicked() method
+            item = QTableWidgetItem("")
+            item.setFlags(
+                item.flags()
+                & ~(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEditable)
+            )
+            item.setCheckState(Qt.CheckState.Checked)
+            self._window.tbl_SummaryTranscoder.setItem(
+                i,
+                self.SummaryTranscoderColumns.OUTPUT_INCLUDED.value,
+                item,
+            )
 
             # Add the column output name
             item = QTableWidgetItem(column.output_name)
-            self._window.tbl_SummaryTranscoder.setItem(i, 1, item)
+            self._window.tbl_SummaryTranscoder.setItem(
+                i,
+                self.SummaryTranscoderColumns.OUTPUT_NAME.value,
+                item,
+            )
 
             # Add the column output units
             item = QTableWidgetItem(str(column.output_units))
-            self._window.tbl_SummaryTranscoder.setItem(i, 2, item)
+            self._window.tbl_SummaryTranscoder.setItem(
+                i,
+                self.SummaryTranscoderColumns.OUTPUT_UNITS.value,
+                item,
+            )
 
             # Add the column output header column
             item = QTableWidgetItem(str(column.output_header_column))
-            self._window.tbl_SummaryTranscoder.setItem(i, 3, item)
+            self._window.tbl_SummaryTranscoder.setItem(
+                i,
+                self.SummaryTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
+                item,
+            )
 
             # Add the collate column
             # NOTE: checking is handled solely within the
@@ -1264,7 +1693,11 @@ class Window(QMainWindow):
                 & ~(Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsEditable)
             )
             item.setCheckState(Qt.CheckState.Checked)
-            self._window.tbl_SummaryTranscoder.setItem(i, 4, item)
+            self._window.tbl_SummaryTranscoder.setItem(
+                i,
+                self.SummaryTranscoderColumns.COLLATE.value,
+                item,
+            )
 
 
 class Application(QApplication):

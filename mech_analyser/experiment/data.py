@@ -36,33 +36,42 @@ class Transcoder(Serialiser):
 
         Args:
             name: The name of the column as recognised by the program.
+            input_included: Whether the column is included in the input file.
+            input_included_editing: Whether the input_included flag can be edited.
             input_name: The name of the column in the input file.
+            input_units: The units of the data in the input file.
+            input_header_rows: The rows in the input file that contain the header.
+            input_header_column: The column in the input file that contains the header.
+            output_included: Whether the column is included in the output file.
+            output_included_editing: Whether the output_included flag can be edited.
             output_name: The name of the column in the output file.  To utilise multiple
                 rows for the name of the column, use a newline character ('\n') to
                 separate the rows.
-            input_header_rows: The rows in the input file that contain the header.
-            input_header_column: The column in the input file that contains the header.
+            output_units: The units of the data in the output file.
             output_header_column: The column in the output file that contains the header.
             data_type: The type of the data in the column.
         """
 
         name: str = dataclasses.field(default="")
+        input_included: bool = dataclasses.field(default=True)
+        input_included_editing: bool = dataclasses.field(default=False)
         input_name: str = dataclasses.field(default="")
-        output_name: str = dataclasses.field(default="")
+        input_units: pint.Unit = dataclasses.field(default=pint.Unit("dimensionless"))
         input_header_rows: list[int] = dataclasses.field(default_factory=lambda: [0])
         input_header_column: int = dataclasses.field(default=0)
+        output_included: bool = dataclasses.field(default=True)
+        output_included_editing: bool = dataclasses.field(default=True)
+        output_name: str = dataclasses.field(default="")
+        output_units: pint.Unit = dataclasses.field(default=pint.Unit("dimensionless"))
         output_header_column: int = dataclasses.field(default=0)
         data_type: type = dataclasses.field(default=float)
-        input_units: pint.Unit = dataclasses.field(default=pint.Unit("dimensionless"))
-        output_units: pint.Unit = dataclasses.field(default=pint.Unit("dimensionless"))
 
         def __post_init__(self) -> None:
             super().__post_init__()
 
-            if not self.output_name:
-                self.output_name = self.name
-
-            if not self.input_units.is_compatible_with(self.output_units):
+            if self.input_included and not self.input_units.is_compatible_with(
+                self.output_units
+            ):
                 raise ValueError(
                     f"Units are incompatible ({self.input_units} with "
                     f"{self.output_units})"
@@ -116,7 +125,9 @@ class Transcoder(Serialiser):
             """
 
             frame: pd.DataFrame = pd.read_csv(  # type: ignore
-                input_file, header=self.input_header_rows, skip_blank_lines=False
+                input_file,
+                header=self.input_header_rows,
+                skip_blank_lines=False,
             )
             if len(self.input_header_rows) > 1:
                 frame.columns = [
@@ -129,6 +140,12 @@ class Transcoder(Serialiser):
                     )
                     for column in frame.columns
                 ]
+
+            # Raw data is not included in the input file: create an empty column
+            # NOTE: due to how load() is called, this condition should actually never
+            #       trigger, but it is included as a safeguard in case it is called
+            if not self.input_included:
+                return pd.DataFrame([self.data_type()] * len(frame), columns=[self.name])
 
             # Select the desired column manually
             if self.input_header_column < 0:
@@ -317,7 +334,12 @@ class Transcoder(Serialiser):
 
         # Load the columns from the input file
         frame: pd.DataFrame = pd.concat(
-            [i.load(input_file, **kwargs) for i in self._columns.values()], axis=1
+            [
+                i.load(input_file, **kwargs)
+                for i in self._columns.values()
+                if i.input_included
+            ],
+            axis=1,
         )
 
         # Reset the index of the frame
@@ -346,7 +368,7 @@ class Transcoder(Serialiser):
 
         # Validate the outputs
         ordered_columns: list[Transcoder.Column] = sorted(
-            self._columns.values(),
+            [column for column in self._columns.values() if column.output_included],
             key=lambda column: column.output_header_column,
         )
         if len(ordered_columns) == 0:
@@ -365,18 +387,13 @@ class Transcoder(Serialiser):
         # If the output name contains newline characters, it will be split into multiple
         # rows in the output file
         output_frame: pd.DataFrame = pd.concat(
-            [
-                frame[[column.name]].copy(deep=True)
-                for column in ordered_columns
-                if column.output_name
-            ],
+            [frame[[column.name]].copy(deep=True) for column in ordered_columns],
             axis=1,
         )
         output_frame.rename(
             columns={
                 column.name: self._get_output_name_as_tuple(column)
                 for column in ordered_columns
-                if column.output_name
             },
             inplace=True,
         )

@@ -27,6 +27,7 @@ class SummaryTranscoder(ma_collation.SummaryVerticalTranscoder):
             c.output_header_column += 1
         columns["Name"] = ma_data.SummaryTranscoder.Column(
             name="Name",
+            input_included=False,
             output_name="Sample",
             output_header_column=0,
             data_type=str,
@@ -36,6 +37,7 @@ class SummaryTranscoder(ma_collation.SummaryVerticalTranscoder):
             ma_data.SummaryTranscoder().columns,
             ma_data.SummaryTranscoder.Column(
                 name="Name",
+                input_included=False,
                 output_name="Sample",
                 output_header_column=0,
                 data_type=str,
