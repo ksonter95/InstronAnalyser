@@ -37,17 +37,17 @@ class TestAnalyser(unittest.TestCase):
             "Column1": Transcoder.Column(
                 name="Column1",
                 input_name="Input1 (units)",
-                output_name="Output1 (units)",
                 input_header_rows=[0, 1],
                 input_header_column=0,
+                output_name="Output1 (units)",
                 output_header_column=0,
             ),
             "Column2": Transcoder.Column(
                 name="Column2",
                 input_name="Input2 (units)",
-                output_name="Output2 (units)",
                 input_header_rows=[0, 1],
                 input_header_column=1,
+                output_name="Output2 (units)",
                 output_header_column=1,
             ),
         }

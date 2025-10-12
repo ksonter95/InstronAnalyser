@@ -41,31 +41,31 @@ class TestBase(unittest.TestCase):
             "Column1": Transcoder.Column(
                 name="Column1",
                 input_name="Input1 (units)",
-                output_name="Output1\n(units)",
                 input_header_rows=[0, 1],
                 input_header_column=0,
+                output_name="Output1\n(units)",
                 output_header_column=0,
                 data_type=int,
             ),
             "Column2": Transcoder.Column(
                 name="Column2",
                 input_name="Input2 (units)",
-                output_name="Output2 (units)",
                 input_header_rows=[0, 1],
                 input_header_column=1,
+                output_name="Output2 (units)",
                 output_header_column=1,
                 data_type=str,
             ),
             "Column3": Transcoder.Column(
                 name="Column3",
                 input_name="Input3 (units)",
-                output_name="Output3 (units)",
+                input_units=pint.Unit("ms"),
                 input_header_rows=[0, 1],
                 input_header_column=2,
+                output_name="Output3 (units)",
+                output_units=pint.Unit("us"),
                 output_header_column=2,
                 data_type=float,
-                input_units=pint.Unit("ms"),
-                output_units=pint.Unit("us"),
             ),
         }
         self.sample_frame = pd.DataFrame(
@@ -220,6 +220,7 @@ class TestTranscoder(TestBase):
             self.test_xlsx,
             sheet_name="TestSheet",
             header=[0, 1],
+            index_col=0,
         )
         # Merge multi-line headers into single line, separated by space
         saved_frame.columns = [
@@ -315,6 +316,7 @@ class TestData(TestBase):
             self.test_xlsx,
             sheet_name="Test Data",
             header=[0, 1],
+            index_col=0,
         )
         # Merge multi-line headers into single line, separated by space
         saved_frame.columns = [
@@ -386,6 +388,7 @@ class TestRawTranscoder(TestTranscoder):
             self.test_xlsx,
             sheet_name="Raw Data",
             header=[0, 1],
+            index_col=0,
         )
         # Merge multi-line headers into single line, separated by space
         saved_frame.columns = [
@@ -538,6 +541,7 @@ class TestSummaryTranscoder(TestTranscoder):
             self.test_xlsx,
             sheet_name="Summary",
             header=[0, 1],
+            index_col=0,
         )
         # Merge multi-line headers into single line, separated by space
         saved_frame.columns = [
