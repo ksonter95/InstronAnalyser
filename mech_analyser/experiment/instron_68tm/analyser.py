@@ -41,21 +41,25 @@ class Parameters(ma_analyser.Parameters):
                 cross-sectional area and/or initial length are not set.
         """
 
-        if self.properties_file is None or (
-            self.cross_sectional_area_m2 is None and self.initial_length_m is None
+        if (
+            self.properties_file is None
+            and self.cross_sectional_area_m2 is None
+            and self.initial_length_m is None
         ):
             return
 
-        with self.properties_file.open(newline="") as csv_file:
+        with self.properties_file.open(newline="", encoding="utf-8-sig") as csv_file:
             reader: csv.DictReader[str] = csv.DictReader(csv_file)
 
             for row in reader:
                 if row["Name"] != name:
                     continue
                 if self.cross_sectional_area_m2 is None:
-                    self.cross_sectional_area_m2 = float(row["Cross-sectional area"])
+                    self.cross_sectional_area_m2 = (
+                        float(row["Cross-sectional area"]) * 1e-6
+                    )
                 if self.initial_length_m is None:
-                    self.initial_length_m = float(row["Initial length"])
+                    self.initial_length_m = float(row["Initial length"]) * 1e-3
 
                 return
 

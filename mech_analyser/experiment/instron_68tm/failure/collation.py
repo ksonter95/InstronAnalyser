@@ -34,7 +34,7 @@ class SummaryTranscoder(ma_collation.SummaryVerticalTranscoder):
         )
 
         super().__init__(
-            ma_data.SummaryTranscoder().columns,
+            columns,
             ma_data.SummaryTranscoder.Column(
                 name="Name",
                 input_included=False,

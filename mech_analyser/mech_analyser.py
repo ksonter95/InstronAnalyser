@@ -386,7 +386,7 @@ class Window(QMainWindow):
                 row,
                 self.SummaryTranscoderColumns.NAME.value,
             )
-            output_included_item = self._window.tbl_RawTranscoder.item(
+            output_included_item = self._window.tbl_SummaryTranscoder.item(
                 row,
                 self.SummaryTranscoderColumns.OUTPUT_INCLUDED.value,
             )
