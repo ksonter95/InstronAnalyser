@@ -641,7 +641,7 @@ class Data(Serialiser):
     def columns(self) -> list[str]:
         return [i for i in self._frame.columns]
 
-    def generate_plot(self, **kwargs: dict[str, Any]) -> None:
+    def generate_plot(self, **kwargs: Any) -> None:
         """
         Generates a plot of the data.
 
@@ -854,12 +854,7 @@ class RawData(Data):
         return cast(RawTranscoder, self._transcoder)
 
     @classmethod
-    def load(
-        cls,
-        input_file: Path,
-        transcoder: RawTranscoder,
-        **kwargs: dict[str, Any],
-    ) -> Self:
+    def load(cls, input_file: Path, transcoder: RawTranscoder, **kwargs: Any) -> Self:
         """
         Loads the raw data from the input file.
 

@@ -1,13 +1,13 @@
-from typing import Optional
-
-import pandas as pd
 import mech_analyser.experiment.collation as ma_collation
 import mech_analyser.experiment.instron_68tm.failure.data as ma_data
+import pandas as pd
+
+from typing import Optional
 
 
 class RawTranscoder(ma_collation.RawTranscoder):
     """
-    Instron 68TM collated raw data file transcoders.
+    Instron 68TM compression-to-failure experiment collated raw data file transcoders.
     """
 
     def __init__(self) -> None:
@@ -16,7 +16,7 @@ class RawTranscoder(ma_collation.RawTranscoder):
 
 class SummaryTranscoder(ma_collation.SummaryVerticalTranscoder):
     """
-    Instron 68TM collated summary data file transcoders.
+    Instron 68TM compression-to-failure experiment collated summary data file transcoders.
     """
 
     def __init__(self) -> None:
@@ -47,7 +47,7 @@ class SummaryTranscoder(ma_collation.SummaryVerticalTranscoder):
 
 class SummaryCollation(ma_collation.SummaryVerticalCollation):
     """
-    Instron 68TM compression-to-failure summary collation.
+    Instron 68TM compression-to-failure experiment summary collation.
 
     Args:
         transcoder: The summary data transcoder.

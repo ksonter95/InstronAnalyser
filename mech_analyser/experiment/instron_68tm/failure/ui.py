@@ -1,7 +1,8 @@
+import copy
 import mech_analyser.experiment.instron_68tm.failure.analyser as ma_analyser
 import mech_analyser.experiment.instron_68tm.failure.data as ma_data
 import mech_analyser.experiment.instron_68tm.failure.phase as ma_phase
-import mech_analyser.experiment.instron_68tm.failure.view as view
+import mech_analyser.experiment.instron_68tm.failure.view as ma_view
 import mech_analyser.experiment.instron_68tm.ui as ma_ui
 import mech_analyser.study.sample as ma_sample
 
@@ -13,12 +14,11 @@ from typing import Optional, cast
 
 class ConfigWidget(ma_ui.ConfigWidget):
     """
-    User interface configuration widget for the compression-to-failure Instron
-    68TM experiment.
+    Instron 68TM compression-to-failure experiment user interface configuration widget.
     """
 
     def __init__(self) -> None:
-        super().__init__(view.Ui_w_Failure(), ma_analyser.Parameters())  # type: ignore
+        super().__init__(ma_view.Ui_w_Failure(), ma_analyser.Parameters())  # type: ignore
 
         self._properties_csv: Optional[Path] = None
 
@@ -27,8 +27,8 @@ class ConfigWidget(ma_ui.ConfigWidget):
         return cast(ma_analyser.Parameters, self._parameters)
 
     @property
-    def view(self) -> view.Ui_w_Failure:  # type: ignore
-        return cast(view.Ui_w_Failure, self._view)
+    def view(self) -> ma_view.Ui_w_Failure:  # type: ignore
+        return cast(ma_view.Ui_w_Failure, self._view)
 
     def create_analyser(
         self,
@@ -51,7 +51,9 @@ class ConfigWidget(ma_ui.ConfigWidget):
 
         sample.analyser = ma_analyser.Analyser(
             sample.input_file,
-            self.parameters,
+            # NOTE: ensure a deep copy of the parameters is used to avoid issues with
+            #       multiple analysers sharing the same parameters instance
+            copy.deepcopy(self.parameters),
             cast(ma_data.ma_data.RawTranscoder, raw_transcoder),
             cast(ma_data.ProcessedTranscoder, processed_transcoder),
             cast(ma_data.SummaryTranscoder, summary_transcoder),
@@ -59,12 +61,12 @@ class ConfigWidget(ma_ui.ConfigWidget):
 
     def init(self) -> None:
         """
-        Initialises the configuration widget by setting the input fields to the
-        defaults of the parameters to use when analysing the experiment and
-        connecting any signals with an associated slot.
+        Initialises the configuration widget by setting the input fields to the defaults
+        of the parameters to use when analysing the experiment and connecting any signals
+        with an associated slot.
         """
 
-        # Set the input fields to the defaults
+        # Set the input fields to the parameter defaults
         self.view.sb_Tare.setValue(self.parameters.tare_force_N)
         self.view.sb_Abort.setValue(self.parameters.abort_strain_pct)
         self.view.cb_Toughness.setChecked(
@@ -100,22 +102,14 @@ class ConfigWidget(ma_ui.ConfigWidget):
         )
         self.view.cb_Properties.setChecked(False)
         self.view.tb_ReadProperties.setText("")
-        self.view.sb_Area.setValue(
-            self.parameters.cross_sectional_area_m2 * 1e6
-            if self.parameters.cross_sectional_area_m2 is not None
-            else 1.0
-        )
+        self.view.sb_Area.setValue(self.parameters.cross_sectional_area_m2 * 1e6)
         self.view.cb_Area.setChecked(
-            self.parameters.cross_sectional_area_m2 is None
+            self.parameters.read_cross_sectional_area
             and self.parameters.properties_file is not None
         )
-        self.view.sb_Length.setValue(
-            self.parameters.initial_length_m * 1e3
-            if self.parameters.initial_length_m is not None
-            else 1.0
-        )
+        self.view.sb_Length.setValue(self.parameters.initial_length_m * 1e3)
         self.view.cb_Length.setChecked(
-            self.parameters.initial_length_m is None
+            self.parameters.read_initial_length
             and self.parameters.properties_file is not None
         )
 
@@ -177,16 +171,14 @@ class ConfigWidget(ma_ui.ConfigWidget):
         self.parameters.properties_file = (
             self._properties_csv if self.view.cb_Properties.isChecked() else None
         )
-        self.parameters.cross_sectional_area_m2 = (
-            self.view.sb_Area.value() * 1e-6
-            if self.view.cb_Properties.isChecked() and not self.view.cb_Area.isChecked()
-            else None
+        self.parameters.read_cross_sectional_area = (
+            self.view.cb_Properties.isChecked() and self.view.cb_Area.isChecked()
         )
-        self.parameters.initial_length_m = (
-            self.view.sb_Length.value() * 1e-3
-            if self.view.cb_Properties.isChecked() and not self.view.cb_Length.isChecked()
-            else None
+        self.parameters.read_initial_length = (
+            self.view.cb_Properties.isChecked() and self.view.cb_Length.isChecked()
         )
+        self.parameters.cross_sectional_area_m2 = self.view.sb_Area.value() * 1e-6
+        self.parameters.initial_length_m = self.view.sb_Length.value() * 1e-3
 
     def _handle_cb_Area_toggled(self) -> None:
         """

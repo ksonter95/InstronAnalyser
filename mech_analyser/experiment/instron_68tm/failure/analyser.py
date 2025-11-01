@@ -1,5 +1,4 @@
 import dataclasses
-
 import mech_analyser.experiment.instron_68tm.analyser as ma_analyser
 import mech_analyser.experiment.instron_68tm.failure.data as ma_data
 import mech_analyser.experiment.instron_68tm.failure.phase as ma_phase
@@ -11,8 +10,7 @@ from typing import Optional, cast
 @dataclasses.dataclass
 class Parameters(ma_analyser.Parameters):
     """
-    Parameters of an analyser of a compression-to-failure experiment using an
-    Instron 68TM.
+    Instron 68TM compression-to-failure experiment analyser parameters.
 
     Args:
         tare_force_N: The force which will be used to tare the experiment.  All
@@ -21,6 +19,10 @@ class Parameters(ma_analyser.Parameters):
             force will be offset accordingly.
         properties_file: The path to the properties file containing the cross-sectional
             area and initial length of the sample.
+        read_cross_sectional_area: Whether to read the cross-sectional area from the
+            properties file.
+        read_initial_length: Whether to read the initial length from the properties
+            file.
         cross_sectional_area_m2: The cross-sectional surface area of the sample.
         initial_length_m: The initial length of the sample.
         abort_strain_pct: The strain at which the experiment aborts even if the
@@ -73,11 +75,11 @@ class Parameters(ma_analyser.Parameters):
 
 class Analyser(ma_analyser.Analyser):
     """
-    Analyser of a compression-to-failure experiment using an Instron 68TM.
+    Instron 68TM compression-to-failure experiment analyser.
 
     Args:
         input_file: The path to the input file containing the output of the Instron 68TM
-            experiment.
+            compression-to-failure experiment.
         parameters: The parameters to use when analysing the experiment.
         raw_transcoder: The raw experiment data file transcoder.
         processed_transcoder: The processed experiment data file transcoder.
@@ -106,7 +108,9 @@ class Analyser(ma_analyser.Analyser):
             id,
         )
 
-        self.phases.append(ma_phase.Phase(self.raw_data, processed_transcoder))
+        # Create the phases if they do not exist
+        if not self.phases:
+            self.phases.append(ma_phase.Phase(self.raw_data, processed_transcoder))
 
     @property
     def parameters(self) -> Parameters:
@@ -122,16 +126,15 @@ class Analyser(ma_analyser.Analyser):
 
     def analyse(self) -> None:
         """
-        Analyses the output of the compression-to-failure Instron 68TM
-        experiment.
+        Analyses the output of the Instron 68TM compression-to-failure experiment.
         """
 
         self.summary_data.clear_all_rows()
 
         for i in range(len(self.phases)):
             parameters = ma_phase.Parameters(
-                cross_sectional_area_m2=self.parameters.cross_sectional_area_m2 or 0.0,
-                initial_length_m=self.parameters.initial_length_m or 0.0,
+                cross_sectional_area_m2=self.parameters.cross_sectional_area_m2,
+                initial_length_m=self.parameters.initial_length_m,
                 abort_strain_pct=self.parameters.abort_strain_pct,
                 toughness_strain_pct=self.parameters.toughness_strain_pct,
                 e_modulus_method=self.parameters.e_modulus_method,

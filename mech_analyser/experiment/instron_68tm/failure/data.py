@@ -1,18 +1,17 @@
 import dataclasses
-
 import mech_analyser.experiment.instron_68tm.data as ma_data
 import mech_analyser.util.units as ma_units
 import pandas as pd
 import pyqtgraph as pg  # type: ignore
 
+# NOTE: this is to ensure that the RawTranscoder gets appropriately imported
 from mech_analyser.experiment.instron_68tm.data import RawTranscoder  # type: ignore
 from typing import Any, cast
 
 
 class ProcessedTranscoder(ma_data.ProcessedTranscoder):
     """
-    Transcoder for processed data from a compression-to-failure experiment using an
-    Instron 68TM.
+    Instron 68TM compression-to-failure experiment processed data file transcoder.
 
     Args:
         columns: The mapping between the column name that the program recognises, the
@@ -26,7 +25,6 @@ class ProcessedTranscoder(ma_data.ProcessedTranscoder):
         columns: dict[str, ma_data.ProcessedTranscoder.Column] = {},
         id: str = "",
     ) -> None:
-
         if columns:
             assert "Time" in columns, "Time column must be specified"
             assert "Displacement" in columns, "Displacement column must be specified"
@@ -98,7 +96,7 @@ class ProcessedTranscoder(ma_data.ProcessedTranscoder):
 
 class ProcessedData(ma_data.ProcessedData):
     """
-    Processed data from a compression-to-failure experiment using an Instron 68TM.
+    Instron 68TM compression-to-failure experiment processed data.
 
     Args:
         frame: The underlying pd.DataFrame representation of the data.
@@ -152,7 +150,9 @@ class ProcessedData(ma_data.ProcessedData):
 
     def generate_plot(self, **kwargs: Any) -> None:
         """
-        Generates a plot of the data.
+        Generates a plot of the processed data.
+
+        TODO: evaluate if plotting should be external to the class
 
         Args:
             strain1: Strain at which the regression begins.
@@ -164,60 +164,67 @@ class ProcessedData(ma_data.ProcessedData):
         strain2: float = cast(float, kwargs.get("strain2", 1.0))
         e_modulus_r2: float = cast(float, kwargs.get("e_modulus_r2", 1.0))
 
-        strain_column: ma_data.ProcessedTranscoder.Column = self.transcoder.get_column(
+        x_series: "pd.Series[float]" = self.strain
+        y_series: "pd.Series[float]" = self.stress
+        y_regression_series: "pd.Series[float]" = self.regression_stress
+        x_column: ma_data.ProcessedTranscoder.Column = self.transcoder.get_column(
             "Strain"
         )
-        stress_column: ma_data.ProcessedTranscoder.Column = self.transcoder.get_column(
+        y_column: ma_data.ProcessedTranscoder.Column = self.transcoder.get_column(
             "Stress"
         )
+        y_regression_column: ma_data.ProcessedTranscoder.Column = (
+            self.transcoder.get_column("Regression stress")
+        )
+        title: str = "Linear stress-strain regression"
 
         # Plot the data
-        self._plot.getPlotItem().setTitle("Linear stress-strain regression")  # type: ignore
-        self._plot.getPlotItem().setLabel("bottom", strain_column.output_name)  # type: ignore
-        self._plot.getPlotItem().setLabel("left", stress_column.output_name)  # type: ignore
+        self._plot.getPlotItem().setTitle(title)  # type: ignore
+        self._plot.getPlotItem().setLabel("bottom", x_column.output_name)  # type: ignore
+        self._plot.getPlotItem().setLabel("left", y_column.output_name)  # type: ignore
         self._plot.getPlotItem().addLegend()  # type: ignore
         self._plot.getPlotItem().plot(  # type: ignore
             [
-                ma_units.convert_from_base_units(x, strain_column.output_units)
-                for x in cast(list[float], list(self.strain.values))
+                ma_units.convert_from_base_units(x, x_column.output_units)
+                for x in cast(list[float], list(x_series.values))
             ],
             [
-                ma_units.convert_from_base_units(x, stress_column.output_units)
-                for x in cast(list[float], list(self.stress.values))
+                ma_units.convert_from_base_units(y, y_column.output_units)
+                for y in cast(list[float], list(y_series.values))
             ],
-            name=self.stress.name,
+            name=y_column.name,
         )
         self._plot.getPlotItem().plot(  # type: ignore
             [
-                ma_units.convert_from_base_units(x, strain_column.output_units)
-                for x in cast(list[float], list(self.strain.values))
+                ma_units.convert_from_base_units(x, x_column.output_units)
+                for x in cast(list[float], list(x_series.values))
             ],
             [
-                ma_units.convert_from_base_units(x, stress_column.output_units)
-                for x in cast(list[float], list(self.regression_stress.values))
+                ma_units.convert_from_base_units(y, y_regression_column.output_units)
+                for y in cast(list[float], list(y_regression_series.values))
             ],
-            name=self.regression_stress.name,
+            name=y_regression_column.name,
             pen=pg.mkPen("r"),  # type: ignore
         )
 
         # Add the regression domain
         self._plot.getPlotItem().plot(  # type: ignore
             [
-                ma_units.convert_from_base_units(strain1, strain_column.output_units),
-                ma_units.convert_from_base_units(strain2, strain_column.output_units),
+                ma_units.convert_from_base_units(strain1, x_column.output_units),
+                ma_units.convert_from_base_units(strain2, x_column.output_units),
             ],
             [
                 ma_units.convert_from_base_units(
-                    self.stress.iloc[(self.strain[self.strain > strain2]).idxmin()],  # type: ignore
-                    stress_column.output_units,
+                    y_series.iloc[(x_series[x_series > strain2]).idxmin()],  # type: ignore
+                    y_column.output_units,
                 )
             ]
             * 2,
             name="Regression domain",
             pen=None,
             fillLevel=ma_units.convert_from_base_units(
-                self.stress.iloc[(self.strain[self.strain < strain1]).idxmax()],  # type: ignore
-                stress_column.output_units,
+                y_series.iloc[(x_series[x_series < strain1]).idxmax()],  # type: ignore
+                y_column.output_units,
             ),
             brush=pg.mkBrush(200, 200, 255, 100),  # type: ignore
         )
@@ -230,8 +237,7 @@ class ProcessedData(ma_data.ProcessedData):
 
 class SummaryTranscoder(ma_data.SummaryTranscoder):
     """
-    Transcoder for summary data from a compression-to-failure experiment using an
-    Instron 68TM.
+    Instron 68TM compression-to-failure experiment summary data file transcoder.
 
     Args:
         columns: The mapping between the column name that the program recognises, the
@@ -245,7 +251,6 @@ class SummaryTranscoder(ma_data.SummaryTranscoder):
         columns: dict[str, ma_data.RawTranscoder.Column] = {},
         id: str = "",
     ) -> None:
-
         if columns:
             assert "Yield force" in columns, "Yield force column must be specified"
             assert "Yield strain" in columns, "Yield strain column must be specified"
@@ -372,7 +377,7 @@ class SummaryTranscoder(ma_data.SummaryTranscoder):
 
 class SummaryData(ma_data.SummaryData):
     """
-    Summary data from a compression-to-failure experiment using an Instron 68TM.
+    Instron 68TM compression-to-failure experiment summary data.
 
     Args:
         transcoder: The transcoder used to load and save the data.
@@ -382,7 +387,26 @@ class SummaryData(ma_data.SummaryData):
     @dataclasses.dataclass
     class Row(ma_data.SummaryData.Row):
         """
-        Summary data row for a compression-to-failure experiment using an Instron 68TM.
+        Instron 68TM compression-to-failure experiment summary data row.
+
+        Args:
+            yield_force_N: Maximum force that can be sustained before deforming
+                permanently.
+            yield_strain: Maximum strain that can be sustained before deforming
+                permanently.
+            yield_strength_Pa: Maximum stress that can be sustained before deforming
+                permanently.
+            ultimate_force_N: Maximum force that can be sustained before failure.
+            ultimate_strain: Maximum strain that can be sustained before failure.
+            ultimate_strength_Pa: Maximum stress that can be sustained before failure.
+            e_modulus_strain_1: First strain at which the E-modulus is calculated.
+            e_modulus_strain_2: Second strain at which the E-modulus is calculated.
+            c_Pa: Y-intercept of the linear stress-strain regression.
+            e_modulus_Pa: Gradient of the linear stress-strain regression.
+            e_modulus_r2: Coefficient of determination of the linear stress-strain
+                regression.
+            toughness_strain: Strain at which the toughness is calculated.
+            toughness_Pa: Area under the stress-strain curve up to the specified strain.
         """
 
         yield_force_N: float = dataclasses.field(metadata={"column_name": "Yield force"})

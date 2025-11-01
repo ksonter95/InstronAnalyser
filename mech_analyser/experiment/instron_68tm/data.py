@@ -1,6 +1,5 @@
 import mech_analyser.experiment.data as ma_data
 import mech_analyser.util.units as ma_units
-
 import pandas as pd
 
 from pathlib import Path
@@ -57,7 +56,6 @@ class RawTranscoder(ma_data.RawTranscoder):
         columns: dict[str, ma_data.RawTranscoder.Column] = {},
         id: str = "",
     ) -> None:
-
         if columns:
             assert "Time" in columns, "Time column must be specified"
             assert "Displacement" in columns, "Displacement column must be specified"
@@ -128,7 +126,7 @@ class RawTranscoder(ma_data.RawTranscoder):
 
 class RawData(ma_data.RawData, Data):
     """
-    Raw data from an Instron 68TM.
+    Base class for all Instron 68TM raw data.
 
     Args:
         frame: The underlying pd.DataFrame representation of the data.
@@ -205,7 +203,7 @@ class RawData(ma_data.RawData, Data):
     def tare_time_s(self) -> float:
         return self._tare_time_s
 
-    def generate_plot(self, **kwargs: dict[str, Any]) -> None:
+    def generate_plot(self, **kwargs: Any) -> None:
         """
         Generates a plot of the raw data.
 
@@ -218,6 +216,7 @@ class RawData(ma_data.RawData, Data):
         y_column: RawTranscoder.Column
         title: str
 
+        # Determine which data to plot
         if (
             self.transcoder.get_column("Strain").input_included
             and self.transcoder.get_column("Stress").input_included
@@ -234,6 +233,7 @@ class RawData(ma_data.RawData, Data):
             x_series = self.displacement
             y_series = self.force
 
+        # Plot the data
         self._plot.getPlotItem().setTitle(title)  # type: ignore
         self._plot.getPlotItem().setLabel("bottom", x_column.output_name)  # type: ignore
         self._plot.getPlotItem().setLabel("left", y_column.output_name)  # type: ignore
@@ -243,8 +243,8 @@ class RawData(ma_data.RawData, Data):
                 for x in cast(list[float], list(x_series.values))
             ],
             [
-                ma_units.convert_from_base_units(x, y_column.output_units)
-                for x in cast(list[float], list(y_series.values))
+                ma_units.convert_from_base_units(y, y_column.output_units)
+                for y in cast(list[float], list(y_series.values))
             ],
         )
 
@@ -302,7 +302,6 @@ class ProcessedData(ma_data.ProcessedData, Data):
         transcoder: ProcessedTranscoder,
         id: str = "",
     ) -> None:
-
         super().__init__(frame, transcoder, id)
 
     @property
@@ -340,7 +339,6 @@ class SummaryData(ma_data.SummaryData):
         transcoder: SummaryTranscoder,
         id: str = "",
     ) -> None:
-
         super().__init__(frame, transcoder, id)
 
     @property

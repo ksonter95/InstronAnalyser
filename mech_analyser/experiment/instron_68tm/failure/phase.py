@@ -15,7 +15,7 @@ from typing import Optional, cast
 @dataclasses.dataclass
 class Parameters(ma_phase.Parameters):
     """
-    Parameters for a compression-to-failure experiment using an Instron 68TM.
+    Instron 68TM compression-to-failure experiment phase parameters.
 
     Args:
         cross_sectional_area_m2: The cross-sectional surface area of the sample.
@@ -154,7 +154,7 @@ class Parameters(ma_phase.Parameters):
 
 class Phase(ma_phase.Phase):
     """
-    Phase of a compression-to-failure experiment using an Instron 68TM.
+    Instron 68TM compression-to-failure experiment phase.
 
     Args:
         raw_data: The raw data from which the processed data is created.
@@ -292,8 +292,7 @@ class Phase(ma_phase.Phase):
 
     def process(self, parameters: ma_phase.ma_phase.Parameters) -> None:
         """
-        Processes the raw data from the compression-to-failure experiment using
-        an Instron 68TM.
+        Processes the Instron 68TM compression-to-failure experiment raw data.
 
         Dataset filtering:
             -

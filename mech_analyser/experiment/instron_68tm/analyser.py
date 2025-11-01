@@ -1,17 +1,17 @@
 import csv
 import dataclasses
-from typing import Optional, cast
 import mech_analyser.experiment.analyser as ma_analyser
 import mech_analyser.experiment.instron_68tm.data as ma_data
 import mech_analyser.experiment.instron_68tm.phase as ma_phase
 
 from pathlib import Path
+from typing import Optional, cast
 
 
 @dataclasses.dataclass
 class Parameters(ma_analyser.Parameters):
     """
-    Parameters of an Instron 68TM experiment.
+    Parameters of the Instron 68TM experiment analyser.
 
     Args:
         tare_force_N: The force which will be used to tare the experiment.  All
@@ -20,14 +20,20 @@ class Parameters(ma_analyser.Parameters):
             force will be offset accordingly.
         properties_file: The path to the properties file containing the cross-sectional
             area and initial length of the sample.
+        read_cross_sectional_area: Whether to read the cross-sectional area from the
+            properties file.
+        read_initial_length: Whether to read the initial length from the properties
+            file.
         cross_sectional_area_m2: The cross-sectional surface area of the sample.
         initial_length_m: The initial length of the sample.
     """
 
     tare_force_N: float = 0.0
     properties_file: Optional[Path] = None
-    cross_sectional_area_m2: Optional[float] = None
-    initial_length_m: Optional[float] = None
+    read_cross_sectional_area: bool = False
+    read_initial_length: bool = False
+    cross_sectional_area_m2: float = 0.0
+    initial_length_m: float = 0.0
 
     def calculate_sample_parameters(self, name: str) -> None:
         """
@@ -41,10 +47,8 @@ class Parameters(ma_analyser.Parameters):
                 cross-sectional area and/or initial length are not set.
         """
 
-        if (
-            self.properties_file is None
-            and self.cross_sectional_area_m2 is None
-            and self.initial_length_m is None
+        if self.properties_file is None or (
+            not self.read_cross_sectional_area and not self.read_initial_length
         ):
             return
 
@@ -54,11 +58,11 @@ class Parameters(ma_analyser.Parameters):
             for row in reader:
                 if row["Name"] != name:
                     continue
-                if self.cross_sectional_area_m2 is None:
+                if self.read_cross_sectional_area:
                     self.cross_sectional_area_m2 = (
                         float(row["Cross-sectional area"]) * 1e-6
                     )
-                if self.initial_length_m is None:
+                if self.read_initial_length:
                     self.initial_length_m = float(row["Initial length"]) * 1e-3
 
                 return
@@ -90,7 +94,6 @@ class Analyser(ma_analyser.Analyser):
         phases: list[ma_phase.Phase] = [],
         id: str = "",
     ) -> None:
-
         super().__init__(
             parameters,
             ma_data.RawData.load(

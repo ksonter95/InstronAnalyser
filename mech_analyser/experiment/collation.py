@@ -250,7 +250,6 @@ class VerticalCollation(Collation):
         frame: Optional[pd.DataFrame] = None,
         id: str = "",
     ) -> None:
-
         super().__init__(
             frame or pd.DataFrame(columns=list(transcoder.columns)),
             transcoder,
