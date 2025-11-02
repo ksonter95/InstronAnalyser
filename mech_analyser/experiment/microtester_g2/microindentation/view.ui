@@ -94,7 +94,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v²) * sqrt(R(h - a)³) + b</string>
      </property>
      <property name="text">
       <string>Indenter radius (R)</string>
@@ -110,7 +110,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5</string>
+      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v²) * sqrt(R(h - a)³) + b</string>
      </property>
      <property name="suffix">
       <string>µm</string>
@@ -129,7 +129,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5.  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
+      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v²) * sqrt(Rh³).  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
      </property>
      <property name="text">
       <string>Poisson's ratio (v)</string>
@@ -145,7 +145,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5.  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
+      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v²) * sqrt(Rh³).  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
      </property>
      <property name="decimals">
       <number>4</number>
@@ -234,7 +234,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v²) * sqrt(R(h - a)³) + b</string>
      </property>
      <property name="text">
       <string>Tip Displacement (a)</string>
@@ -244,7 +244,7 @@
    <item row="7" column="1">
     <widget class="QDoubleSpinBox" name="sb_OffsetTipDisplacement">
      <property name="toolTip">
-      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v²) * sqrt(R(h - a)³) + b</string>
      </property>
      <property name="suffix">
       <string>µm</string>
@@ -263,7 +263,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v²) * sqrt(R(h - a)³) + b</string>
      </property>
      <property name="text">
       <string>Force (b)</string>
@@ -273,7 +273,7 @@
    <item row="8" column="1">
     <widget class="QDoubleSpinBox" name="sb_OffsetForce">
      <property name="toolTip">
-      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v²) * sqrt(R(h - a)³) + b</string>
      </property>
      <property name="suffix">
       <string>µN</string>
