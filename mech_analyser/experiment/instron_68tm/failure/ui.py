@@ -1,4 +1,3 @@
-import copy
 import mech_analyser.experiment.instron_68tm.failure.analyser as ma_analyser
 import mech_analyser.experiment.instron_68tm.failure.data as ma_data
 import mech_analyser.experiment.instron_68tm.failure.phase as ma_phase
@@ -51,9 +50,8 @@ class ConfigWidget(ma_ui.ConfigWidget):
 
         sample.analyser = ma_analyser.Analyser(
             sample.input_file,
-            # NOTE: ensure a deep copy of the parameters is used to avoid issues with
-            #       multiple analysers sharing the same parameters instance
-            copy.deepcopy(self.parameters),
+            # NOTE: needed to avoid multiple analysers sharing the one parameters instance
+            self.parameters.copy(),
             cast(ma_data.ma_data.RawTranscoder, raw_transcoder),
             cast(ma_data.ProcessedTranscoder, processed_transcoder),
             cast(ma_data.SummaryTranscoder, summary_transcoder),

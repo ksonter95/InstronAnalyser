@@ -209,22 +209,8 @@ class Phase(ma_phase.Phase):
         return self._e_modulus_strain1
 
     @property
-    def e_modulus_strain1_pct(self) -> float:
-        return ma_units.convert_from_base_units(
-            self.e_modulus_strain1,
-            ma_units.unit_registry.Unit("%"),
-        )
-
-    @property
     def e_modulus_strain2(self) -> float:
         return self._e_modulus_strain2
-
-    @property
-    def e_modulus_strain2_pct(self) -> float:
-        return ma_units.convert_from_base_units(
-            self.e_modulus_strain2,
-            ma_units.unit_registry.Unit("%"),
-        )
 
     @property
     def processed_data(self) -> ma_data.ProcessedData:
@@ -258,13 +244,6 @@ class Phase(ma_phase.Phase):
         return self.processed_data.strain.loc[self._ultimate_id]
 
     @property
-    def ultimate_strain_pct(self) -> float:
-        return ma_units.convert_from_base_units(
-            self.ultimate_strain,
-            ma_units.unit_registry.Unit("%"),
-        )
-
-    @property
     def ultimate_strength_Pa(self) -> float:
         return self.processed_data.stress.loc[self._ultimate_id]
 
@@ -277,13 +256,6 @@ class Phase(ma_phase.Phase):
     def yield_strain(self) -> float:
         # TODO: return self.processed_data.strain.loc[self._yield_id]
         return 0.0
-
-    @property
-    def yield_strain_pct(self) -> float:
-        return ma_units.convert_from_base_units(
-            self.yield_strain,
-            ma_units.unit_registry.Unit("%"),
-        )
 
     @property
     def yield_strength_Pa(self) -> float:

@@ -20,21 +20,8 @@ class SummaryTranscoder(ma_collation.SummaryVerticalTranscoder):
     """
 
     def __init__(self) -> None:
-        columns: dict[str, ma_data.SummaryTranscoder.Column] = (
-            ma_data.SummaryTranscoder().columns
-        )
-        for c in columns.values():
-            c.output_header_column += 1
-        columns["Name"] = ma_data.SummaryTranscoder.Column(
-            name="Name",
-            input_included=False,
-            output_name="Sample",
-            output_header_column=0,
-            data_type=str,
-        )
-
         super().__init__(
-            columns,
+            ma_data.SummaryTranscoder().columns,
             ma_data.SummaryTranscoder.Column(
                 name="Name",
                 input_included=False,

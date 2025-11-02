@@ -213,7 +213,7 @@ class Ui_w_Failure(object):
         self.sb_Area.setObjectName(u"sb_Area")
         self.sb_Area.setDecimals(2)
         self.sb_Area.setMaximum(999999.989999999990687)
-        self.sb_Area.setValue(1.000000000000000)
+        self.sb_Area.setValue(0.000000000000000)
 
         self.gl_Failure.addWidget(self.sb_Area, 10, 1, 1, 1)
 
@@ -235,7 +235,7 @@ class Ui_w_Failure(object):
         self.sb_Length.setObjectName(u"sb_Length")
         self.sb_Length.setDecimals(2)
         self.sb_Length.setMaximum(999.990000000000009)
-        self.sb_Length.setValue(1.000000000000000)
+        self.sb_Length.setValue(0.000000000000000)
 
         self.gl_Failure.addWidget(self.sb_Length, 11, 1, 1, 1)
 

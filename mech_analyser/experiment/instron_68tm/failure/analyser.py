@@ -2,6 +2,7 @@ import dataclasses
 import mech_analyser.experiment.instron_68tm.analyser as ma_analyser
 import mech_analyser.experiment.instron_68tm.failure.data as ma_data
 import mech_analyser.experiment.instron_68tm.failure.phase as ma_phase
+import mech_analyser.util.units as ma_units
 
 from pathlib import Path
 from typing import Optional, cast
@@ -71,6 +72,72 @@ class Parameters(ma_analyser.Parameters):
     e_modulus_find_strain_min_pct: float = 10.0
     e_modulus_find_strain_max_pct: float = 90.0
     e_modulus_find_strain_width_pct: float = 5.0
+
+    @property
+    def abort_strain(self) -> float:
+        return ma_units.convert_to_base_units(
+            self.abort_strain_pct,
+            ma_units.unit_registry.Unit("%"),
+        )
+
+    @property
+    def e_modulus_anchor_offset(self) -> float:
+        return ma_units.convert_to_base_units(
+            self.e_modulus_anchor_offset_pct,
+            ma_units.unit_registry.Unit("%"),
+        )
+
+    @property
+    def e_modulus_anchor_strain_width(self) -> float:
+        return ma_units.convert_to_base_units(
+            self.e_modulus_anchor_strain_width_pct,
+            ma_units.unit_registry.Unit("%"),
+        )
+
+    @property
+    def e_modulus_find_strain_max(self) -> float:
+        return ma_units.convert_to_base_units(
+            self.e_modulus_find_strain_max_pct,
+            ma_units.unit_registry.Unit("%"),
+        )
+
+    @property
+    def e_modulus_find_strain_min(self) -> float:
+        return ma_units.convert_to_base_units(
+            self.e_modulus_find_strain_min_pct,
+            ma_units.unit_registry.Unit("%"),
+        )
+
+    @property
+    def e_modulus_find_strain_width(self) -> float:
+        return ma_units.convert_to_base_units(
+            self.e_modulus_find_strain_width_pct,
+            ma_units.unit_registry.Unit("%"),
+        )
+
+    @property
+    def e_modulus_fixed_strain1(self) -> float:
+        return ma_units.convert_to_base_units(
+            self.e_modulus_fixed_strain1_pct,
+            ma_units.unit_registry.Unit("%"),
+        )
+
+    @property
+    def e_modulus_fixed_strain2(self) -> float:
+        return ma_units.convert_to_base_units(
+            self.e_modulus_fixed_strain2_pct,
+            ma_units.unit_registry.Unit("%"),
+        )
+
+    @property
+    def toughness_strain(self) -> Optional[float]:
+        if self.toughness_strain_pct is None:
+            return None
+
+        return ma_units.convert_to_base_units(
+            self.toughness_strain_pct,
+            ma_units.unit_registry.Unit("%"),
+        )
 
 
 class Analyser(ma_analyser.Analyser):

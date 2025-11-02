@@ -19,6 +19,15 @@ class Parameters(Serialiser):
     Base class for all analyser parameters.
     """
 
+    def copy(self) -> Self:
+        """
+        Returns a copy of the column.
+
+        Returns:
+            Self: A copy of the column.
+        """
+        return type(self)(**dataclasses.asdict(self))
+
     def serialise(self) -> SerialisedParameters:
         """
         Serialises the parameters.

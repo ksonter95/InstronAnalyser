@@ -19,7 +19,14 @@ class Parameters:
     Base class for all phase parameters.
     """
 
-    pass
+    def copy(self) -> Self:
+        """
+        Returns a copy of the column.
+
+        Returns:
+            Self: A copy of the column.
+        """
+        return type(self)(**dataclasses.asdict(self))
 
 
 class Phase(Serialiser):

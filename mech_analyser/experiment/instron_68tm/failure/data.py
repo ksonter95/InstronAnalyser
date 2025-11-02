@@ -231,7 +231,10 @@ class ProcessedData(ma_data.ProcessedData):
 
         # Add the regression coefficient of determination
         self._plot.getPlotItem().plot(  # type: ignore
-            [], [], name=f"R^2 = {round(e_modulus_r2, 4)}", pen=None  # type: ignore
+            [],
+            [],
+            name=f"R² = {round(e_modulus_r2, 4)}",
+            pen=None,
         )
 
 
@@ -270,7 +273,7 @@ class SummaryTranscoder(ma_data.SummaryTranscoder):
             ), "E-modulus strain 2 column must be specified"
             assert "c" in columns, "c column must be specified"
             assert "E-modulus" in columns, "E-modulus column must be specified"
-            assert "E-modulus R^2" in columns, "E-modulus R^2 column must be specified"
+            assert "E-modulus R²" in columns, "E-modulus R² column must be specified"
             assert (
                 "Toughness strain" in columns
             ), "Toughness strain column must be specified"
@@ -280,90 +283,90 @@ class SummaryTranscoder(ma_data.SummaryTranscoder):
         else:
             super().__init__(
                 {
-                    "Yield force": ma_data.RawTranscoder.Column(
+                    "Yield force": ma_data.SummaryTranscoder.Column(
                         name="Yield force",
                         input_included=False,
                         output_name="Yield force [N]",
                         output_units=ma_units.unit_registry.parse_units("N"),
                         output_header_column=0,
                     ),
-                    "Yield strain": ma_data.RawTranscoder.Column(
+                    "Yield strain": ma_data.SummaryTranscoder.Column(
                         name="Yield strain",
                         input_included=False,
                         output_name="Yield strain [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
                         output_header_column=1,
                     ),
-                    "Yield strength": ma_data.RawTranscoder.Column(
+                    "Yield strength": ma_data.SummaryTranscoder.Column(
                         name="Yield strength",
                         input_included=False,
                         output_name="Yield strength [MPa]",
                         output_units=ma_units.unit_registry.parse_units("MPa"),
                         output_header_column=2,
                     ),
-                    "Ultimate force": ma_data.RawTranscoder.Column(
+                    "Ultimate force": ma_data.SummaryTranscoder.Column(
                         name="Ultimate force",
                         input_included=False,
                         output_name="Ultimate force [N]",
                         output_units=ma_units.unit_registry.parse_units("N"),
                         output_header_column=3,
                     ),
-                    "Ultimate strain": ma_data.RawTranscoder.Column(
+                    "Ultimate strain": ma_data.SummaryTranscoder.Column(
                         name="Ultimate strain",
                         input_included=False,
                         output_name="Ultimate strain [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
                         output_header_column=4,
                     ),
-                    "Ultimate strength": ma_data.RawTranscoder.Column(
+                    "Ultimate strength": ma_data.SummaryTranscoder.Column(
                         name="Ultimate strength",
                         input_included=False,
                         output_name="Ultimate strength [MPa]",
                         output_units=ma_units.unit_registry.parse_units("MPa"),
                         output_header_column=5,
                     ),
-                    "E-modulus strain 1": ma_data.RawTranscoder.Column(
+                    "E-modulus strain 1": ma_data.SummaryTranscoder.Column(
                         name="E-modulus strain 1",
                         input_included=False,
                         output_name="E-modulus strain 1 [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
                         output_header_column=6,
                     ),
-                    "E-modulus strain 2": ma_data.RawTranscoder.Column(
+                    "E-modulus strain 2": ma_data.SummaryTranscoder.Column(
                         name="E-modulus strain 2",
                         input_included=False,
                         output_name="E-modulus strain 2 [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
                         output_header_column=7,
                     ),
-                    "c": ma_data.RawTranscoder.Column(
+                    "c": ma_data.SummaryTranscoder.Column(
                         name="c",
                         input_included=False,
                         output_name="c [MPa]",
                         output_units=ma_units.unit_registry.parse_units("MPa"),
                         output_header_column=8,
                     ),
-                    "E-modulus": ma_data.RawTranscoder.Column(
+                    "E-modulus": ma_data.SummaryTranscoder.Column(
                         name="E-modulus",
                         input_included=False,
                         output_name="E-modulus [MPa]",
                         output_units=ma_units.unit_registry.parse_units("MPa"),
                         output_header_column=9,
                     ),
-                    "E-modulus R^2": ma_data.RawTranscoder.Column(
-                        name="E-modulus R^2",
+                    "E-modulus R²": ma_data.SummaryTranscoder.Column(
+                        name="E-modulus R²",
                         input_included=False,
-                        output_name="E-modulus R^2 [MPa^2/MPa^2]",
+                        output_name="E-modulus R² [MPa²/MPa²]",
                         output_header_column=10,
                     ),
-                    "Toughness strain": ma_data.RawTranscoder.Column(
+                    "Toughness strain": ma_data.SummaryTranscoder.Column(
                         name="Toughness strain",
                         input_included=False,
                         output_name="Toughness strain [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
                         output_header_column=11,
                     ),
-                    "Toughness": ma_data.RawTranscoder.Column(
+                    "Toughness": ma_data.SummaryTranscoder.Column(
                         name="Toughness",
                         input_included=False,
                         output_name="Toughness [MPa]",
@@ -431,7 +434,7 @@ class SummaryData(ma_data.SummaryData):
         )
         c_Pa: float = dataclasses.field(metadata={"column_name": "c"})
         e_modulus_Pa: float = dataclasses.field(metadata={"column_name": "E-modulus"})
-        e_modulus_r2: float = dataclasses.field(metadata={"column_name": "E-modulus R^2"})
+        e_modulus_r2: float = dataclasses.field(metadata={"column_name": "E-modulus R²"})
         toughness_strain: float = dataclasses.field(
             metadata={"column_name": "Toughness strain"}
         )
