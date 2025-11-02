@@ -16,8 +16,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QDoubleSpinBox, QGridLayout,
-    QLabel, QSizePolicy, QSpacerItem, QSpinBox,
-    QWidget)
+    QLabel, QPushButton, QSizePolicy, QSpacerItem,
+    QSpinBox, QTextBrowser, QWidget)
 
 class Ui_w_Stepwise(object):
     def setupUi(self, w_Stepwise):
@@ -56,7 +56,7 @@ class Ui_w_Stepwise(object):
 
         self.s_Horizontal = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gl_Stepwise.addItem(self.s_Horizontal, 0, 4, 4, 1)
+        self.gl_Stepwise.addItem(self.s_Horizontal, 0, 4, 9, 1)
 
         self.l_Epsilon = QLabel(w_Stepwise)
         self.l_Epsilon.setObjectName(u"l_Epsilon")
@@ -87,9 +87,81 @@ class Ui_w_Stepwise(object):
 
         self.gl_Stepwise.addWidget(self.sb_RegressionPoints, 2, 1, 1, 1)
 
+        self.s_VerticalProperties = QSpacerItem(0, 5, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+
+        self.gl_Stepwise.addItem(self.s_VerticalProperties, 3, 0, 1, 4)
+
+        self.cb_Properties = QCheckBox(w_Stepwise)
+        self.cb_Properties.setObjectName(u"cb_Properties")
+        sizePolicy.setHeightForWidth(self.cb_Properties.sizePolicy().hasHeightForWidth())
+        self.cb_Properties.setSizePolicy(sizePolicy)
+
+        self.gl_Stepwise.addWidget(self.cb_Properties, 4, 0, 1, 1)
+
+        self.l_Area = QLabel(w_Stepwise)
+        self.l_Area.setObjectName(u"l_Area")
+        sizePolicy.setHeightForWidth(self.l_Area.sizePolicy().hasHeightForWidth())
+        self.l_Area.setSizePolicy(sizePolicy)
+
+        self.gl_Stepwise.addWidget(self.l_Area, 5, 0, 1, 1)
+
+        self.sb_Area = QDoubleSpinBox(w_Stepwise)
+        self.sb_Area.setObjectName(u"sb_Area")
+        self.sb_Area.setDecimals(2)
+        self.sb_Area.setMaximum(999999.989999999990687)
+        self.sb_Area.setValue(0.000000000000000)
+
+        self.gl_Stepwise.addWidget(self.sb_Area, 5, 1, 1, 1)
+
+        self.cb_Area = QCheckBox(w_Stepwise)
+        self.cb_Area.setObjectName(u"cb_Area")
+        sizePolicy1.setHeightForWidth(self.cb_Area.sizePolicy().hasHeightForWidth())
+        self.cb_Area.setSizePolicy(sizePolicy1)
+
+        self.gl_Stepwise.addWidget(self.cb_Area, 5, 2, 1, 2)
+
+        self.l_Length = QLabel(w_Stepwise)
+        self.l_Length.setObjectName(u"l_Length")
+        sizePolicy.setHeightForWidth(self.l_Length.sizePolicy().hasHeightForWidth())
+        self.l_Length.setSizePolicy(sizePolicy)
+
+        self.gl_Stepwise.addWidget(self.l_Length, 6, 0, 1, 1)
+
+        self.sb_Length = QDoubleSpinBox(w_Stepwise)
+        self.sb_Length.setObjectName(u"sb_Length")
+        self.sb_Length.setDecimals(2)
+        self.sb_Length.setMaximum(999.990000000000009)
+        self.sb_Length.setValue(0.000000000000000)
+
+        self.gl_Stepwise.addWidget(self.sb_Length, 6, 1, 1, 1)
+
+        self.cb_Length = QCheckBox(w_Stepwise)
+        self.cb_Length.setObjectName(u"cb_Length")
+        sizePolicy1.setHeightForWidth(self.cb_Length.sizePolicy().hasHeightForWidth())
+        self.cb_Length.setSizePolicy(sizePolicy1)
+
+        self.gl_Stepwise.addWidget(self.cb_Length, 6, 2, 1, 2)
+
+        self.pb_ReadProperties = QPushButton(w_Stepwise)
+        self.pb_ReadProperties.setObjectName(u"pb_ReadProperties")
+        sizePolicy.setHeightForWidth(self.pb_ReadProperties.sizePolicy().hasHeightForWidth())
+        self.pb_ReadProperties.setSizePolicy(sizePolicy)
+
+        self.gl_Stepwise.addWidget(self.pb_ReadProperties, 7, 0, 1, 1)
+
+        self.tb_ReadProperties = QTextBrowser(w_Stepwise)
+        self.tb_ReadProperties.setObjectName(u"tb_ReadProperties")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Ignored)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.tb_ReadProperties.sizePolicy().hasHeightForWidth())
+        self.tb_ReadProperties.setSizePolicy(sizePolicy2)
+
+        self.gl_Stepwise.addWidget(self.tb_ReadProperties, 7, 1, 1, 3)
+
         self.s_Vertical = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gl_Stepwise.addItem(self.s_Vertical, 3, 0, 1, 4)
+        self.gl_Stepwise.addItem(self.s_Vertical, 8, 0, 1, 4)
 
 
         self.retranslateUi(w_Stepwise)
@@ -124,6 +196,41 @@ class Ui_w_Stepwise(object):
         self.cb_RegressionPoints.setText(QCoreApplication.translate("w_Stepwise", u"Regression points", None))
 #if QT_CONFIG(tooltip)
         self.sb_RegressionPoints.setToolTip(QCoreApplication.translate("w_Stepwise", u"Number of data points to include in the regression analysis", None))
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        self.cb_Properties.setToolTip(QCoreApplication.translate("w_Stepwise", u"The physical properties of the experiment samples.  If checked, the selected properties will be read from the file", None))
+#endif // QT_CONFIG(tooltip)
+        self.cb_Properties.setText(QCoreApplication.translate("w_Stepwise", u"Physical properties", None))
+#if QT_CONFIG(tooltip)
+        self.l_Area.setToolTip(QCoreApplication.translate("w_Stepwise", u"The cross-sectional area of the samples.  It is A in the equation \u03c3 = F / A", None))
+#endif // QT_CONFIG(tooltip)
+        self.l_Area.setText(QCoreApplication.translate("w_Stepwise", u"Cross-sectional area", None))
+#if QT_CONFIG(tooltip)
+        self.sb_Area.setToolTip(QCoreApplication.translate("w_Stepwise", u"The cross-sectional area of every sample.  It is A in the equation \u03c3 = F / A", None))
+#endif // QT_CONFIG(tooltip)
+        self.sb_Area.setSuffix(QCoreApplication.translate("w_Stepwise", u"mm\u00b2", None))
+#if QT_CONFIG(tooltip)
+        self.cb_Area.setToolTip(QCoreApplication.translate("w_Stepwise", u"If checked, the cross-sectional area will be read in from the file on a sample-by-sample basis.  Otherwise, the specified cross-sectional area will be used by all samples", None))
+#endif // QT_CONFIG(tooltip)
+        self.cb_Area.setText(QCoreApplication.translate("w_Stepwise", u"Read from file", None))
+#if QT_CONFIG(tooltip)
+        self.l_Length.setToolTip(QCoreApplication.translate("w_Stepwise", u"The initial length of the samples.  It is l0 in the equation \u03b5 = d / l0", None))
+#endif // QT_CONFIG(tooltip)
+        self.l_Length.setText(QCoreApplication.translate("w_Stepwise", u"Initial length", None))
+#if QT_CONFIG(tooltip)
+        self.sb_Length.setToolTip(QCoreApplication.translate("w_Stepwise", u"The initial length of every sample.  It is l in the equation \u03b5 = d / l0", None))
+#endif // QT_CONFIG(tooltip)
+        self.sb_Length.setSuffix(QCoreApplication.translate("w_Stepwise", u"mm", None))
+#if QT_CONFIG(tooltip)
+        self.cb_Length.setToolTip(QCoreApplication.translate("w_Stepwise", u"If checked, the initial length will be read in from the file on a sample-by-sample basis.  Otherwise, the specified initial length will be used by all samples", None))
+#endif // QT_CONFIG(tooltip)
+        self.cb_Length.setText(QCoreApplication.translate("w_Stepwise", u"Read from file", None))
+#if QT_CONFIG(tooltip)
+        self.pb_ReadProperties.setToolTip(QCoreApplication.translate("w_Stepwise", u"Select the file from which the physical sample properties will be read.", None))
+#endif // QT_CONFIG(tooltip)
+        self.pb_ReadProperties.setText(QCoreApplication.translate("w_Stepwise", u"Read from...", None))
+#if QT_CONFIG(tooltip)
+        self.tb_ReadProperties.setToolTip(QCoreApplication.translate("w_Stepwise", u"File from which the physical sample properties will be read.", None))
 #endif // QT_CONFIG(tooltip)
         pass
     # retranslateUi
