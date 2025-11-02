@@ -358,6 +358,16 @@
         ],
         "description": "Inserts the template for an instrument UI base class."
     },
+    "Experiment": {
+        "prefix": "new module (experiment)",
+        "body": [
+            "import mech_analyser.experiment.${TM_DIRECTORY/.+\\/([^\\/]+)\\/[^\\/]+$/$1/}",
+            "",
+            "INSTRUMENT = mech_analyser.experiment.${TM_DIRECTORY/.+\\/([^\\/]+)\\/[^\\/]+$/$1/}.INSTRUMENT",
+            "EXPERIMENT = \"${1:### Insert experiment type ###}\"",
+        ],
+        "description": "Inserts the template for an instrument module."
+    },
     "Experiment Analyser": {
         "prefix": "new analyser (experiment)",
         "body": [
