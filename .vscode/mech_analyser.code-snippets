@@ -981,6 +981,22 @@
     },
 
     // === Code block templates ============================================= //
+    "Raw Transcoder Column Creation": {
+        "prefix": "new raw transcoder column creator",
+        "body": [
+            "\"${1:Name}\": ma_data.RawTranscoder.Column(",
+            "    name=\"${1:Name}\",",
+            "    input_name=\"${2:Name [units]}\",",
+            "    input_units=ma_units.unit_registry.parse_units(\"${3:units}\"),",
+            "    input_header_rows=${4:[0]},",
+            "    input_header_column=${5:0},",
+            "    output_name=\"${6:Name [units]}\",",
+            "    output_units=ma_units.unit_registry.parse_units(\"${7:units}\"),",
+            "    output_header_column=${8:0},",
+            "),",
+        ],
+        "description": "Inserts the template for a raw transcoder column creation."
+    },
     "Processed Transcoder Column Creation": {
         "prefix": "new processed transcoder column creator",
         "body": [

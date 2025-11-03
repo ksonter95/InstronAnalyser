@@ -110,7 +110,12 @@ class Transcoder(Serialiser):
                 + [""] * (number_of_rows - (self.output_name.count("\n") + 1))
             )
 
-        def load(self, input_file: Path, **kwargs: Any) -> pd.DataFrame:
+        def load(
+            self,
+            input_file: Path,
+            encoding: str = "utf-8",
+            **kwargs: Any,
+        ) -> pd.DataFrame:
             """
             Loads the column from the input file.
 
@@ -119,6 +124,7 @@ class Transcoder(Serialiser):
 
             Args:
                 input_file: The path to the input file.
+                encoding: The encoding of the input file.
 
             Returns:
                 pd.DataFrame: The loaded column.
@@ -128,6 +134,7 @@ class Transcoder(Serialiser):
                 input_file,
                 header=self.input_header_rows,
                 skip_blank_lines=False,
+                encoding=encoding,
             )
             if len(self.input_header_rows) > 1:
                 frame.columns = [
@@ -230,6 +237,10 @@ class Transcoder(Serialiser):
     @property
     def columns(self) -> dict[str, Column]:
         return self._columns
+
+    @property
+    def encoding(self) -> str:
+        return "utf-8"
 
     @property
     def header_rows(self) -> int:
@@ -335,7 +346,7 @@ class Transcoder(Serialiser):
         # Load the columns from the input file
         frame: pd.DataFrame = pd.concat(
             [
-                i.load(input_file, **kwargs)
+                i.load(input_file, encoding=self.encoding, **kwargs)
                 for i in self._columns.values()
                 if i.input_included
             ],

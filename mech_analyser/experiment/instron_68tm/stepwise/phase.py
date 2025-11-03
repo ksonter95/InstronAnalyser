@@ -318,8 +318,8 @@ class Phase(ma_phase.Phase):
             regression_data_points or self.processed_data.frame.index.size  # type: ignore
         )
 
-        # Ensure that the regression has more data points that the number of
-        # parameters to be regressed
+        # Ensure that the regression has more data points than the number of parameters to
+        # be regressed
         if len(x) < 4:
             return 0.0, 0.0, 1.0, 0.0
 
@@ -331,16 +331,21 @@ class Phase(ma_phase.Phase):
 
         # Calculate the scaling factor
         scaling_factor: float = self._calculate_regression_scaling_factor(y)
+        y_scaled: "pd.Series[float]" = y / scaling_factor  # type: ignore
+        a0_scaled: float = a0_Pa / scaling_factor
+        b0_scaled: float = b0_Pa / scaling_factor
 
         # Regress the data
-        [a, b, tau_s], _ = curve_fit(  # type: ignore
+        [a_scaled, b_scaled, tau_s], _ = curve_fit(  # type: ignore
             self.y,
             x,
-            y / scaling_factor,
-            p0=[a0_Pa / scaling_factor, b0_Pa / scaling_factor, tau0_s],
+            y_scaled,
+            p0=[a0_scaled, b0_scaled, tau0_s],
         )
-        a_Pa: float = cast(float, a * scaling_factor)
-        b_Pa: float = cast(float, b * scaling_factor)
+
+        # Rescale the parameters
+        a_Pa: float = cast(float, a_scaled) * scaling_factor
+        b_Pa: float = cast(float, b_scaled) * scaling_factor
 
         # Calculate the coefficient of determination
         tau_r2: float = ma_utils.calculate_r2(
