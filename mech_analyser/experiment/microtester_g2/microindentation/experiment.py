@@ -374,9 +374,7 @@ class Data(microtester_g2.Data):
         # Generate the processed data plot
         self.processed_frame.generate_plot(e_modulus_r2=self.e_modulus_r2)  # type: ignore
 
-    def _calculate_energy_dissipated_uJ(
-        self, cycle: int, samples_to_skip: int
-    ) -> float:
+    def _calculate_energy_dissipated_uJ(self, cycle: int, samples_to_skip: int) -> float:
         """
         Calculates the energy dissipated by the sample between the compression
         and relaxation cycles, which is the area between the force-tip
@@ -705,9 +703,7 @@ class ConfigWidget(microtester_g2.ConfigWidget):
         self.view.sb_IndenterRadius.setValue(self.parameters.R_um)
         self.view.sb_PoissonsRatio.setValue(self.parameters.v)
         self.view.sb_HRThreshold.setValue(self.parameters.h_R_threshold)
-        self.view.cb_RegressionOffsets.setChecked(
-            self.parameters.use_regression_offsets
-        )
+        self.view.cb_RegressionOffsets.setChecked(self.parameters.use_regression_offsets)
         self.view.cb_OffsetBounds.setChecked(
             self.parameters.use_regression_offsets
             and self.parameters.a_max_um is not None
