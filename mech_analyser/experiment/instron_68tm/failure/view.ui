@@ -251,11 +251,6 @@
      </item>
      <item>
       <property name="text">
-       <string>Yield Strain</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
        <string>Ultimate Strain</string>
       </property>
      </item>

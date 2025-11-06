@@ -274,11 +274,6 @@ class ConfigWidget(ma_ui.ConfigWidget):
             Qt.ItemDataRole.UserRole - 1,
         )
         self.view.cbx_AnchorPoint.setItemData(
-            ma_phase.Parameters.AnchorPoint.YIELD.value,
-            Qt.ItemFlag.NoItemFlags,
-            Qt.ItemDataRole.UserRole - 1,
-        )
-        self.view.cbx_AnchorPoint.setItemData(
             ma_phase.Parameters.AnchorPoint.FAILURE.value,
             Qt.ItemFlag.NoItemFlags,
             Qt.ItemDataRole.UserRole - 1,
