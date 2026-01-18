@@ -13,7 +13,7 @@ PYINSTALLER ?= pyinstaller
 ifeq ($(shell uname -s),Darwin)
 	PYINSTALLER_OPTIONS := --windowed
 else
-	PYINSTALLER_OPTIONS := --windowed --onefile
+	PYINSTALLER_OPTIONS := --windowed --onedir
 endif
 
 .PHONY: all clean dist test
