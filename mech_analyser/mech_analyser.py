@@ -1145,7 +1145,9 @@ class Window(QMainWindow):
                     self.RawTranscoderColumns.INPUT_HEADER_ROWS.value,
                 ),
             )
-            column.input_header_rows = [int(i) for i in re.split(r",\s*", item.text())]
+            column.input_header_rows = [
+                int(i) - 1 for i in re.split(r",\s*", item.text())
+            ]
 
             # Update the input header column
             item = cast(
@@ -1155,7 +1157,7 @@ class Window(QMainWindow):
                     self.RawTranscoderColumns.INPUT_HEADER_COLUMN.value,
                 ),
             )
-            column.input_header_column = int(item.text())
+            column.input_header_column = int(item.text()) - 1
 
             # Update the output included state
             item = cast(
@@ -1199,7 +1201,7 @@ class Window(QMainWindow):
                     self.RawTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
                 ),
             )
-            column.output_header_column = int(item.text())
+            column.output_header_column = int(item.text()) - 1
 
         # Synchronise the processed transcoder
         for row in range(self._window.tbl_ProcessedTranscoder.rowCount()):
@@ -1254,7 +1256,7 @@ class Window(QMainWindow):
                     self.ProcessedTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
                 ),
             )
-            column.output_header_column = int(item.text())
+            column.output_header_column = int(item.text()) - 1
 
         # Synchronise the summary transcoder
         for row in range(self._window.tbl_SummaryTranscoder.rowCount()):
@@ -1309,7 +1311,7 @@ class Window(QMainWindow):
                     self.SummaryTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
                 ),
             )
-            column.output_header_column = int(item.text())
+            column.output_header_column = int(item.text()) - 1
 
     def _reset(self) -> None:
         """
@@ -1473,7 +1475,7 @@ class Window(QMainWindow):
             )
 
             # Add the column output header column
-            item = QTableWidgetItem(str(column.output_header_column))
+            item = QTableWidgetItem(str(column.output_header_column + 1))
             self._window.tbl_ProcessedTranscoder.setItem(
                 i,
                 self.ProcessedTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
@@ -1551,7 +1553,9 @@ class Window(QMainWindow):
             )
 
             # Add the column input header row
-            item = QTableWidgetItem(", ".join(str(i) for i in column.input_header_rows))
+            item = QTableWidgetItem(
+                ", ".join(str(i + 1) for i in column.input_header_rows)
+            )
             self._window.tbl_RawTranscoder.setItem(
                 i,
                 self.RawTranscoderColumns.INPUT_HEADER_ROWS.value,
@@ -1559,7 +1563,7 @@ class Window(QMainWindow):
             )
 
             # Add the column input header column
-            item = QTableWidgetItem(str(column.input_header_column))
+            item = QTableWidgetItem(str(column.input_header_column + 1))
             self._window.tbl_RawTranscoder.setItem(
                 i,
                 self.RawTranscoderColumns.INPUT_HEADER_COLUMN.value,
@@ -1598,7 +1602,7 @@ class Window(QMainWindow):
             )
 
             # Add the column output header column
-            item = QTableWidgetItem(str(column.output_header_column))
+            item = QTableWidgetItem(str(column.output_header_column + 1))
             self._window.tbl_RawTranscoder.setItem(
                 i,
                 self.RawTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
@@ -1677,7 +1681,7 @@ class Window(QMainWindow):
             )
 
             # Add the column output header column
-            item = QTableWidgetItem(str(column.output_header_column))
+            item = QTableWidgetItem(str(column.output_header_column + 1))
             self._window.tbl_SummaryTranscoder.setItem(
                 i,
                 self.SummaryTranscoderColumns.OUTPUT_HEADER_COLUMN.value,
