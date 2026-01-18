@@ -174,7 +174,7 @@ class ProcessedData(ma_data.ProcessedData):
 
         regression_data_points: int = cast(
             int,
-            kwargs.get("regression_data_points", self.frame.index.size),  # type: ignore
+            kwargs.get("regression_data_points") or self.frame.index.size,  # type: ignore
         )
         tau_r2: float = cast(float, kwargs.get("tau_r2", 1.0))
 
@@ -226,13 +226,13 @@ class ProcessedData(ma_data.ProcessedData):
             [
                 0.0,
                 ma_units.convert_from_base_units(
-                    x_series[regression_data_points],
+                    x_series.iloc[regression_data_points - 1],
                     x_column.output_units,
                 ),
             ],
             [
                 ma_units.convert_from_base_units(
-                    y_series[0],
+                    y_series.iloc[0],
                     y_column.output_units,
                 )
             ]
@@ -240,7 +240,7 @@ class ProcessedData(ma_data.ProcessedData):
             name="Regression domain",
             pen=None,
             fillLevel=ma_units.convert_from_base_units(
-                y_series[regression_data_points],
+                y_series.iloc[regression_data_points - 1],
                 y_column.output_units,
             ),
             brush=pg.mkBrush(200, 200, 255, 100),  # type: ignore
