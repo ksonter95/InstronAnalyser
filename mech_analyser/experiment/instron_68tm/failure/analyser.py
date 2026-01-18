@@ -217,9 +217,6 @@ class Analyser(ma_analyser.Analyser):
             self.phases[i].process(parameters)
 
             row = ma_data.SummaryData.Row(
-                yield_force_N=self.phases[i].yield_force_N,
-                yield_strain=self.phases[i].yield_strain,
-                yield_strength_Pa=self.phases[i].yield_strength_Pa,
                 ultimate_force_N=self.phases[i].ultimate_force_N,
                 ultimate_strain=self.phases[i].ultimate_strain,
                 ultimate_strength_Pa=self.phases[i].ultimate_strength_Pa,

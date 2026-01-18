@@ -255,9 +255,6 @@ class SummaryTranscoder(ma_data.SummaryTranscoder):
         id: str = "",
     ) -> None:
         if columns:
-            assert "Yield force" in columns, "Yield force column must be specified"
-            assert "Yield strain" in columns, "Yield strain column must be specified"
-            assert "Yield strength" in columns, "Yield strength column must be specified"
             assert "Ultimate force" in columns, "Ultimate force column must be specified"
             assert (
                 "Ultimate strain" in columns
@@ -283,95 +280,74 @@ class SummaryTranscoder(ma_data.SummaryTranscoder):
         else:
             super().__init__(
                 {
-                    "Yield force": ma_data.SummaryTranscoder.Column(
-                        name="Yield force",
-                        input_included=False,
-                        output_name="Yield force [N]",
-                        output_units=ma_units.unit_registry.parse_units("N"),
-                        output_header_column=0,
-                    ),
-                    "Yield strain": ma_data.SummaryTranscoder.Column(
-                        name="Yield strain",
-                        input_included=False,
-                        output_name="Yield strain [%]",
-                        output_units=ma_units.unit_registry.parse_units("%"),
-                        output_header_column=1,
-                    ),
-                    "Yield strength": ma_data.SummaryTranscoder.Column(
-                        name="Yield strength",
-                        input_included=False,
-                        output_name="Yield strength [MPa]",
-                        output_units=ma_units.unit_registry.parse_units("MPa"),
-                        output_header_column=2,
-                    ),
                     "Ultimate force": ma_data.SummaryTranscoder.Column(
                         name="Ultimate force",
                         input_included=False,
                         output_name="Ultimate force [N]",
                         output_units=ma_units.unit_registry.parse_units("N"),
-                        output_header_column=3,
+                        output_header_column=0,
                     ),
                     "Ultimate strain": ma_data.SummaryTranscoder.Column(
                         name="Ultimate strain",
                         input_included=False,
                         output_name="Ultimate strain [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
-                        output_header_column=4,
+                        output_header_column=1,
                     ),
                     "Ultimate strength": ma_data.SummaryTranscoder.Column(
                         name="Ultimate strength",
                         input_included=False,
                         output_name="Ultimate strength [MPa]",
                         output_units=ma_units.unit_registry.parse_units("MPa"),
-                        output_header_column=5,
+                        output_header_column=2,
                     ),
                     "E-modulus strain 1": ma_data.SummaryTranscoder.Column(
                         name="E-modulus strain 1",
                         input_included=False,
                         output_name="E-modulus strain 1 [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
-                        output_header_column=6,
+                        output_header_column=3,
                     ),
                     "E-modulus strain 2": ma_data.SummaryTranscoder.Column(
                         name="E-modulus strain 2",
                         input_included=False,
                         output_name="E-modulus strain 2 [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
-                        output_header_column=7,
+                        output_header_column=4,
                     ),
                     "c": ma_data.SummaryTranscoder.Column(
                         name="c",
                         input_included=False,
                         output_name="c [MPa]",
                         output_units=ma_units.unit_registry.parse_units("MPa"),
-                        output_header_column=8,
+                        output_header_column=5,
                     ),
                     "E-modulus": ma_data.SummaryTranscoder.Column(
                         name="E-modulus",
                         input_included=False,
                         output_name="E-modulus [MPa]",
                         output_units=ma_units.unit_registry.parse_units("MPa"),
-                        output_header_column=9,
+                        output_header_column=6,
                     ),
                     "E-modulus R²": ma_data.SummaryTranscoder.Column(
                         name="E-modulus R²",
                         input_included=False,
                         output_name="E-modulus R² [MPa²/MPa²]",
-                        output_header_column=10,
+                        output_header_column=7,
                     ),
                     "Toughness strain": ma_data.SummaryTranscoder.Column(
                         name="Toughness strain",
                         input_included=False,
                         output_name="Toughness strain [%]",
                         output_units=ma_units.unit_registry.parse_units("%"),
-                        output_header_column=11,
+                        output_header_column=8,
                     ),
                     "Toughness": ma_data.SummaryTranscoder.Column(
                         name="Toughness",
                         input_included=False,
                         output_name="Toughness [MPa]",
                         output_units=ma_units.unit_registry.parse_units("MPa"),
-                        output_header_column=12,
+                        output_header_column=9,
                     ),
                 },
                 id,
@@ -393,12 +369,6 @@ class SummaryData(ma_data.SummaryData):
         Instron 68TM compression-to-failure experiment summary data row.
 
         Args:
-            yield_force_N: Maximum force that can be sustained before deforming
-                permanently.
-            yield_strain: Maximum strain that can be sustained before deforming
-                permanently.
-            yield_strength_Pa: Maximum stress that can be sustained before deforming
-                permanently.
             ultimate_force_N: Maximum force that can be sustained before failure.
             ultimate_strain: Maximum strain that can be sustained before failure.
             ultimate_strength_Pa: Maximum stress that can be sustained before failure.
@@ -412,11 +382,6 @@ class SummaryData(ma_data.SummaryData):
             toughness_Pa: Area under the stress-strain curve up to the specified strain.
         """
 
-        yield_force_N: float = dataclasses.field(metadata={"column_name": "Yield force"})
-        yield_strain: float = dataclasses.field(metadata={"column_name": "Yield strain"})
-        yield_strength_Pa: float = dataclasses.field(
-            metadata={"column_name": "Yield strength"}
-        )
         ultimate_force_N: float = dataclasses.field(
             metadata={"column_name": "Ultimate force"}
         )

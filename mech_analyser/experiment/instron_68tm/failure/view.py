@@ -136,7 +136,6 @@ class Ui_w_Failure(object):
         self.cbx_AnchorPoint.addItem("")
         self.cbx_AnchorPoint.addItem("")
         self.cbx_AnchorPoint.addItem("")
-        self.cbx_AnchorPoint.addItem("")
         self.cbx_AnchorPoint.setObjectName(u"cbx_AnchorPoint")
 
         self.gl_Failure.addWidget(self.cbx_AnchorPoint, 6, 3, 1, 1)
@@ -326,10 +325,9 @@ class Ui_w_Failure(object):
         self.l_From.setText(QCoreApplication.translate("w_Failure", u"from", None))
         self.cbx_AnchorPoint.setItemText(0, QCoreApplication.translate("w_Failure", u"Start Strain", None))
         self.cbx_AnchorPoint.setItemText(1, QCoreApplication.translate("w_Failure", u"Toe Strain", None))
-        self.cbx_AnchorPoint.setItemText(2, QCoreApplication.translate("w_Failure", u"Yield Strain", None))
-        self.cbx_AnchorPoint.setItemText(3, QCoreApplication.translate("w_Failure", u"Ultimate Strain", None))
-        self.cbx_AnchorPoint.setItemText(4, QCoreApplication.translate("w_Failure", u"Failure Strain", None))
-        self.cbx_AnchorPoint.setItemText(5, QCoreApplication.translate("w_Failure", u"End Strain", None))
+        self.cbx_AnchorPoint.setItemText(2, QCoreApplication.translate("w_Failure", u"Ultimate Strain", None))
+        self.cbx_AnchorPoint.setItemText(3, QCoreApplication.translate("w_Failure", u"Failure Strain", None))
+        self.cbx_AnchorPoint.setItemText(4, QCoreApplication.translate("w_Failure", u"End Strain", None))
 
 #if QT_CONFIG(tooltip)
         self.cbx_AnchorPoint.setToolTip(QCoreApplication.translate("w_Failure", u"The point used to anchor the strain range over which the Young's modulus is to be calculated", None))

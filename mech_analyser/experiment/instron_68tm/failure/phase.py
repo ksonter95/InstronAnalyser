@@ -61,10 +61,9 @@ class Parameters(ma_phase.Parameters):
 
         START = 0
         TOE = 1
-        YIELD = 2
-        ULTIMATE = 3
-        FAILURE = 4
-        END = 5
+        ULTIMATE = 2
+        FAILURE = 3
+        END = 4
 
     class Method(enum.Enum):
         """The method used to calculate the Young's modulus."""
@@ -186,7 +185,6 @@ class Phase(ma_phase.Phase):
         self._e_modulus_strain2: float = 0.0
         self._toughness_id: int = 0
         self._ultimate_id: int = 0
-        self._yield_id: int = 0
 
     @property
     def aborted(self) -> bool:
@@ -247,21 +245,6 @@ class Phase(ma_phase.Phase):
     def ultimate_strength_Pa(self) -> float:
         return self.processed_data.stress.loc[self._ultimate_id]
 
-    @property
-    def yield_force_N(self) -> float:
-        # TODO: return self.processed_data.force.loc[self._yield_id]
-        return 0.0
-
-    @property
-    def yield_strain(self) -> float:
-        # TODO: return self.processed_data.strain.loc[self._yield_id]
-        return 0.0
-
-    @property
-    def yield_strength_Pa(self) -> float:
-        # TODO: return self.processed_data.stress.loc[self._yield_id]
-        return 0.0
-
     def process(self, parameters: ma_phase.ma_phase.Parameters) -> None:
         """
         Processes the Instron 68TM compression-to-failure experiment raw data.
@@ -290,9 +273,6 @@ class Phase(ma_phase.Phase):
                 which the toughness is to be calculated.
             - Toughness: The area under the stress-strain curve up until the
                 toughness strain.
-            - Yield force: The force at which the material begins to deform.
-            - Yield strain: The strain at which the material begins to deform.
-            - Yield strength: The stress at which the material begins to deform.
             - Ultimate force: The maximum force that the material can withstand.
             - Ultimate strain: The maximum strain that the material can
                 withstand.
@@ -368,7 +348,6 @@ class Phase(ma_phase.Phase):
             .abs()
             .idxmin()  # type: ignore
         )
-        self._yield_id = 0  # TODO: implement
 
         # Calculate the parameters of the linear equation that best fits the
         # data points
@@ -394,17 +373,6 @@ class Phase(ma_phase.Phase):
                     self._e_modulus_strain2 = (
                         self._e_modulus_strain1
                         + phase_parameters.e_modulus_anchor_strain_width
-                    )
-                elif (
-                    phase_parameters.e_modulus_anchor_point
-                    == Parameters.AnchorPoint.YIELD
-                ):
-                    self._e_modulus_strain2 = (
-                        self.yield_strain - phase_parameters.e_modulus_anchor_offset
-                    )
-                    self._e_modulus_strain1 = (
-                        self._e_modulus_strain2
-                        - phase_parameters.e_modulus_anchor_strain_width
                     )
                 elif (
                     phase_parameters.e_modulus_anchor_point
