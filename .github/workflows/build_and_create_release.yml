@@ -73,7 +73,7 @@ jobs:
 
   build-macos-x86_64:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'macos-x86_64' || inputs.target == 'all' }}
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
