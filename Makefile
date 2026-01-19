@@ -1,7 +1,6 @@
 # App metadata
 APP_NAME := MechAnalyser
 APP_PATH := mech_analyser
-ICON := $(APP_PATH)/ui/icons/MechAnalyser.png
 ENTRY := $(APP_PATH)/mech_analyser.py
 
 # Python interpreter (override with `make PYTHON=...`)
@@ -12,8 +11,10 @@ PYINSTALLER ?= pyinstaller
 # Platform-specific pyinstaller options
 ifeq ($(shell uname -s),Darwin)
 	PYINSTALLER_OPTIONS := --windowed
+	ICON := $(APP_PATH)/ui/icons/MechAnalyser.png
 else
 	PYINSTALLER_OPTIONS := --windowed --onedir
+	ICON := $(APP_PATH)/ui/icons/MechAnalyser.ico
 endif
 
 .PHONY: all clean dist test

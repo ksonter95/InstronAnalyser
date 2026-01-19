@@ -10,6 +10,7 @@ import mech_analyser.study.sample as ma_sample
 import mech_analyser.util.units as ma_units
 import mech_analyser.version as ma_version
 import re
+import sys
 import traceback
 
 from PySide6.QtCore import QUrl, Qt
@@ -1712,8 +1713,15 @@ class Application(QApplication):
     def __init__(self) -> None:
         super().__init__([])
 
+        if sys.platform == "win32":
+            extension = "ico"
+        else:
+            extension = "png"
         window_icon = QIcon(
-            str(Path(__file__).resolve().parent / "ui" / "icons" / "MechAnalyser.png")
+            str(
+                Path(__file__).resolve().parent / "ui" / "icons" /
+                f"MechAnalyser.{extension}"
+            )
         )
         self.setWindowIcon(window_icon)
 
