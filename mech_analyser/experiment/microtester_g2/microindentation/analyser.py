@@ -34,10 +34,10 @@ class Parameters(ma_analyser.Parameters):
             regression parameter.  If None, `b` can take any value.
     """
 
-    cycles: int = 3
+    cycles: int = 1
     samples_to_skip: int = 0
-    R_um: float = 500.0
-    v: float = 0.484
+    R_um: float = 1000.0
+    v: float = 0.5
     delta_R_threshold: float = 0.1
     use_regression_offsets: bool = False
     a_max_um: Optional[float] = None

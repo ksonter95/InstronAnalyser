@@ -42,7 +42,7 @@ class Parameters(ma_analyser.Parameters):
             regression analysis.
     """
 
-    relaxation_strain_intervals: int = 6
+    relaxation_strain_intervals: int = 1
     relaxation_strain_start_pct: float = 5.0
     epsilon_pct: float = 0.1
     regression_data_points: Optional[int] = None

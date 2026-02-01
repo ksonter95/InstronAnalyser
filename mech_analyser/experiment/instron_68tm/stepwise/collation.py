@@ -32,7 +32,7 @@ class SummaryTranscoder(ma_collation.SummaryHorizontalTranscoder):
             ma_data.SummaryTranscoder.Column(
                 name="Strain",
                 input_included=False,
-                output_name="Strain [%]",
+                output_name="Strain (%)",
                 output_units=ma_units.unit_registry.parse_units("%"),
                 output_header_column=0,
             ),
