@@ -125,13 +125,27 @@ To add a new type of mechanical experiment:
    [VS Code snippets](https://code.visualstudio.com/docs/editing/userdefinedsnippets) to
    create the files in this order:
     - Use "new module (experiment)" snippet for `__init__.py`
+
+   ![Instrument and experiment dropdowns](img/experiment_dropdowns.png)
+   *Instrument and experiment dropdowns (highlighted in red) are auto-created from the
+   instrument and experiment names defined in __init__.py files.*
+
     - Use "new data (experiment)" snippet for `data.py`
+
+   ![Data transcoders table](img/data_transcoders.png)
+   *The table (highlighted in red) is populated using RawTranscoder, SummaryTranscoder,
+   and ProcessedTranscoder classes defined in data.py.*
+
     - Use "new phase (experiment)" snippet for `phase.py`
     - Use "new analyser (experiment)" snippet for `analyser.py`
     - Use "new ui (experiment)" snippet for `ui.py`
     - Use "new horizontal collation (experiment)" or "new vertical collation (experiment)"
       snippet for `collation.py`
     - Use "new widget" snippet for `view.ui`
+
+   ![Configuration screen with view.ui area highlighted](img/view_ui_widget.png)
+   *Configuration screen showing the area defined by the view.ui file (highlighted in
+   red).*
 
    Fill out each snippet placeholder by hitting TAB to jump to the next one.
 
