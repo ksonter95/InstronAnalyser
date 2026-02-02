@@ -105,6 +105,7 @@ class Window(QMainWindow):
         # Create the main window
         self._window = Ui_MainWindow()
         self._window.setupUi(self)  # type: ignore
+        self.showMaximized()
         self.setWindowIcon(icon)
         self._window.a_Version.setText(f"Version: {ma_version.__version__}")
 
