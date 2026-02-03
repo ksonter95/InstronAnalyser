@@ -43,7 +43,7 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="3" rowspan="10">
+   <item row="0" column="2" rowspan="10">
     <spacer name="s_Horizontal">
      <property name="orientation">
       <enum>Qt::Orientation::Horizontal</enum>
@@ -94,7 +94,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v²) * sqrt(R(δ - a)³) + b</string>
      </property>
      <property name="text">
       <string>Indenter radius (R)</string>
@@ -110,7 +110,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5</string>
+      <string>Radius of the spherical indenter.  This is the value R in the equation F = 4/3 * E / (1 - v²) * sqrt(R(δ - a)³) + b</string>
      </property>
      <property name="suffix">
       <string>µm</string>
@@ -129,7 +129,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5.  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
+      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v²) * sqrt(Rh³).  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
      </property>
      <property name="text">
       <string>Poisson's ratio (v)</string>
@@ -145,7 +145,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v^2) * R^0.5 * h^1.5.  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
+      <string>Poisson's ratio of the sample.  This is the value of v in the equation F = 4/3 * E / (1 - v²) * sqrt(Rh³).  See Bas, Onur, et al. &quot;Rational design and fabrication of multiphasic soft network composites for tissue engineering articular cartilage: A numerical model-based approach.&quot; Chemical Engineering Journal 340 (2018): 15-23</string>
      </property>
      <property name="decimals">
       <number>4</number>
@@ -159,7 +159,7 @@
     </widget>
    </item>
    <item row="4" column="0">
-    <widget class="QLabel" name="l_HRThreshold">
+    <widget class="QLabel" name="l_DeltaRThreshold">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -170,12 +170,12 @@
       <string>Threshold for the ratio of the indentation depth to the radius of the indenter.  If the ratio is greater than this value, then the Hertz model is not a valid approximation of the indentation response</string>
      </property>
      <property name="text">
-      <string>h/R threshold</string>
+      <string>δ/R threshold</string>
      </property>
     </widget>
    </item>
    <item row="4" column="1">
-    <widget class="QDoubleSpinBox" name="sb_HRThreshold">
+    <widget class="QDoubleSpinBox" name="sb_DeltaRThreshold">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -234,7 +234,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v²) * sqrt(R(δ - a)³) + b</string>
      </property>
      <property name="text">
       <string>Tip Displacement (a)</string>
@@ -244,7 +244,7 @@
    <item row="7" column="1">
     <widget class="QDoubleSpinBox" name="sb_OffsetTipDisplacement">
      <property name="toolTip">
-      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the tip displacement and indentation depth.  It is the parameter a in the equation F = 4 / 3 * E / (1 - v²) * sqrt(R(δ - a)³) + b</string>
      </property>
      <property name="suffix">
       <string>µm</string>
@@ -263,7 +263,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v²) * sqrt(R(δ - a)³) + b</string>
      </property>
      <property name="text">
       <string>Force (b)</string>
@@ -273,7 +273,7 @@
    <item row="8" column="1">
     <widget class="QDoubleSpinBox" name="sb_OffsetForce">
      <property name="toolTip">
-      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v^2) * R^0.5 * (h - a)^1.5 + b</string>
+      <string>Offset that relates the measured force and indentation force.  It is the parameter b in the equation F = 4 / 3 * E / (1 - v²) * sqrt(R(δ - a)³) + b</string>
      </property>
      <property name="suffix">
       <string>µN</string>
@@ -283,7 +283,7 @@
      </property>
     </widget>
    </item>
-   <item row="8" column="0" colspan="3">
+   <item row="9" column="0" colspan="2">
     <spacer name="s_Vertical">
      <property name="orientation">
       <enum>Qt::Orientation::Vertical</enum>

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>648</width>
-    <height>238</height>
+    <height>396</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gl_Failure">
@@ -39,11 +39,11 @@
       <number>1</number>
      </property>
      <property name="maximum">
-      <double>10.0000000000000000</double>
+      <double>10.000000000000000</double>
      </property>
     </widget>
    </item>
-   <item row="0" column="6" rowspan="8">
+   <item row="0" column="6" rowspan="15">
     <spacer name="s_Horizontal">
      <property name="orientation">
       <enum>Qt::Orientation::Horizontal</enum>
@@ -117,7 +117,23 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="3" column="0" colspan="6">
+    <spacer name="s_VerticalEmodulus">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Policy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>5</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="4" column="0">
     <widget class="QLabel" name="l_EModulus">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -133,7 +149,7 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
+   <item row="5" column="0">
     <widget class="QRadioButton" name="rb_FixedRange">
      <property name="toolTip">
       <string>Use the fixed strain range on the stress-strain curve over which the Young's modulus is calculated.</string>
@@ -143,7 +159,7 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
+   <item row="5" column="1">
     <widget class="QDoubleSpinBox" name="sb_Strain1">
      <property name="toolTip">
       <string>The strain value which defines the first datapoint on the stress-strain curve used to calculate the Young's modulus.  It is ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1)</string>
@@ -156,7 +172,7 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="2">
+   <item row="5" column="2">
     <widget class="QLabel" name="l_To1">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -169,7 +185,7 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="3">
+   <item row="5" column="3">
     <widget class="QDoubleSpinBox" name="sb_Strain2">
      <property name="toolTip">
       <string>The strain value which defines the second datapoint on the stress-strain curve used to calculate the Young's modulus.  It is ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1)</string>
@@ -182,7 +198,7 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0">
+   <item row="6" column="0">
     <widget class="QRadioButton" name="rb_AnchorPoint">
      <property name="toolTip">
       <string>Anchor a point on the stress-strain curve over which the Young's modulus is calculated to a specific point on the curve.</string>
@@ -192,7 +208,7 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="1">
+   <item row="6" column="1">
     <widget class="QDoubleSpinBox" name="sb_StrainOffset">
      <property name="toolTip">
       <string>The strain offset from the specific point on the stress-strain curve from/to which the Young's modulus will be calculated.  It, in combination with the anchor point, specifies ε1 in the equation E = (σ2 - σ1) / (ε2 - ε1).</string>
@@ -205,7 +221,7 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="2">
+   <item row="6" column="2">
     <widget class="QLabel" name="l_From">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -218,7 +234,7 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="3">
+   <item row="6" column="3">
     <widget class="QComboBox" name="cbx_AnchorPoint">
      <property name="toolTip">
       <string>The point used to anchor the strain range over which the Young's modulus is to be calculated</string>
@@ -231,11 +247,6 @@
      <item>
       <property name="text">
        <string>Toe Strain</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Yield Strain</string>
       </property>
      </item>
      <item>
@@ -255,7 +266,7 @@
      </item>
     </widget>
    </item>
-   <item row="5" column="4">
+   <item row="6" column="4">
     <widget class="QLabel" name="l_With1">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -268,7 +279,7 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="5">
+   <item row="6" column="5">
     <widget class="QDoubleSpinBox" name="sb_StrainRangeWidth">
      <property name="toolTip">
       <string>The width of the range on the stress-strain curve over which the Young's modulus will be calculated.  It, in combination with the strain offset and anchor point, specifies ε2 in the equation E = (σ2 - σ1) / (ε2 - ε1).</string>
@@ -281,7 +292,7 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="0">
+   <item row="7" column="0">
     <widget class="QRadioButton" name="rb_FindRange">
      <property name="toolTip">
       <string>Automatically find the strain range over which the stress-strain curve is most linear and use this range to calculate the Young's modulus.</string>
@@ -291,7 +302,7 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="1">
+   <item row="7" column="1">
     <widget class="QDoubleSpinBox" name="sb_StrainMin">
      <property name="toolTip">
       <string>The strain value which defines the minimum strain that can be used to find the best approximation of the linear region of the stress-strain curve.</string>
@@ -304,7 +315,7 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="2">
+   <item row="7" column="2">
     <widget class="QLabel" name="l_To2">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -317,7 +328,7 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="3">
+   <item row="7" column="3">
     <widget class="QDoubleSpinBox" name="sb_StrainMax">
      <property name="toolTip">
       <string>The strain value which defines the maximum strain that can be used to find the best approximation of the linear region of the stress-strain curve.</string>
@@ -330,7 +341,7 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="4">
+   <item row="7" column="4">
     <widget class="QLabel" name="l_With2">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -343,7 +354,7 @@
      </property>
     </widget>
    </item>
-   <item row="6" column="5">
+   <item row="7" column="5">
     <widget class="QDoubleSpinBox" name="sb_StrainWindowWidth">
      <property name="toolTip">
       <string>The width of the strain window which will be used to find the best approximation of the linear region of the stress-strain curve for all possible regions between the minimum and maximum strains.</string>
@@ -356,15 +367,181 @@
      </property>
     </widget>
    </item>
-   <item row="7" column="0" colspan="6">
+   <item row="8" column="0" colspan="6">
+    <spacer name="s_VerticalProperties">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Policy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>5</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="9" column="0">
+    <widget class="QCheckBox" name="cb_Properties">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>The physical properties of the experiment samples.  If checked, the selected properties will be read from the file</string>
+     </property>
+     <property name="text">
+      <string>Physical properties</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="l_Area">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>The cross-sectional area of the samples.  It is A in the equation σ = F / A</string>
+     </property>
+     <property name="text">
+      <string>Cross-sectional area</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="1">
+    <widget class="QDoubleSpinBox" name="sb_Area">
+     <property name="toolTip">
+      <string>The cross-sectional area of every sample.  It is A in the equation σ = F / A</string>
+     </property>
+     <property name="suffix">
+      <string>mm²</string>
+     </property>
+     <property name="decimals">
+      <number>2</number>
+     </property>
+     <property name="maximum">
+      <double>999999.989999999990687</double>
+     </property>
+     <property name="value">
+      <double>0.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="2" colspan="4">
+    <widget class="QCheckBox" name="cb_Area">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>If checked, the cross-sectional area will be read in from the file on a sample-by-sample basis.  Otherwise, the specified cross-sectional area will be used by all samples</string>
+     </property>
+     <property name="text">
+      <string>Read from file</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="l_Length">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>The initial length of the samples.  It is l0 in the equation ε = d / l0</string>
+     </property>
+     <property name="text">
+      <string>Initial length</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <widget class="QDoubleSpinBox" name="sb_Length">
+     <property name="toolTip">
+      <string>The initial length of every sample.  It is l in the equation ε = d / l0</string>
+     </property>
+     <property name="suffix">
+      <string>mm</string>
+     </property>
+     <property name="decimals">
+      <number>2</number>
+     </property>
+     <property name="maximum">
+      <double>999.990000000000009</double>
+     </property>
+     <property name="value">
+      <double>0.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="2" colspan="4">
+    <widget class="QCheckBox" name="cb_Length">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>If checked, the initial length will be read in from the file on a sample-by-sample basis.  Otherwise, the specified initial length will be used by all samples</string>
+     </property>
+     <property name="text">
+      <string>Read from file</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QPushButton" name="pb_ReadProperties">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Select the file from which the physical sample properties will be read.</string>
+     </property>
+     <property name="text">
+      <string>Read from...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="1" colspan="5">
+    <widget class="QTextBrowser" name="tb_ReadProperties">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>File from which the physical sample properties will be read.</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="0" colspan="6">
     <spacer name="s_Vertical">
      <property name="orientation">
       <enum>Qt::Orientation::Vertical</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Policy::MinimumExpanding</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>0</height>
       </size>
      </property>
     </spacer>

@@ -1,7 +1,6 @@
 # App metadata
 APP_NAME := MechAnalyser
 APP_PATH := mech_analyser
-ICON := $(APP_PATH)/ui/icons/MechAnalyser.png
 ENTRY := $(APP_PATH)/mech_analyser.py
 
 # Python interpreter (override with `make PYTHON=...`)
@@ -12,11 +11,13 @@ PYINSTALLER ?= pyinstaller
 # Platform-specific pyinstaller options
 ifeq ($(shell uname -s),Darwin)
 	PYINSTALLER_OPTIONS := --windowed
+	ICON := $(APP_PATH)/ui/icons/MechAnalyser.png
 else
-	PYINSTALLER_OPTIONS := --windowed --onefile
+	PYINSTALLER_OPTIONS := --windowed --onedir
+	ICON := $(APP_PATH)/ui/icons/MechAnalyser.ico
 endif
 
-.PHONY: all clean dist
+.PHONY: all clean dist test
 
 all: dist
 
@@ -31,5 +32,13 @@ dist: $(ENTRY)
 		--icon=$(ICON) \
 		--paths=$(APP_PATH) \
 		--collect-submodules=experiment \
-		$$($(PYTHON) -c "from $(APP_PATH).config import EXPERIMENT_MODULES; print(' '.join(f'--hidden-import {m}' for m in EXPERIMENT_MODULES))") \
+		$$($(PYTHON) -c "from $(APP_PATH).config import EXPERIMENT_MODULES; print(' '.join(f'--hidden-import {m} --hidden-import {m}.analyser --hidden-import {m}.collation --hidden-import {m}.data --hidden-import {m}.phase --hidden-import {m}.ui' for m in EXPERIMENT_MODULES))") \
 		$(ENTRY)
+
+test:
+	$(PYTHON) -m unittest tests/experiment/test_data.py
+	$(PYTHON) -m unittest tests/experiment/test_phase.py
+	$(PYTHON) -m unittest tests/experiment/test_analyser.py
+	$(PYTHON) -m unittest tests/study/test_sample.py
+	$(PYTHON) -m unittest tests/study/test_study.py
+	$(PYTHON) -m unittest tests/util/test_serialiser.py
