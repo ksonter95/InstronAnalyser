@@ -30,6 +30,7 @@ dist: $(ENTRY)
 		$(PYINSTALLER_OPTIONS) \
 		--name "$(APP_NAME)" \
 		--icon=$(ICON) \
+		--add-data "$(APP_PATH)/ui/icons:$(APP_PATH)/ui/icons" \
 		--paths=$(APP_PATH) \
 		--collect-submodules=experiment \
 		$$($(PYTHON) -c "from $(APP_PATH).config import EXPERIMENT_MODULES; print(' '.join(f'--hidden-import {m} --hidden-import {m}.analyser --hidden-import {m}.collation --hidden-import {m}.data --hidden-import {m}.phase --hidden-import {m}.ui' for m in EXPERIMENT_MODULES))") \
