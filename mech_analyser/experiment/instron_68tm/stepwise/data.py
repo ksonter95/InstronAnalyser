@@ -57,8 +57,8 @@ class ProcessedTranscoder(ma_data.ProcessedTranscoder):
                     "Displacement": ma_data.ProcessedTranscoder.Column(
                         name="Displacement",
                         input_included=False,
-                        output_name="Displacement (m)",
-                        output_units=ma_units.unit_registry.parse_units("m"),
+                        output_name="Displacement (mm)",
+                        output_units=ma_units.unit_registry.parse_units("mm"),
                         output_header_column=2,
                     ),
                     "Force": ma_data.ProcessedTranscoder.Column(

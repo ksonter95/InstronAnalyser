@@ -1718,9 +1718,13 @@ class Application(QApplication):
             extension = "ico"
         else:
             extension = "png"
+        if hasattr(sys, "_MEIPASS"):
+            prefix = Path(sys._MEIPASS)
+        else:
+            prefix = Path(__file__).resolve().parent
         window_icon = QIcon(
             str(
-                Path(__file__).resolve().parent / "ui" / "icons" /
+                prefix / "mech_analyser" / "ui" / "icons" /
                 f"MechAnalyser.{extension}"
             )
         )

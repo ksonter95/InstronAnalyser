@@ -336,10 +336,18 @@ class Phase(ma_phase.Phase):
             )
         )
 
+        # NOTE: in the event that there is no strain in the raw data, the tare strain
+        #       needs to be calculated from the tare displacement and the initial length
+        tare_strain = 0.0
+        if self.raw_data.transcoder.get_column("Strain").input_included:
+            tare_strain = self.raw_data.tare_strain
+        elif phase_parameters.initial_length_m > 0.0:
+            tare_strain = self.raw_data.tare_displacement_m / phase_parameters.initial_length_m
+
         # Calculate the summary parameters
         self._ultimate_id = self.processed_data.stress.idxmax()  # type: ignore
         self._aborted = (
-            self.ultimate_strain + self.raw_data.tare_strain
+            self.ultimate_strain + tare_strain
         ) >= phase_parameters.abort_strain
         self._toughness_id = (
             self._ultimate_id

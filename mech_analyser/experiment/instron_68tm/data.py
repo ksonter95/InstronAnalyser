@@ -79,12 +79,12 @@ class RawTranscoder(ma_data.RawTranscoder):
                     ),
                     "Displacement": ma_data.RawTranscoder.Column(
                         name="Displacement",
-                        input_name="Displacement (m)",
-                        input_units=ma_units.unit_registry.parse_units("m"),
+                        input_name="Displacement (mm)",
+                        input_units=ma_units.unit_registry.parse_units("mm"),
                         input_header_rows=[0],
                         input_header_column=1,
-                        output_name="Displacement (m)",
-                        output_units=ma_units.unit_registry.parse_units("m"),
+                        output_name="Displacement (mm)",
+                        output_units=ma_units.unit_registry.parse_units("mm"),
                         output_header_column=1,
                     ),
                     "Force": ma_data.RawTranscoder.Column(
@@ -161,8 +161,10 @@ class RawData(ma_data.RawData, Data):
 
         self._tare_displacement_m = filtered_frame["Displacement"][0]
         self._tare_force_N = filtered_frame["Force"][0]
-        self._tare_strain = filtered_frame["Strain"][0]
-        self._tare_stress_Pa = filtered_frame["Stress"][0]
+        if transcoder.get_column("Strain").input_included:
+            self._tare_strain = filtered_frame["Strain"][0]
+        if transcoder.get_column("Stress").input_included:
+            self._tare_stress_Pa = filtered_frame["Stress"][0]
         self._tare_time_s = filtered_frame["Time"][0]
 
         tared_frame: pd.DataFrame = pd.concat(
@@ -170,11 +172,25 @@ class RawData(ma_data.RawData, Data):
                 filtered_frame["Time"] - self._tare_time_s,  # type: ignore
                 filtered_frame["Displacement"] - self._tare_displacement_m,  # type: ignore
                 filtered_frame["Force"] - self._tare_force_N,  # type: ignore
-                filtered_frame["Strain"] - self._tare_strain,  # type: ignore
-                filtered_frame["Stress"] - self._tare_stress_Pa,  # type: ignore
             ],
             axis=1,
         )
+        if transcoder.get_column("Strain").input_included:
+            tared_frame = pd.concat(
+                [
+                    tared_frame,
+                    filtered_frame["Strain"] - self._tare_strain,  # type: ignore
+                ],
+                axis=1,
+            )
+        if transcoder.get_column("Stress").input_included:
+            tared_frame = pd.concat(
+                [
+                    tared_frame,
+                    filtered_frame["Stress"] - self._tare_stress_Pa,  # type: ignore
+                ],
+                axis=1,
+            )
         tared_frame.columns = filtered_frame.columns
 
         super().__init__(tared_frame, transcoder, id)
@@ -196,7 +212,7 @@ class RawData(ma_data.RawData, Data):
         return self._tare_strain
 
     @property
-    def tare_stress_MPa(self) -> float:
+    def tare_stress_Pa(self) -> float:
         return self._tare_stress_Pa
 
     @property
