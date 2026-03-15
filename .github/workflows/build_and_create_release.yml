@@ -8,9 +8,6 @@ on:
     branches:
       - master
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build-windows:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'windows' || inputs.target == 'all' }}
@@ -34,7 +31,7 @@ jobs:
           make dist
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: MechAnalyser-Windows
           path: dist/MechAnalyser
@@ -64,7 +61,7 @@ jobs:
           make dist
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: MechAnalyser-MacOS-ARM
           path: dist/MechAnalyser.app
@@ -94,7 +91,7 @@ jobs:
           make dist
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: MechAnalyser-MacOS-x86_64
           path: dist/MechAnalyser.app
@@ -105,19 +102,19 @@ jobs:
     needs: [build-windows, build-macos-arm, build-macos-x86_64]
     steps:
       - name: Download Windows artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: MechAnalyser-Windows
           path: artifacts/windows
 
       - name: Download MacOS-ARM artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: MechAnalyser-MacOS-ARM
           path: artifacts/macos-arm
 
       - name: Download MacOS-x86_64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: MechAnalyser-MacOS-x86_64
           path: artifacts/macos-x86_64
