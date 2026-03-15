@@ -34,7 +34,7 @@ jobs:
           make dist
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: MechAnalyser-Windows
           path: dist/MechAnalyser
@@ -64,7 +64,7 @@ jobs:
           make dist
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: MechAnalyser-MacOS-ARM
           path: dist/MechAnalyser.app
@@ -94,7 +94,7 @@ jobs:
           make dist
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: MechAnalyser-MacOS-x86_64
           path: dist/MechAnalyser.app
@@ -105,19 +105,19 @@ jobs:
     needs: [build-windows, build-macos-arm, build-macos-x86_64]
     steps:
       - name: Download Windows artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v4
         with:
           name: MechAnalyser-Windows
           path: artifacts/windows
 
       - name: Download MacOS-ARM artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v4
         with:
           name: MechAnalyser-MacOS-ARM
           path: artifacts/macos-arm
 
       - name: Download MacOS-x86_64 artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v4
         with:
           name: MechAnalyser-MacOS-x86_64
           path: artifacts/macos-x86_64
