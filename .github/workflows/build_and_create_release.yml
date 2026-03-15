@@ -14,10 +14,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: 3.12
 
@@ -31,24 +31,23 @@ jobs:
           make dist
 
       - name: Upload artifact
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: MechAnalyser-Windows
-          path: dist/MechAnalyser.exe
+          name: MechAnalyser-windows-x64
+          path: dist/MechAnalyser
 
   build-macos-arm:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'macos-arm' || inputs.target == 'all' }}
     runs-on: macos-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Print CPU architecture
         run: uname -m
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: 3.12
 
@@ -61,30 +60,24 @@ jobs:
         run: |
           make dist
 
-      - name: Zip .app bundle
-        run: |
-          cd dist
-          zip -r MechAnalyser.zip MechAnalyser.app
-
       - name: Upload artifact
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: MechAnalyser-MacOS-ARM
-          path: dist/MechAnalyser.zip
+          name: MechAnalyser-macos-arm64
+          path: dist/MechAnalyser.app
 
   build-macos-x86_64:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'macos-x86_64' || inputs.target == 'all' }}
     runs-on: macos-15-intel
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Print CPU architecture
         run: uname -m
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: 3.12
 
@@ -97,17 +90,11 @@ jobs:
         run: |
           make dist
 
-      - name: Zip .app bundle
-        run: |
-          cd dist
-          zip -r MechAnalyser.zip MechAnalyser.app
-
       - name: Upload artifact
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: MechAnalyser-MacOS-x86_64
-          path: dist/MechAnalyser.zip
+          name: MechAnalyser-macos-x64
+          path: dist/MechAnalyser.app
 
   create-release:
     if: startsWith(github.ref, 'refs/tags/')
@@ -115,22 +102,25 @@ jobs:
     needs: [build-windows, build-macos-arm, build-macos-x86_64]
     steps:
       - name: Download Windows artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: MechAnalyser-Windows
-          path: artifacts/windows
+          name: MechAnalyser-windows-x64
+          path: artifacts
+          skip-decompress: true
 
       - name: Download MacOS-ARM artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: MechAnalyser-MacOS-ARM
-          path: artifacts/macos-arm
+          name: MechAnalyser-macos-arm64
+          path: artifacts
+          skip-decompress: true
 
       - name: Download MacOS-x86_64 artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          name: MechAnalyser-MacOS-x86_64
-          path: artifacts/macos-x86_64
+          name: MechAnalyser-macos-x64
+          path: artifacts
+          skip-decompress: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -140,8 +130,8 @@ jobs:
           body: |
             Automatically created release for tag ${{ github.ref_name }}
           files: |
-            artifacts/windows/*
-            artifacts/macos-arm/*
-            artifacts/macos-x86_64/*
+            artifacts/MechAnalyser-windows-x64.zip
+            artifacts/MechAnalyser-macos-arm64.zip
+            artifacts/MechAnalyser-macos-x64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
